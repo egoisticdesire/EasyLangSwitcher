@@ -1,0 +1,85 @@
+# ==========================
+# General
+# ==========================
+# Temporary files
+*.swp
+*.swo
+*.DS_Store
+*.log
+
+# Build folders
+/build-*
+/*debug*/
+/*release*/
+/CMakeFiles/
+/CMakeCache.txt
+/cmakesetup_*/
+
+# Compiled object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled headers
+*.gch
+*.pch
+
+# Libraries
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# ==========================
+# Qt-specific
+# ==========================
+# Generated moc, ui, qrc files
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.qmlc
+*.jsc
+
+# Qt unit test wrappers
+target_wrapper.*
+
+# qmake & QBS
+/.qmake.cache
+/.qmake.stash
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+
+# Qt Creator project files
+*.autosave
+*.qmlproject.user
+*.qmlproject.user.*
+CMakeLists.txt.user*
+compile_commands.json
+*creator.user*
+
+# QML cache
+*_qmlcache.qrc
+
+# ==========================
+# Windows-specific
+# ==========================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ==========================
+# Optional: CLion-specific
+# ==========================
+.idea/
+*.iml
+cmake-build-*/
