@@ -81,6 +81,7 @@ QIcon TrayManager::loadSvgIcon(const QString &path, const QSize &size) {
 
 void TrayManager::setupTrayIcon() {
     trayIcon.setIcon(loadSvgIcon(":/icons/icons/FluentFlashSparkle24FilledW.svg"));
+    trayIcon.setToolTip("Easy Lang Switcher");
     trayIcon.setVisible(true);
 
     connect(&trayIcon, &QSystemTrayIcon::activated, this, [this](const QSystemTrayIcon::ActivationReason reason) {
