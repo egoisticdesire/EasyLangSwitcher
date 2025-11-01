@@ -37,16 +37,30 @@ TrayManager::TrayManager(SettingsWindow &settingsWindow, QWidget *parent)
 }
 
 void TrayManager::setupTrayIcon() {
-    trayIcon.setIcon(SvgHelper::loadSvgIcon(":/icons/icons/FluentFlashSparkle24FilledW.svg"));
+    trayIcon.setIcon(IconHelper::loadIcon(":/icons/icons/FluentFlashSparkle24FilledW.svg"));
     trayIcon.setToolTip("Easy Lang Switcher");
     trayIcon.setVisible(true);
 
-    connect(&trayIcon, &QSystemTrayIcon::activated, this, [this](const QSystemTrayIcon::ActivationReason reason) {
-        if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::Context) {
-            if (isVisible()) hideAnimated();
-            else showAtCursor();
-        }
-    });
+    connect(&trayIcon, &QSystemTrayIcon::activated, this,
+            [this](const QSystemTrayIcon::ActivationReason reason) {
+                switch (reason) {
+                    case QSystemTrayIcon::Trigger: {
+                        // ЛКМ — быстрый вкл/выкл
+                        enabled = !enabled;
+                        emit keyboardToggled(enabled);
+                        updateTrayIcon();
+                        break;
+                    }
+                    case QSystemTrayIcon::Context: {
+                        // ПКМ — показать меню
+                        if (isVisible()) hideAnimated();
+                        else showAtCursor();
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            });
 }
 
 void TrayManager::setupUiBehavior() {
@@ -59,13 +73,9 @@ void TrayManager::setupUiBehavior() {
     });
     connect(ui.toggle_btn, &QToolButton::clicked, this, [this]() {
         enabled = !enabled;
-        animateToggleButton();
         emit keyboardToggled(enabled);
-        trayIcon.setIcon(
-            enabled
-                ? SvgHelper::loadSvgIcon(":/icons/icons/FluentFlashSparkle24FilledW.svg")
-                : SvgHelper::loadSvgIcon(":/icons/icons/FluentFlashSparkle24RegularW.svg")
-        );
+        animateToggleButton();
+        updateTrayIcon();
     });
 
     updateInfo();
@@ -80,11 +90,11 @@ void TrayManager::updateInfo() const {
 
     ui.toggle_btn->setIcon(
         enabled
-            ? SvgHelper::loadSvgIcon(":/icons/icons/FluentFlashSparkle24RegularW.svg")
-            : SvgHelper::loadSvgIcon(":/icons/icons/FluentFlashSparkle24FilledW.svg")
+            ? IconHelper::loadIcon(":/icons/icons/FluentFlashSparkle24RegularW.svg")
+            : IconHelper::loadIcon(":/icons/icons/FluentFlashSparkle24FilledW.svg")
     );
-    ui.settings_btn->setIcon(SvgHelper::loadSvgIcon(":/icons/icons/FluentFlashSettings24RegularW.svg"));
-    ui.exit_btn->setIcon(SvgHelper::loadSvgIcon(":/icons/icons/FluentFlashOff24RegularW.svg"));
+    ui.settings_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FluentFlashSettings24RegularW.svg"));
+    ui.exit_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FluentFlashOff24RegularW.svg"));
 }
 
 void TrayManager::showAtCursor() {
@@ -147,4 +157,12 @@ void TrayManager::animateToggleButton() {
     });
     connect(fadeInBtn, &QPropertyAnimation::finished, [effect]() { effect->deleteLater(); });
     fadeOutBtn->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void TrayManager::updateTrayIcon() {
+    trayIcon.setIcon(
+        enabled
+            ? IconHelper::loadIcon(":/icons/icons/FluentFlashSparkle24FilledW.svg")
+            : IconHelper::loadIcon(":/icons/icons/FluentFlashSparkle24RegularW.svg")
+    );
 }

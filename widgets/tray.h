@@ -1,9 +1,9 @@
 #pragma once
 #include <QSystemTrayIcon>
-#include "../resources/ui_EasyLangSwitcher.h"
-#include "../helpers/svg.h"
-#include "../helpers/acrylicEffect.h"
-#include "../helpers/hoverEffect.h"
+#include "../resources/ui_EasyLangSwitcher_tray.h"
+#include "../helpers/iconHelper.h"
+#include "../helpers/acrylicHelper.h"
+#include "../helpers/hoverHelper.h"
 #include "settings.h"
 
 class TrayManager final : public QWidget {
@@ -16,6 +16,7 @@ public:
 
 signals:
     void exitRequested();
+
     void keyboardToggled(bool enabled);
 
 protected:
@@ -32,6 +33,8 @@ private:
     bool enabled = true;
     QPropertyAnimation *fadeIn = nullptr;
     QPropertyAnimation *fadeOut = nullptr;
+
+    void updateTrayIcon();
 
     void setupTrayIcon();
 
