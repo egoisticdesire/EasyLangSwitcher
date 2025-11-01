@@ -5,8 +5,8 @@
 thread_local KeyboardHandler *KeyboardHandler::instance = nullptr;
 
 KeyboardHandler::KeyboardHandler(SettingsData &data, QObject *parent)
-    : QObject(parent)
-      , settings(data) {
+    : QObject(parent),
+      settings(data) {
     timer.setSingleShot(true);
     connect(&timer, &QTimer::timeout, this, [this]() {
         longPressDetected = true;
@@ -87,7 +87,31 @@ void KeyboardHandler::switchKeyboardLayout() {
         }
     HKL next = list[(idx + 1) % n];
 
+    // 1. Пытаемся стандартным способом
     PostMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(next));
 
-    qDebug() << "Requested layout switch (HKL next):" << QString::number(reinterpret_cast<qulonglong>(next), 16);
+    // 2. Проверяем через короткую задержку, изменилась ли раскладка
+    QTimer::singleShot(20, [threadId, next]() {
+        if (const HKL now = GetKeyboardLayout(threadId); now != next) {
+            // fallback: эмулируем Win+Space
+            INPUT inputs[4] = {};
+            // Win down
+            inputs[0].type = INPUT_KEYBOARD;
+            inputs[0].ki.wVk = VK_LWIN;
+            // Space down
+            inputs[1].type = INPUT_KEYBOARD;
+            inputs[1].ki.wVk = VK_SPACE;
+            // Space up
+            inputs[2].type = INPUT_KEYBOARD;
+            inputs[2].ki.wVk = VK_SPACE;
+            inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
+            // Win up
+            inputs[3].type = INPUT_KEYBOARD;
+            inputs[3].ki.wVk = VK_LWIN;
+            inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
+
+            SendInput(4, inputs, sizeof(INPUT));
+        }
+    });
+    qDebug() << "Requested layout switch:" << QString::number(reinterpret_cast<qulonglong>(next), 16);
 }

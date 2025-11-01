@@ -1,4 +1,3 @@
-#include <QApplication>
 #include "handlers/keyboard.h"
 #include "widgets/settings.h"
 #include "widgets/tray.h"
