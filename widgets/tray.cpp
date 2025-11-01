@@ -40,7 +40,7 @@ struct WINDOWCOMPOSITIONATTRIBDATA {
 TrayManager::TrayManager(SettingsWindow &settingsWindow, QWidget *parent)
     : QWidget(parent), settingsWindow(settingsWindow) {
     ui.setupUi(this);
-    setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    setWindowFlags(Qt::Popup | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setFocusPolicy(Qt::StrongFocus);
@@ -223,28 +223,36 @@ void TrayManager::animateToggleButton() {
 }
 
 void TrayManager::showAtCursor() {
-    static bool acrylicApplied = false; // эффект включаем один раз
-
     updateInfo();
     resize(sizeHint());
 
+    // позиция рядом с курсором
     const QPoint cursor = QCursor::pos();
     move(cursor.x() + 3, cursor.y() - height() - 3);
 
+    // показываем окно невидимым сначала
     setWindowOpacity(0.0);
-    show();
+    setVisible(true);
     raise();
     activateWindow();
     setFocus(Qt::ActiveWindowFocusReason);
 
-    // включаем акрил только при первом показе
+    // включаем акрил на следующем цикле событий
+    static bool acrylicApplied = false;
     if (!acrylicApplied) {
-        enableAcrylic();
         acrylicApplied = true;
+        QTimer::singleShot(0, this, [this]() {
+            enableAcrylic();
+        });
+    } else {
+        // для повторных открытий, чтобы акрил не пропадал
+        QTimer::singleShot(0, this, [this]() { enableAcrylic(); });
     }
 
+    // плавное появление
     fadeIn->start();
 }
+
 
 
 void TrayManager::hideAnimated() const {
