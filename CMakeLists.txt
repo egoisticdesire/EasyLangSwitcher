@@ -12,9 +12,31 @@ if (NOT QT_DIR)
 endif ()
 set(CMAKE_PREFIX_PATH "${QT_DIR}/6.10.0/msvc2022_64/lib/cmake/Qt6")
 
-find_package(Qt6 COMPONENTS Core Gui Widgets Svg REQUIRED)
-add_executable(EasyLangSwitcher main.cpp handlers/keyboard.cpp handlers/keyboard.h widgets/settings.cpp widgets/settings.h widgets/tray.cpp widgets/tray.h)
-target_link_libraries(EasyLangSwitcher Qt::Core Qt::Gui Qt::Widgets Qt::Svg)
+find_package(Qt6 COMPONENTS
+        Core
+        Gui
+        Widgets
+        Svg
+        REQUIRED
+)
+add_executable(EasyLangSwitcher
+        main.cpp
+        handlers/keyboard.cpp
+        handlers/keyboard.h
+        widgets/settings.cpp
+        widgets/settings.h
+        widgets/tray.cpp
+        widgets/tray.h
+        helpers/acrylicEffect.h
+        helpers/svg.h
+        helpers/hoverEffect.h
+)
+target_link_libraries(EasyLangSwitcher
+        Qt::Core
+        Qt::Gui
+        Qt::Widgets
+        Qt::Svg
+)
 qt_add_resources(RESOURCES resources/resources.qrc)
 target_sources(EasyLangSwitcher PRIVATE ${RESOURCES})
 if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
@@ -43,7 +65,12 @@ if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
                 "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/platforms/"
         )
     endif ()
-    foreach (QT_LIB Core Gui Widgets Svg)
+    foreach (QT_LIB
+            Core
+            Gui
+            Widgets
+            Svg
+    )
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND
                 ${CMAKE_COMMAND} -E copy
                 "${QT_INSTALL_PATH}/bin/Qt6${QT_LIB}${DEBUG_SUFFIX}.dll"

@@ -1,15 +1,10 @@
 #pragma once
-
 #include <QSystemTrayIcon>
-#include <QPropertyAnimation>
-#include <QSvgRenderer>
-#include <QPainter>
-#include "settings.h"
 #include "../resources/ui_EasyLangSwitcher.h"
-#include <dwmapi.h>
-#pragma comment(lib, "dwmapi.lib")
-
-constexpr int WINDOW_RADIUS = 8;
+#include "../helpers/svg.h"
+#include "../helpers/acrylicEffect.h"
+#include "../helpers/hoverEffect.h"
+#include "settings.h"
 
 class TrayManager final : public QWidget {
     Q_OBJECT
@@ -27,11 +22,12 @@ protected:
 
     void focusOutEvent(QFocusEvent *event) override;
 
+    void resizeEvent(QResizeEvent *event) override;
+
 private:
     Ui::main_frame ui;
     SettingsWindow &settingsWindow;
     QSystemTrayIcon trayIcon;
-
     bool enabled = true;
     QPropertyAnimation *fadeIn = nullptr;
     QPropertyAnimation *fadeOut = nullptr;
@@ -42,17 +38,7 @@ private:
 
     void updateInfo() const;
 
-    void enableAcrylic() const;
-
-    void resizeEvent(QResizeEvent *event) override;
-
     void animateToggleButton();
 
     void hideAnimated() const;
-
-    void initializeHoverEffects() const;
-
-    static void startHoverBrightening(const QFrame *frame, bool enter);
-
-    static QIcon loadSvgIcon(const QString &path, const QSize &size = QSize(22, 22));
 };
