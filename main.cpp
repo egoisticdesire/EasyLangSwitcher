@@ -18,6 +18,10 @@ int main(int argc, char *argv[]) {
 
     QObject::connect(&app, &QApplication::aboutToQuit, [&]() { kbHandler.stop(); });
     QObject::connect(&tray, &TrayManager::exitRequested, [&]() { QApplication::quit(); });
+    // привязываем включение/выключение клавиши
+    QObject::connect(&tray, &TrayManager::keyboardToggled, [&](bool enabled) {
+        kbHandler.setActive(enabled);
+    });
 
     return QApplication::exec();
 }

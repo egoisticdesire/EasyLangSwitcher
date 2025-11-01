@@ -5,8 +5,7 @@
 thread_local KeyboardHandler *KeyboardHandler::instance = nullptr;
 
 KeyboardHandler::KeyboardHandler(SettingsData &data, QObject *parent)
-    : QObject(parent),
-      settings(data) {
+    : QObject(parent), settings(data) {
     timer.setSingleShot(true);
     connect(&timer, &QTimer::timeout, this, [this]() {
         longPressDetected = true;
@@ -35,7 +34,7 @@ void KeyboardHandler::stop() {
 }
 
 LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WPARAM wParam, const LPARAM lParam) {
-    if (nCode == HC_ACTION && instance) {
+    if (nCode == HC_ACTION && instance && instance->active) {
         const auto kb = reinterpret_cast<KBDLLHOOKSTRUCT *>(lParam);
         const bool isDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
         const bool isUp = (wParam == WM_KEYUP || wParam == WM_SYSKEYUP);

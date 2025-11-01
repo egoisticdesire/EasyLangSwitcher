@@ -16,6 +16,7 @@ public:
 
 signals:
     void exitRequested();
+    void keyboardToggled(bool enabled);
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;

@@ -17,6 +17,8 @@ public:
 
     void stop();
 
+    void setActive(const bool value) { active = value; }
+
 private:
     SettingsData &settings;
     bool keyPressed = false;
@@ -24,6 +26,7 @@ private:
     DWORD pressTime = 0;
     QTimer timer;
     HHOOK hook = nullptr;
+    bool active = true; // разрешено ли реагировать на хоткей
 
     static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 

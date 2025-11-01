@@ -60,6 +60,7 @@ void TrayManager::setupUiBehavior() {
     connect(ui.toggle_btn, &QToolButton::clicked, this, [this]() {
         enabled = !enabled;
         animateToggleButton();
+        emit keyboardToggled(enabled);
     });
 
     updateInfo();
