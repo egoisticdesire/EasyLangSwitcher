@@ -1,37 +1,191 @@
 #include "tray.h"
-#include <QIcon>
+#include <QApplication>
+#include <QTimer>
+#include <QScreen>
+#include <QCursor>
+#include <QMouseEvent>
 
-TrayManager::TrayManager(SettingsWindow &settingsWindow, QObject *parent)
-    : QObject(parent),
-      enableAction("Enable", this),
-      disableAction("Disable", this),
-      settingsAction("Settings", this),
-      exitAction("Exit", this),
-      settingsWindow(settingsWindow) {
-    trayIcon.setIcon(QIcon(":/resources/icons/a1.png"));
+TrayManager::TrayManager(SettingsWindow &settingsWindow, QWidget *parent)
+    : QWidget(parent), settingsWindow(settingsWindow) {
+    ui.setupUi(this);
+    setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    setAttribute(Qt::WA_TranslucentBackground);
+    setAttribute(Qt::WA_ShowWithoutActivating);
+    setFocusPolicy(Qt::StrongFocus);
 
-    trayMenu.addAction(&enableAction);
-    trayMenu.addAction(&disableAction);
-    trayMenu.addSeparator();
-    trayMenu.addAction(&settingsAction);
-    trayMenu.addAction(&exitAction);
+    ui.info_frame->installEventFilter(this);
+    qApp->installEventFilter(this);
 
-    trayIcon.setContextMenu(&trayMenu);
+    fadeIn = new QPropertyAnimation(this, "windowOpacity", this);
+    fadeIn->setDuration(180);
+    fadeIn->setStartValue(0.0);
+    fadeIn->setEndValue(1.0);
+    fadeIn->setEasingCurve(QEasingCurve::OutCubic);
 
-    setupActions();
+    fadeOut = new QPropertyAnimation(this, "windowOpacity", this);
+    fadeOut->setDuration(140);
+    fadeOut->setStartValue(1.0);
+    fadeOut->setEndValue(0.0);
+    fadeOut->setEasingCurve(QEasingCurve::InCubic);
+    connect(fadeOut, &QPropertyAnimation::finished, this, &QWidget::hide);
+
+    setupUiBehavior();
+    setupTrayIcon();
+
+    setWindowOpacity(0.0);
+    hide();
 }
 
-void TrayManager::setupActions() {
-    connect(&settingsAction, &QAction::triggered, [&]() {
-        settingsWindow.show();
+QIcon TrayManager::loadSvgIcon(const QString &path, const QSize &size) {
+    QSvgRenderer renderer(path);
+    if (!renderer.isValid()) return QIcon();
+
+    QPixmap pixmap(size);
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    renderer.render(&painter);
+    return QIcon(pixmap);
+}
+
+void TrayManager::setupTrayIcon() {
+    trayIcon.setIcon(loadSvgIcon(":/icons/icons/FluentFlashSparkle24FilledW.svg"));
+    trayIcon.setVisible(true);
+
+    connect(&trayIcon, &QSystemTrayIcon::activated, this, [this](const QSystemTrayIcon::ActivationReason reason) {
+        if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::Context) {
+            if (isVisible()) hideAnimated();
+            else showAtCursor();
+        }
     });
+}
 
-
-    connect(&exitAction, &QAction::triggered, [&]() {
+void TrayManager::setupUiBehavior() {
+    connect(ui.settings_btn, &QToolButton::clicked, this, [this]() {
+        settingsWindow.show();
+        hideAnimated();
+    });
+    connect(ui.exit_btn, &QToolButton::clicked, this, [this]() {
         emit exitRequested();
     });
+    connect(ui.toggle_btn, &QToolButton::clicked, this, [this]() {
+        enabled = !enabled;
+        animateToggleButton();
+    });
+
+    updateInfo();
 }
 
-void TrayManager::show() {
-    trayIcon.show();
+void TrayManager::updateInfo() const {
+    ui.status_value->setText(enabled ? tr("Enabled") : tr("Disabled"));
+    ui.hotkey_value->setText(settingsWindow.getHotkeyName());
+    ui.delay_value->setText(QString::number(settingsWindow.getSwitchDelayMs()));
+    ui.toggle_btn->setText(enabled ? tr("  Disable") : tr("  Enable"));
+
+    const QIcon ic = enabled
+                         ? loadSvgIcon(":/icons/icons/FluentFlashSparkle24RegularW.svg")
+                         : loadSvgIcon(":/icons/icons/FluentFlashSparkle24FilledW.svg");
+    ui.toggle_btn->setIcon(ic);
+    ui.settings_btn->setIcon(loadSvgIcon(":/icons/icons/FluentFlashSettings24RegularW.svg"));
+    ui.exit_btn->setIcon(loadSvgIcon(":/icons/icons/FluentFlashOff24RegularW.svg"));
+}
+
+void TrayManager::enableAcrylic() {
+    const auto hwnd = reinterpret_cast<HWND>(winId());
+    if (!hwnd) return;
+
+    constexpr MARGINS margins = {-1, -1, -1, -1};
+    DwmExtendFrameIntoClientArea(hwnd, &margins);
+
+    DWM_BLURBEHIND bb{};
+    bb.dwFlags = DWM_BB_ENABLE;
+    bb.fEnable = TRUE;
+    bb.hRgnBlur = nullptr;
+    DwmEnableBlurBehindWindow(hwnd, &bb);
+
+    QPalette pal = palette();
+    pal.setColor(QPalette::Window, QColor(20, 20, 20, 180));
+    setPalette(pal);
+    setAutoFillBackground(true);
+}
+
+void TrayManager::animateToggleButton() {
+    QWidget *btn = ui.toggle_btn;
+    auto *effect = new QGraphicsOpacityEffect(btn);
+    btn->setGraphicsEffect(effect);
+
+    auto *fadeOutBtn = new QPropertyAnimation(effect, "opacity");
+    fadeOutBtn->setDuration(110);
+    fadeOutBtn->setStartValue(1.0);
+    fadeOutBtn->setEndValue(0.0);
+
+    auto *fadeInBtn = new QPropertyAnimation(effect, "opacity");
+    fadeInBtn->setDuration(140);
+    fadeInBtn->setStartValue(0.0);
+    fadeInBtn->setEndValue(1.0);
+
+    connect(fadeOutBtn, &QPropertyAnimation::finished, [this, fadeInBtn]() {
+        updateInfo();
+        fadeInBtn->start(QAbstractAnimation::DeleteWhenStopped);
+    });
+    connect(fadeInBtn, &QPropertyAnimation::finished, [effect]() {
+        effect->deleteLater();
+    });
+
+    fadeOutBtn->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void TrayManager::showAtCursor() {
+    updateInfo();
+    resize(sizeHint());
+    const QPoint cursor = QCursor::pos();
+    move(cursor.x() + 3, cursor.y() - height() - 3);
+
+    setWindowOpacity(0.0);
+    show();
+    raise();
+    activateWindow();
+    setFocus(Qt::ActiveWindowFocusReason);
+
+    enableAcrylic();
+    fadeIn->start();
+}
+
+void TrayManager::hideAnimated() const {
+    if (!isVisible()) return;
+    fadeOut->start();
+}
+
+bool TrayManager::eventFilter(QObject *obj, QEvent *event) {
+    if (obj == ui.info_frame) {
+        if (event->type() == QEvent::Enter) startHoverBrightening(ui.info_frame, true);
+        else if (event->type() == QEvent::Leave) startHoverBrightening(ui.info_frame, false);
+    }
+
+    if (isVisible() && event->type() == QEvent::MouseButtonPress) {
+        if (const auto *me = static_cast<QMouseEvent *>(event); !geometry().contains(me->globalPosition().toPoint()))
+            hideAnimated();
+    }
+
+    return QWidget::eventFilter(obj, event);
+}
+
+void TrayManager::focusOutEvent(QFocusEvent *event) {
+    hideAnimated();
+    QWidget::focusOutEvent(event);
+}
+
+void TrayManager::startHoverBrightening(const QFrame *frame, const bool enter) {
+    for (const auto labels = frame->findChildren<QLabel *>(); QLabel *lbl: labels) {
+        auto *eff = qobject_cast<QGraphicsOpacityEffect *>(lbl->graphicsEffect());
+        if (!eff) {
+            eff = new QGraphicsOpacityEffect(lbl);
+            lbl->setGraphicsEffect(eff);
+        }
+        auto *anim = new QPropertyAnimation(eff, "opacity");
+        anim->setDuration(180);
+        anim->setStartValue(eff->opacity());
+        anim->setEndValue(enter ? 1.0 : 0.7);
+        anim->setEasingCurve(QEasingCurve::InOutCubic);
+        anim->start(QAbstractAnimation::DeleteWhenStopped);
+    }
 }
