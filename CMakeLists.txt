@@ -27,9 +27,9 @@ add_executable(EasyLangSwitcher
         widgets/settings.h
         widgets/tray.cpp
         widgets/tray.h
-        helpers/acrylicEffect.h
-        helpers/svg.h
-        helpers/hoverEffect.h
+        helpers/acrylicHelper.h
+        helpers/hoverHelper.h
+        helpers/iconHelper.h
 )
 target_link_libraries(EasyLangSwitcher
         Qt::Core
