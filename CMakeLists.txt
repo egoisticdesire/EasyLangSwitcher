@@ -7,9 +7,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 set(QT_DIR "$ENV{QT_DIR}")
-if(NOT QT_DIR)
+if (NOT QT_DIR)
     message(FATAL_ERROR "Please set QT_DIR environment variable to Qt installation path")
-endif()
+endif ()
 set(CMAKE_PREFIX_PATH "${QT_DIR}/6.10.0/msvc2022_64/lib/cmake/Qt6")
 
 find_package(Qt6 COMPONENTS Core Gui Widgets Svg REQUIRED)

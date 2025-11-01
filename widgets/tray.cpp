@@ -40,7 +40,7 @@ struct WINDOWCOMPOSITIONATTRIBDATA {
 TrayManager::TrayManager(SettingsWindow &settingsWindow, QWidget *parent)
     : QWidget(parent), settingsWindow(settingsWindow) {
     ui.setupUi(this);
-    setWindowFlags(Qt::Popup | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+    setWindowFlags(Qt::Popup | Qt::NoDropShadowWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setFocusPolicy(Qt::StrongFocus);
@@ -105,6 +105,7 @@ void TrayManager::setupUiBehavior() {
     });
 
     updateInfo();
+    initializeHoverEffects();
 }
 
 void TrayManager::updateInfo() const {
@@ -119,6 +120,16 @@ void TrayManager::updateInfo() const {
     ui.toggle_btn->setIcon(ic);
     ui.settings_btn->setIcon(loadSvgIcon(":/icons/icons/FluentFlashSettings24RegularW.svg"));
     ui.exit_btn->setIcon(loadSvgIcon(":/icons/icons/FluentFlashOff24RegularW.svg"));
+}
+
+void TrayManager::initializeHoverEffects() const {
+    for (const auto frames = findChildren<QFrame *>(); const auto *frame: frames) {
+        for (auto *lbl: frame->findChildren<QLabel *>()) {
+            auto *eff = new QGraphicsOpacityEffect(lbl);
+            eff->setOpacity(0.7); // исходная яркость
+            lbl->setGraphicsEffect(eff);
+        }
+    }
 }
 
 void TrayManager::enableAcrylic() const {
@@ -147,8 +158,7 @@ void TrayManager::enableAcrylic() const {
     // 3) Режим акрила через SetWindowCompositionAttribute
     const auto setWindowCompositionAttribute =
             reinterpret_cast<pSetWindowCompositionAttribute>(
-                GetProcAddress(GetModuleHandleW(L"user32.dll"),
-                               "SetWindowCompositionAttribute"));
+                GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetWindowCompositionAttribute"));
 
     if (!setWindowCompositionAttribute) {
         qWarning() << "SetWindowCompositionAttribute not available.";
@@ -158,7 +168,7 @@ void TrayManager::enableAcrylic() const {
 
         // GradientColor: AARRGGBB: альфа в старшем байте
         // 0xA0 (~63%) — типичный уровень мутности Win11
-        constexpr DWORD alpha = 0xA0;
+        constexpr DWORD alpha = 0x40;
         constexpr DWORD rgb = (0x20) | (0x20 << 8) | (0x20 << 16); // #202020
         policy.GradientColor = (alpha << 24) | rgb;
         policy.AccentFlags = 2; // 0 или 2 — без шумового слоя
@@ -202,12 +212,12 @@ void TrayManager::animateToggleButton() {
     btn->setGraphicsEffect(effect);
 
     auto *fadeOutBtn = new QPropertyAnimation(effect, "opacity");
-    fadeOutBtn->setDuration(110);
+    fadeOutBtn->setDuration(160);
     fadeOutBtn->setStartValue(1.0);
     fadeOutBtn->setEndValue(0.0);
 
     auto *fadeInBtn = new QPropertyAnimation(effect, "opacity");
-    fadeInBtn->setDuration(140);
+    fadeInBtn->setDuration(200);
     fadeInBtn->setStartValue(0.0);
     fadeInBtn->setEndValue(1.0);
 
@@ -237,22 +247,12 @@ void TrayManager::showAtCursor() {
     activateWindow();
     setFocus(Qt::ActiveWindowFocusReason);
 
-    // включаем акрил на следующем цикле событий
-    static bool acrylicApplied = false;
-    if (!acrylicApplied) {
-        acrylicApplied = true;
-        QTimer::singleShot(0, this, [this]() {
-            enableAcrylic();
-        });
-    } else {
-        // для повторных открытий, чтобы акрил не пропадал
-        QTimer::singleShot(0, this, [this]() { enableAcrylic(); });
-    }
+    // включаем акрил
+    QTimer::singleShot(0, this, [this]() { enableAcrylic(); });
 
     // плавное появление
     fadeIn->start();
 }
-
 
 
 void TrayManager::hideAnimated() const {
@@ -280,17 +280,14 @@ void TrayManager::focusOutEvent(QFocusEvent *event) {
 }
 
 void TrayManager::startHoverBrightening(const QFrame *frame, const bool enter) {
-    for (const auto labels = frame->findChildren<QLabel *>(); QLabel *lbl: labels) {
-        auto *eff = qobject_cast<QGraphicsOpacityEffect *>(lbl->graphicsEffect());
-        if (!eff) {
-            eff = new QGraphicsOpacityEffect(lbl);
-            lbl->setGraphicsEffect(eff);
+    for (const auto *lbl: frame->findChildren<QLabel *>()) {
+        if (auto *eff = qobject_cast<QGraphicsOpacityEffect *>(lbl->graphicsEffect())) {
+            auto *anim = new QPropertyAnimation(eff, "opacity");
+            anim->setDuration(180);
+            anim->setStartValue(eff->opacity());
+            anim->setEndValue(enter ? 1.0 : 0.7);
+            anim->setEasingCurve(QEasingCurve::InOutCubic);
+            anim->start(QAbstractAnimation::DeleteWhenStopped);
         }
-        auto *anim = new QPropertyAnimation(eff, "opacity");
-        anim->setDuration(180);
-        anim->setStartValue(eff->opacity());
-        anim->setEndValue(enter ? 1.0 : 0.7);
-        anim->setEasingCurve(QEasingCurve::InOutCubic);
-        anim->start(QAbstractAnimation::DeleteWhenStopped);
     }
 }

@@ -50,6 +50,8 @@ private:
 
     void hideAnimated() const;
 
+    void initializeHoverEffects() const;
+
     static void startHoverBrightening(const QFrame *frame, bool enter);
 
     static QIcon loadSvgIcon(const QString &path, const QSize &size = QSize(22, 22));
