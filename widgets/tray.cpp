@@ -61,6 +61,11 @@ void TrayManager::setupUiBehavior() {
         enabled = !enabled;
         animateToggleButton();
         emit keyboardToggled(enabled);
+        trayIcon.setIcon(
+            enabled
+                ? SvgHelper::loadSvgIcon(":/icons/icons/FluentFlashSparkle24FilledW.svg")
+                : SvgHelper::loadSvgIcon(":/icons/icons/FluentFlashSparkle24RegularW.svg")
+        );
     });
 
     updateInfo();
