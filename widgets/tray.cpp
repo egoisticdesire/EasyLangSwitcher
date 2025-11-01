@@ -1,9 +1,41 @@
 #include "tray.h"
 #include <QApplication>
 #include <QTimer>
-#include <QScreen>
 #include <QCursor>
 #include <QMouseEvent>
+#include <QGraphicsOpacityEffect>
+
+#include <Windows.h>
+#include <dwmapi.h>
+#pragma comment(lib, "dwmapi.lib")
+
+// WinAPI типы
+using pSetWindowCompositionAttribute = BOOL (WINAPI *)(HWND, struct WINDOWCOMPOSITIONATTRIBDATA *);
+
+enum WINDOWCOMPOSITIONATTRIB {
+    WCA_ACCENT_POLICY = 19
+};
+
+enum ACCENT_STATE {
+    ACCENT_DISABLED = 0,
+    ACCENT_ENABLE_GRADIENT = 1,
+    ACCENT_ENABLE_TRANSPARENTGRADIENT = 2,
+    ACCENT_ENABLE_BLURBEHIND = 3,
+    ACCENT_ENABLE_ACRYLICBLURBEHIND = 4
+};
+
+struct ACCENT_POLICY {
+    ACCENT_STATE AccentState;
+    DWORD AccentFlags;
+    DWORD GradientColor;
+    DWORD AnimationId;
+};
+
+struct WINDOWCOMPOSITIONATTRIBDATA {
+    WINDOWCOMPOSITIONATTRIB Attribute;
+    PVOID Data;
+    SIZE_T SizeOfData;
+};
 
 TrayManager::TrayManager(SettingsWindow &settingsWindow, QWidget *parent)
     : QWidget(parent), settingsWindow(settingsWindow) {
@@ -89,24 +121,80 @@ void TrayManager::updateInfo() const {
     ui.exit_btn->setIcon(loadSvgIcon(":/icons/icons/FluentFlashOff24RegularW.svg"));
 }
 
-void TrayManager::enableAcrylic() {
+void TrayManager::enableAcrylic() const {
     const auto hwnd = reinterpret_cast<HWND>(winId());
     if (!hwnd) return;
 
-    constexpr MARGINS margins = {-1, -1, -1, -1};
-    DwmExtendFrameIntoClientArea(hwnd, &margins);
+    // 1) Убираем WS_EX_LAYERED, если он есть (чтобы DWM корректно применил blur)
+    if (const LONG ex = GetWindowLongW(hwnd, GWL_EXSTYLE); ex & WS_EX_LAYERED) {
+        SetWindowLongW(hwnd, GWL_EXSTYLE, ex & ~WS_EX_LAYERED);
+    }
 
-    DWM_BLURBEHIND bb{};
-    bb.dwFlags = DWM_BB_ENABLE;
-    bb.fEnable = TRUE;
-    bb.hRgnBlur = nullptr;
-    DwmEnableBlurBehindWindow(hwnd, &bb);
+    // 2) Применяем DWM-скругления (если поддерживается) — Windows 11/10+.
+    //    DWMWA_WINDOW_CORNER_PREFERENCE = 33 (значение ОС может меняться, но обычно 33)
+    //    Включаем PREFERRED_ROUND (значение 2) — рекомендуемый вариант.
+    constexpr DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+    constexpr int DWMWCP_ROUND = 2;
+    const HRESULT hrCorner = DwmSetWindowAttribute(
+        hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &DWMWCP_ROUND,
+        sizeof(DWMWCP_ROUND)
+    );
+    // не фатально, но логируем при необходимости
+    if (FAILED(hrCorner)) {
+        // qDebug() << "DwmSetWindowAttribute corner failed:" << hrCorner;
+    }
 
-    QPalette pal = palette();
-    pal.setColor(QPalette::Window, QColor(20, 20, 20, 180));
-    setPalette(pal);
-    setAutoFillBackground(true);
+    // 3) Режим акрила через SetWindowCompositionAttribute
+    const auto setWindowCompositionAttribute =
+            reinterpret_cast<pSetWindowCompositionAttribute>(
+                GetProcAddress(GetModuleHandleW(L"user32.dll"),
+                               "SetWindowCompositionAttribute"));
+
+    if (!setWindowCompositionAttribute) {
+        qWarning() << "SetWindowCompositionAttribute not available.";
+    } else {
+        ACCENT_POLICY policy{};
+        policy.AccentState = ACCENT_ENABLE_ACRYLICBLURBEHIND;
+
+        // GradientColor: AARRGGBB: альфа в старшем байте
+        // 0xA0 (~63%) — типичный уровень мутности Win11
+        constexpr DWORD alpha = 0xA0;
+        constexpr DWORD rgb = (0x20) | (0x20 << 8) | (0x20 << 16); // #202020
+        policy.GradientColor = (alpha << 24) | rgb;
+        policy.AccentFlags = 2; // 0 или 2 — без шумового слоя
+
+        WINDOWCOMPOSITIONATTRIBDATA data{};
+        data.Attribute = WCA_ACCENT_POLICY;
+        data.Data = &policy;
+        data.SizeOfData = sizeof(policy);
+
+        if (const BOOL res = setWindowCompositionAttribute(hwnd, &data); !res) {
+            qWarning() << "SetWindowCompositionAttribute returned false";
+        }
+    }
+
+    // 4) Устанавливаем реальную форму окна — скруглённый регион.
+    //    Это помогает, когда DWM не полностью учитывает QSS-радиус.
+    // region должен быть пересоздан при изменении размера (см. resizeEvent)
+    if (const HRGN hrgn = CreateRoundRectRgn(0, 0, width() + 1, height() + 1, WINDOW_RADIUS, WINDOW_RADIUS)) {
+        // SetWindowRgn передаёт владение HRGN системе — не нужно DeleteObject после этого.
+        SetWindowRgn(hwnd, hrgn, TRUE);
+    }
 }
+
+void TrayManager::resizeEvent(QResizeEvent *event) {
+    QWidget::resizeEvent(event);
+
+    // При изменении размера пересоздаём регион с тем же радиусом
+    const auto hwnd = reinterpret_cast<HWND>(winId());
+    if (!hwnd) return;
+
+    if (const HRGN r = CreateRoundRectRgn(0, 0, width() + 1, height() + 1, WINDOW_RADIUS, WINDOW_RADIUS)) {
+        SetWindowRgn(hwnd, r, TRUE);
+        // SetWindowRgn владеет регионом — не вызываем DeleteObject(r)
+    }
+}
+
 
 void TrayManager::animateToggleButton() {
     QWidget *btn = ui.toggle_btn;
@@ -135,8 +223,11 @@ void TrayManager::animateToggleButton() {
 }
 
 void TrayManager::showAtCursor() {
+    static bool acrylicApplied = false; // эффект включаем один раз
+
     updateInfo();
     resize(sizeHint());
+
     const QPoint cursor = QCursor::pos();
     move(cursor.x() + 3, cursor.y() - height() - 3);
 
@@ -146,9 +237,15 @@ void TrayManager::showAtCursor() {
     activateWindow();
     setFocus(Qt::ActiveWindowFocusReason);
 
-    enableAcrylic();
+    // включаем акрил только при первом показе
+    if (!acrylicApplied) {
+        enableAcrylic();
+        acrylicApplied = true;
+    }
+
     fadeIn->start();
 }
+
 
 void TrayManager::hideAnimated() const {
     if (!isVisible()) return;

@@ -1,5 +1,4 @@
 #pragma once
-#include <QWidget>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -18,10 +17,12 @@ class SettingsWindow final : public QWidget {
 
 public:
     explicit SettingsWindow(SettingsData &data, QWidget *parent = nullptr);
+
     QString getHotkeyName() const {
         // Преобразуем VK код в читаемое имя (например, только для Ctrl)
         return settings.hotkeyVk == VK_LCONTROL ? "Left Ctrl" : QString("VK %1").arg(settings.hotkeyVk);
     }
+
     int getSwitchDelayMs() const { return settings.switchDelayMs; }
 
 private:

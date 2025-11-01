@@ -80,10 +80,11 @@ void KeyboardHandler::switchKeyboardLayout() {
     GetKeyboardLayoutList(n, list.data());
 
     int idx = 0;
-    for (int i = 0; i < n; ++i) if (list[i] == current) {
-        idx = i;
-        break;
-    }
+    for (int i = 0; i < n; ++i)
+        if (list[i] == current) {
+            idx = i;
+            break;
+        }
     HKL next = list[(idx + 1) % n];
 
     PostMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(next));
