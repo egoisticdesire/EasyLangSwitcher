@@ -1,54 +1,29 @@
 <RCC>
   <qresource prefix="icons">
     <file>icons/CloseOutline.svg</file>
-    <file>icons/CloseOutlineW.svg</file>
     <file>icons/Close.svg</file>
-    <file>icons/CloseW.svg</file>
     <file>icons/CharmArrowDownLeft.svg</file>
-    <file>icons/CharmArrowDownLeftW.svg</file>
     <file>icons/ArrowDownLeftFilled.svg</file>
-    <file>icons/ArrowDownLeftFilledW.svg</file>
     <file>icons/Checkmark.svg</file>
     <file>icons/CheckmarkDone.svg</file>
-    <file>icons/CheckmarkDoneW.svg</file>
-    <file>icons/CheckmarkW.svg</file>
     <file>icons/ClockSparkleFilled.svg</file>
-    <file>icons/ClockSparkleFilledW.svg</file>
     <file>icons/ClockSparkleRegular.svg</file>
-    <file>icons/ClockSparkleRegularW.svg</file>
     <file>icons/CloseRound.svg</file>
-    <file>icons/CloseRoundW.svg</file>
     <file>icons/DismissFilled.svg</file>
-    <file>icons/DismissFilledW.svg</file>
     <file>icons/FlashOffFilled.svg</file>
-    <file>icons/FlashOffFilledW.svg</file>
     <file>icons/FlashOffRegular.svg</file>
-    <file>icons/FlashOffRegularW.svg</file>
     <file>icons/FlashSettingsFilled.svg</file>
-    <file>icons/FlashSettingsFilledW.svg</file>
     <file>icons/FlashSettingsRegular.svg</file>
-    <file>icons/FlashSettingsRegularW.svg</file>
     <file>icons/FlashSparkleFilled.svg</file>
-    <file>icons/FlashSparkleFilledW.svg</file>
     <file>icons/FlashSparkleRegular.svg</file>
-    <file>icons/FlashSparkleRegularW.svg</file>
     <file>icons/InfoFilled.svg</file>
-    <file>icons/InfoFilledW.svg</file>
     <file>icons/InfoRegular.svg</file>
-    <file>icons/InfoRegularW.svg</file>
     <file>icons/InfoSparkleFilled.svg</file>
-    <file>icons/InfoSparkleFilledW.svg</file>
     <file>icons/InfoSparkleRegular.svg</file>
-    <file>icons/InfoSparkleRegularW.svg</file>
     <file>icons/MinusRound.svg</file>
-    <file>icons/MinusRoundW.svg</file>
     <file>icons/SettingsFilled.svg</file>
-    <file>icons/SettingsFilledW.svg</file>
     <file>icons/SettingsRegular.svg</file>
-    <file>icons/SettingsRegularW.svg</file>
     <file>icons/TableSimpleExcludeFilled.svg</file>
-    <file>icons/TableSimpleExcludeFilledW.svg</file>
     <file>icons/TableSimpleExcludeRegular.svg</file>
-    <file>icons/TableSimpleExcludeRegularW.svg</file>
   </qresource>
 </RCC>

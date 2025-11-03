@@ -343,11 +343,11 @@ background-color: rgba(50, 50, 50, 200);
             <enum>Qt::LayoutDirection::LeftToRight</enum>
            </property>
            <property name="text">
-            <string>Disable</string>
+            <string>  Disable</string>
            </property>
            <property name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/icons/icons/FlashSparkleRegularW.svg</normaloff>:/icons/icons/FlashSparkleRegularW.svg</iconset>
+             <normaloff>:/icons/icons/FlashSparkleRegular.svg</normaloff>:/icons/icons/FlashSparkleRegular.svg</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -383,11 +383,11 @@ background-color: rgba(50, 50, 50, 200);
             <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
            </property>
            <property name="text">
-            <string>Settings</string>
+            <string>  Settings</string>
            </property>
            <property name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/icons/icons/FlashSettingsRegularW.svg</normaloff>:/icons/icons/FlashSettingsRegularW.svg</iconset>
+             <normaloff>:/icons/icons/FlashSettingsRegular.svg</normaloff>:/icons/icons/FlashSettingsRegular.svg</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -420,11 +420,11 @@ background-color: rgba(50, 50, 50, 200);
             <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
            </property>
            <property name="text">
-            <string>Exit</string>
+            <string>  Exit</string>
            </property>
            <property name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/icons/icons/FlashOffRegularW.svg</normaloff>:/icons/icons/FlashOffRegularW.svg</iconset>
+             <normaloff>:/icons/icons/FlashOffRegular.svg</normaloff>:/icons/icons/FlashOffRegular.svg</iconset>
            </property>
            <property name="iconSize">
             <size>
