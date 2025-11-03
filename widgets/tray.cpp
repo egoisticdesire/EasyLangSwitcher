@@ -37,7 +37,7 @@ TrayManager::TrayManager(SettingsWindow &settingsWindow, QWidget *parent)
 }
 
 void TrayManager::setupTrayIcon() {
-    trayIcon.setIcon(IconHelper::loadIcon(":/icons/icons/FluentFlashSparkle24FilledW.svg"));
+    trayIcon.setIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilledW.svg"));
     trayIcon.setToolTip("Easy Lang Switcher");
     trayIcon.setVisible(true);
 
@@ -90,11 +90,11 @@ void TrayManager::updateInfo() const {
 
     ui.toggle_btn->setIcon(
         enabled
-            ? IconHelper::loadIcon(":/icons/icons/FluentFlashSparkle24RegularW.svg")
-            : IconHelper::loadIcon(":/icons/icons/FluentFlashSparkle24FilledW.svg")
+            ? IconHelper::loadIcon(":/icons/icons/FlashSparkleRegularW.svg")
+            : IconHelper::loadIcon(":/icons/icons/FlashSparkleFilledW.svg")
     );
-    ui.settings_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FluentFlashSettings24RegularW.svg"));
-    ui.exit_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FluentFlashOff24RegularW.svg"));
+    ui.settings_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FlashSettingsRegularW.svg"));
+    ui.exit_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FlashOffRegularW.svg"));
 }
 
 void TrayManager::showAtCursor() {
@@ -162,7 +162,7 @@ void TrayManager::animateToggleButton() {
 void TrayManager::updateTrayIcon() {
     trayIcon.setIcon(
         enabled
-            ? IconHelper::loadIcon(":/icons/icons/FluentFlashSparkle24FilledW.svg")
-            : IconHelper::loadIcon(":/icons/icons/FluentFlashSparkle24RegularW.svg")
+            ? IconHelper::loadIcon(":/icons/icons/FlashSparkleFilledW.svg")
+            : IconHelper::loadIcon(":/icons/icons/FlashSparkleRegularW.svg")
     );
 }

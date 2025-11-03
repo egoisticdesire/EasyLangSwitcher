@@ -347,7 +347,7 @@ background-color: rgba(50, 50, 50, 200);
            </property>
            <property name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/icons/icons/FluentFlashSparkle24Filled.svg</normaloff>:/icons/icons/FluentFlashSparkle24Filled.svg</iconset>
+             <normaloff>:/icons/icons/FlashSparkleRegularW.svg</normaloff>:/icons/icons/FlashSparkleRegularW.svg</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -387,7 +387,7 @@ background-color: rgba(50, 50, 50, 200);
            </property>
            <property name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/icons/icons/FluentFlashSettings24Filled.svg</normaloff>:/icons/icons/FluentFlashSettings24Filled.svg</iconset>
+             <normaloff>:/icons/icons/FlashSettingsRegularW.svg</normaloff>:/icons/icons/FlashSettingsRegularW.svg</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -424,7 +424,7 @@ background-color: rgba(50, 50, 50, 200);
            </property>
            <property name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/icons/icons/FluentFlashOff24Filled.svg</normaloff>:/icons/icons/FluentFlashOff24Filled.svg</iconset>
+             <normaloff>:/icons/icons/FlashOffRegularW.svg</normaloff>:/icons/icons/FlashOffRegularW.svg</iconset>
            </property>
            <property name="iconSize">
             <size>
