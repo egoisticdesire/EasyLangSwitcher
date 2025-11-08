@@ -30,6 +30,8 @@ add_executable(EasyLangSwitcher
         helpers/acrylicHelper.h
         helpers/hoverHelper.h
         helpers/iconHelper.h
+        i18n/en.h
+        i18n/ru.h
 )
 target_link_libraries(EasyLangSwitcher
         Qt::Core
