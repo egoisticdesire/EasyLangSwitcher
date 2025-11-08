@@ -64,9 +64,9 @@
      </property>
      <property name="styleSheet">
       <string notr="true">QFrame#background_frame {
-background-color: rgba(30, 30, 30, 200);
-border: 1px solid rgba(255, 255, 255, 30);
 border-radius: 8px;
+border: 1px solid rgba(255, 255, 255, 30);
+background: transparent;
 }</string>
      </property>
      <property name="frameShape">
@@ -103,22 +103,21 @@ border-radius: 8px;
         </property>
         <property name="styleSheet">
          <string notr="true">QFrame#info_frame {
-background-color: rgba(42, 42, 42, 200);
-border-radius: 6px;
 margin: 4px;
 padding: 2px;
+border-radius: 6px;
+background: rgba(255, 255, 255, 7);
 }
-
 QLabel#hotkey_key,
 QLabel#hotkey_value,
 QLabel#delay_key,
 QLabel#delay_value,
 QLabel#status_key,
 QLabel#status_value {
-color: rgba(255, 255, 255, 100);
-background-color: transparent;
-border-radius: 5px;
 margin: 2px;
+border-radius: 5px;
+color: rgba(255, 255, 255, 100);
+background: transparent;
 }
 </string>
         </property>
@@ -270,33 +269,29 @@ margin: 2px;
         </property>
         <property name="styleSheet">
          <string notr="true">QFrame#btns_frame {
-background-color: transparent;
-border-radius: 6px;
 margin: 2px;
+border-radius: 6px;
+background: transparent;
 }
-
 QToolButton#toggle_btn,
 QToolButton#settings_btn,
 QToolButton#exit_btn {
-qproperty-iconSize: 20px;
-color: rgba(255, 255, 255, 205);
-background-color: rgba(60, 60, 60, 200);
-border-radius: 5px;
 margin: 2px;
 padding: 2px 4px;
+border-radius: 5px;
+color: rgba(255, 255, 255, 175);
+qproperty-iconSize: 22px;
 }
-
 QToolButton#toggle_btn:hover,
 QToolButton#settings_btn:hover,
 QToolButton#exit_btn:hover {
 color: rgba(255, 255, 255, 255);
-background-color: rgba(70, 70, 70, 200);
+background: rgba(255, 255, 255, 20);
 }
-
 QToolButton#toggle_btn:pressed,
 QToolButton#settings_btn:pressed,
 QToolButton#exit_btn:pressed {
-background-color: rgba(50, 50, 50, 200);
+background: rgba(255, 255, 255, 10);
 }
 
 </string>
@@ -351,8 +346,8 @@ background-color: rgba(50, 50, 50, 200);
            </property>
            <property name="iconSize">
             <size>
-             <width>20</width>
-             <height>20</height>
+             <width>22</width>
+             <height>22</height>
             </size>
            </property>
            <property name="toolButtonStyle">
@@ -391,8 +386,8 @@ background-color: rgba(50, 50, 50, 200);
            </property>
            <property name="iconSize">
             <size>
-             <width>20</width>
-             <height>20</height>
+             <width>22</width>
+             <height>22</height>
             </size>
            </property>
            <property name="toolButtonStyle">
@@ -428,8 +423,8 @@ background-color: rgba(50, 50, 50, 200);
            </property>
            <property name="iconSize">
             <size>
-             <width>20</width>
-             <height>20</height>
+             <width>22</width>
+             <height>22</height>
             </size>
            </property>
            <property name="toolButtonStyle">
@@ -445,6 +440,7 @@ background-color: rgba(50, 50, 50, 200);
    </item>
   </layout>
  </widget>
+ <layoutdefault spacing="0" margin="0"/>
  <resources>
   <include location="resources.qrc"/>
  </resources>

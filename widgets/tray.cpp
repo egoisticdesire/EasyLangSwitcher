@@ -37,7 +37,7 @@ TrayManager::TrayManager(SettingsWindow &settingsWindow, QWidget *parent)
 }
 
 void TrayManager::setupTrayIcon() {
-    trayIcon.setIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled.svg"));
+    trayIcon.setIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
     trayIcon.setToolTip("Easy Lang Switcher");
     trayIcon.setVisible(true);
 
@@ -162,7 +162,7 @@ void TrayManager::animateToggleButton() {
 void TrayManager::updateTrayIcon() {
     trayIcon.setIcon(
         enabled
-            ? IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled.svg")
-            : IconHelper::loadIcon(":/icons/icons/FlashSparkleRegular.svg")
+            ? IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png")
+            : IconHelper::loadIcon(":/icons/icons/FlashSparkleRegular2.png")
     );
 }

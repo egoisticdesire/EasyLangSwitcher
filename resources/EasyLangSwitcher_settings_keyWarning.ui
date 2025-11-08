@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>keyWarning</class>
+ <widget class="QWidget" name="keyWarning">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>180</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="vlayout_keyWarning">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QFrame" name="frame_keyWarning">
+     <property name="styleSheet">
+      <string notr="true">QFrame#frame_keyWarning {
+padding: 10px;
+border-radius: 16px;
+border: 1px solid rgba(255, 255, 255, 30);
+background: rgba(42, 42, 42, 225);
+};</string>
+     </property>
+     <layout class="QVBoxLayout" name="vlayout_frame">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="label_keyWarning">
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
+&lt;div style=&quot;color: rgba(255, 255, 255, 200); font-size: 12px;&quot;&gt;
+&lt;p align=&quot;justify&quot; style=&quot;font-size: 14px;&quot;&gt;
+&lt;span style=&quot; font-weight:700;&quot;&gt;Warnings:&lt;/span&gt;
+&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;
+&lt;li align=&quot;justify&quot; style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;
+&lt;p align=&quot;justify&quot;&gt;
+When selecting the &lt;code style=&quot;color: rgba(74, 144, 226, 255); font-size: 13px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Alt&lt;/span&gt;&lt;/code&gt; key as a layout switch modifier, its default behavior will be disabled — specifically, the activation of the window’s top menu;
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;li align=&quot;justify&quot; style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;
+&lt;p align=&quot;justify&quot;&gt;
+When selecting the &lt;code style=&quot;color: rgba(74, 144, 226, 255); font-size: 13px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Caps Lock&lt;/span&gt;&lt;/code&gt;  key as a layout switch modifier, its default behavior will change: a short press will switch the layout, while a long press will perform the standard action.
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

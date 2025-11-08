@@ -1,5 +1,19 @@
 <RCC>
   <qresource prefix="icons">
+    <file>icons/WalletCreditCardFilled.svg</file>
+    <file>icons/github.svg</file>
+    <file>icons/AppsFilled.svg</file>
+    <file>icons/Regex.svg</file>
+    <file>icons/SquareFilled.svg</file>
+    <file>icons/DeleteFilled.svg</file>
+    <file>icons/DeleteRegular.svg</file>
+    <file>icons/FlashSparkleFilled2.png</file>
+    <file>icons/FlashSparkleRegular2.png</file>
+    <file>icons/SettingsBackupRestoreRounded.svg</file>
+    <file>icons/FlashSparkleFilled.png</file>
+    <file>icons/FlashSparkleRegular.png</file>
+    <file>icons/WarningFilled.svg</file>
+    <file>icons/WarningRegular.svg</file>
     <file>icons/CloseOutline.svg</file>
     <file>icons/Close.svg</file>
     <file>icons/CharmArrowDownLeft.svg</file>
