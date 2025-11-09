@@ -28,8 +28,8 @@ namespace LangEn {
     const QString TABLE_HEADER_RULE = "Rule";
     const QString TABLE_HEADER_DELETE = "Delete";
 
-    const QString RULE_ON_BUTTON = "On";
-    const QString RULE_OFF_BUTTON = "Off";
+    const QString ON_BUTTON = "On";
+    const QString OFF_BUTTON = "Off";
 
     const QString ENABLE_ALL_RULES_BUTTON = "Enable All Rules";
     const QString DISABLE_ALL_RULES_BUTTON = "Disable All Rules";
@@ -55,6 +55,18 @@ namespace LangEn {
     const QString SETTINGS_RESET = "Settings reset to default";
 
     const QString INFO_SWITCHES = "Switches:";
+
+    const QString ENABLE_INDICATOR_LABEL = "Enable Indicator";
+    const QString DISABLE_INDICATOR_LABEL = "Disable Indicator";
+    const QString FONT_COLOR_LABEL = "Font Color";
+    const QString BACKGROUND_COLOR_LABEL = "Background Color";
+    const QString BORDER_COLOR_LABEL = "Border Color";
+
+    const QString DONATE_BUTTON_LABEL = "Support Project";
+
+    const QString CONFIRMATION_LABEL = "Are you sure?";
+    const QString YES_BUTTON_LABEL = "Yes";
+    const QString NO_BUTTON_LABEL = "No";
 
 
     // Всплывающий попап с предупреждениями

@@ -7,8 +7,8 @@ namespace LangRu {
     const QString LANGUAGE_LABEL = "Язык приложения";
 
     const QString AUTOSTART_LABEL = "Автозапуск при старте Windows";
-    const QString AUTOSTART_VALUE_ENABLED = "Вкл";
-    const QString AUTOSTART_VALUE_DISABLED = "Выкл";
+    const QString AUTOSTART_VALUE_ENABLED = "Включить";
+    const QString AUTOSTART_VALUE_DISABLED = "Выключить";
 
     const QString RESTORE_DEFAULT_LABEL = "Сбросить настройки";
 
@@ -28,8 +28,8 @@ namespace LangRu {
     const QString TABLE_HEADER_RULE = "Правило";
     const QString TABLE_HEADER_DELETE = "Удаление";
 
-    const QString RULE_ON_BUTTON = "Вкл";
-    const QString RULE_OFF_BUTTON = "Выкл";
+    const QString ON_BUTTON = "Вкл";
+    const QString OFF_BUTTON = "Выкл";
 
     const QString ENABLE_ALL_RULES_BUTTON = "Включить все правила";
     const QString DISABLE_ALL_RULES_BUTTON = "Выключить все правила";
@@ -55,6 +55,18 @@ namespace LangRu {
     const QString SETTINGS_RESET = "Настройки сброшены до значений по умолчанию";
 
     const QString INFO_SWITCHES = "Переключений:";
+
+    const QString ENABLE_INDICATOR_LABEL= "Включить индикатор";
+    const QString DISABLE_INDICATOR_LABEL= "Выключить индикатор";
+    const QString FONT_COLOR_LABEL= "Цвет шрифта";
+    const QString BACKGROUND_COLOR_LABEL= "Цвет фона";
+    const QString BORDER_COLOR_LABEL= "Цвет рамки";
+
+    const QString DONATE_BUTTON_LABEL= "Поддержать проект";
+
+    const QString CONFIRMATION_LABEL = "Вы уверены?";
+    const QString YES_BUTTON_LABEL = "Да";
+    const QString NO_BUTTON_LABEL = "Нет";
 
 
     // Всплывающий попап с предупреждениями
