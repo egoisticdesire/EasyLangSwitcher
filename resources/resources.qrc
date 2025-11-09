@@ -1,5 +1,17 @@
 <RCC>
   <qresource prefix="icons">
+    <file>icons/ExternalLink.svg</file>
+    <file>icons/CopyFilled.svg</file>
+    <file>icons/Boosty.svg</file>
+    <file>icons/TokenUsdt.svg</file>
+    <file>icons/TokenBitcoin.svg</file>
+    <file>icons/TokenTon.svg</file>
+    <file>icons/TokenTrx.svg</file>
+    <file>icons/CaretDownFilled.svg</file>
+    <file>icons/CaretUpFilled.svg</file>
+    <file>icons/InfoRegular.svg</file>
+    <file>icons/CursorClickFilled.svg</file>
+    <file>icons/CursorClickRegular.svg</file>
     <file>icons/WalletCreditCardFilled.svg</file>
     <file>icons/github.svg</file>
     <file>icons/AppsFilled.svg</file>
@@ -31,7 +43,6 @@
     <file>icons/FlashSparkleFilled.svg</file>
     <file>icons/FlashSparkleRegular.svg</file>
     <file>icons/InfoFilled.svg</file>
-    <file>icons/InfoRegular.svg</file>
     <file>icons/InfoSparkleFilled.svg</file>
     <file>icons/InfoSparkleRegular.svg</file>
     <file>icons/MinusRound.svg</file>

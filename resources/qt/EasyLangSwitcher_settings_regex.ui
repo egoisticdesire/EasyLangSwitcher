@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>200</height>
+    <height>180</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>500</width>
-    <height>200</height>
+    <height>180</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>500</width>
-    <height>200</height>
+    <height>180</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -48,7 +48,7 @@
 padding: 10px;
 border-radius: 16px;
 border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(42, 42, 42, 225);
+background: rgba(42, 42, 42, 235);
 }
 QLineEdit#text_edit {
 padding: 2px 0 2px 10px;
@@ -117,24 +117,23 @@ border-radius: 8px;
 border: 1px solid rgba(255, 255, 255, 30);
 background: rgba(255, 255, 255, 10);
 }
-QPushButton#case_sensitive_yes_btn,
-QPushButton#case_sensitive_no_btn {
+QFrame#case_sensitive_btns_frame QPushButton {
 border-radius: 6px;
 color: rgba(255, 255, 255, 150);
 background: transparent;
 }
-QPushButton#case_sensitive_yes_btn:hover,
-QPushButton#case_sensitive_no_btn:hover {
+QFrame#case_sensitive_btns_frame QPushButton:hover {
 color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
 }
-QPushButton#case_sensitive_yes_btn:pressed,
-QPushButton#case_sensitive_no_btn:pressed {
+QFrame#case_sensitive_btns_frame QPushButton:pressed {
 background: rgba(255, 255, 255, 5);
 }
-QPushButton#case_sensitive_yes_btn:checked,
-QPushButton#case_sensitive_no_btn:checked {
+QFrame#case_sensitive_btns_frame QPushButton:checked {
 color: rgba(255, 255, 255, 255);
+}
+QFrame#case_sensitive_btns_frame QPushButton:focus {
+outline: none;
 }</string>
         </property>
         <layout class="QHBoxLayout" name="hlayout_case_sensitive_btns_frame">
@@ -242,24 +241,23 @@ border-radius: 8px;
 border: 1px solid rgba(255, 255, 255, 30);
 background: rgba(255, 255, 255, 10);
 }
-QPushButton#full_match_yes_btn,
-QPushButton#full_match_no_btn {
+QFrame#full_match_btns_frame QPushButton {
 border-radius: 6px;
 color: rgba(255, 255, 255, 150);
 background: transparent;
 }
-QPushButton#full_match_yes_btn:hover,
-QPushButton#full_match_no_btn:hover {
+QFrame#full_match_btns_frame QPushButton:hover {
 color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
 }
-QPushButton#full_match_yes_btn:pressed,
-QPushButton#full_match_no_btn:pressed {
+QFrame#full_match_btns_frame QPushButton:pressed {
 background: rgba(255, 255, 255, 5);
 }
-QPushButton#full_match_yes_btn:checked,
-QPushButton#full_match_no_btn:checked {
+QFrame#full_match_btns_frame QPushButton:checked {
 color: rgba(255, 255, 255, 255);
+}
+QFrame#full_match_btns_frame QPushButton:focus {
+outline: none;
 }</string>
         </property>
         <layout class="QHBoxLayout" name="hlayout_full_match_btns_frame">
@@ -377,26 +375,28 @@ color: rgba(255, 255, 255, 255);
          <string notr="true">QFrame#manage_btns_frame {
 border-radius: 8px;
 }
-QPushButton#manage_save_btn,
-QPushButton#manage_cancel_btn {
+QFrame#manage_btns_frame QPushButton#manage_cancel_btn {
 border-radius: 8px;
-background: rgba(255, 255, 255, 20);
-}
-QPushButton#manage_cancel_btn:hover {
-background: rgba(255, 255, 255, 25);
-}
-QPushButton#manage_cancel_btn:pressed {
 background: rgba(255, 255, 255, 15);
 }
-QPushButton#manage_save_btn {
+QFrame#manage_btns_frame QPushButton#manage_cancel_btn:hover {
+background: rgba(255, 255, 255, 20);
+}
+QFrame#manage_btns_frame QPushButton#manage_cancel_btn:pressed {
+background: rgba(255, 255, 255, 10);
+}
+QFrame#manage_btns_frame QPushButton#manage_save_btn {
 border-radius: 8px;
-background: rgba(50, 125, 255, 50);
+background: rgba(255, 255, 255, 30);
 }
-QPushButton#manage_save_btn:hover {
-background: rgba(50, 125, 255, 65);
+QFrame#manage_btns_frame QPushButton#manage_save_btn:hover {
+background: rgba(255, 255, 255, 35);
 }
-QPushButton#manage_save_btn:pressed {
-background: rgba(50, 125, 255, 40);
+QFrame#manage_btns_frame QPushButton#manage_save_btn:pressed {
+background: rgba(255, 255, 255, 25);
+}
+QFrame#manage_btns_frame  QPushButton:focus {
+outline: none;
 }</string>
         </property>
         <layout class="QHBoxLayout" name="hlayout_manage_btns_frame" stretch="3,2">
@@ -490,7 +490,7 @@ background: rgba(50, 125, 255, 40);
   </layout>
  </widget>
  <resources>
-  <include location="resources.qrc"/>
+  <include location="../resources.qrc"/>
  </resources>
  <connections/>
 </ui>

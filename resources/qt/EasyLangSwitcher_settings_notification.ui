@@ -36,7 +36,7 @@
 padding: 10px 15px;
 border-radius: 16px;
 border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(42, 42, 42, 225);
+background: rgba(42, 42, 42, 235);
 }
 QLabel#message_label {
 color: rgb(150, 255, 120);
@@ -64,7 +64,7 @@ color: rgb(150, 255, 120);
          <string/>
         </property>
         <property name="pixmap">
-         <pixmap resource="resources.qrc">:/icons/icons/CheckmarkDone.svg</pixmap>
+         <pixmap resource="../resources.qrc">:/icons/icons/CheckmarkDone.svg</pixmap>
         </property>
         <property name="scaledContents">
          <bool>true</bool>
@@ -84,6 +84,7 @@ color: rgb(150, 255, 120);
   </layout>
  </widget>
  <resources>
+  <include location="../resources.qrc"/>
   <include location="resources.qrc"/>
  </resources>
  <connections/>

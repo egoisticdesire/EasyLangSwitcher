@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>keyWarning</class>
- <widget class="QWidget" name="keyWarning">
+ <class>main_widget</class>
+ <widget class="QWidget" name="main_widget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -10,7 +10,7 @@
     <height>180</height>
    </rect>
   </property>
-  <layout class="QVBoxLayout" name="vlayout_keyWarning">
+  <layout class="QVBoxLayout" name="vlayout_main_widget">
    <property name="spacing">
     <number>0</number>
    </property>
@@ -27,16 +27,16 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="QFrame" name="frame_keyWarning">
+    <widget class="QFrame" name="background_frame">
      <property name="styleSheet">
-      <string notr="true">QFrame#frame_keyWarning {
+      <string notr="true">QFrame#background_frame {
 padding: 10px;
 border-radius: 16px;
 border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(42, 42, 42, 225);
+background: rgba(42, 42, 42, 235);
 };</string>
      </property>
-     <layout class="QVBoxLayout" name="vlayout_frame">
+     <layout class="QVBoxLayout" name="vlayout_background_frame">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -53,7 +53,7 @@ background: rgba(42, 42, 42, 225);
        <number>0</number>
       </property>
       <item>
-       <widget class="QLabel" name="label_keyWarning">
+       <widget class="QLabel" name="label_warning">
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
 &lt;div style=&quot;color: rgba(255, 255, 255, 200); font-size: 12px;&quot;&gt;

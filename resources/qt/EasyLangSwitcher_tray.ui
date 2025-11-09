@@ -273,28 +273,23 @@ margin: 2px;
 border-radius: 6px;
 background: transparent;
 }
-QToolButton#toggle_btn,
-QToolButton#settings_btn,
-QToolButton#exit_btn {
+QFrame#btns_frame QToolButton {
 margin: 2px;
 padding: 2px 4px;
 border-radius: 5px;
 color: rgba(255, 255, 255, 175);
 qproperty-iconSize: 22px;
 }
-QToolButton#toggle_btn:hover,
-QToolButton#settings_btn:hover,
-QToolButton#exit_btn:hover {
+QFrame#btns_frame QToolButton:hover {
 color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 20);
 }
-QToolButton#toggle_btn:pressed,
-QToolButton#settings_btn:pressed,
-QToolButton#exit_btn:pressed {
+QFrame#btns_frame QToolButton:pressed {
 background: rgba(255, 255, 255, 10);
 }
-
-</string>
+QFrame#btns_frame QToolButton:pressed {
+outline: none;
+}</string>
         </property>
         <layout class="QVBoxLayout" name="v_layout_btns">
          <property name="spacing">
@@ -341,7 +336,7 @@ background: rgba(255, 255, 255, 10);
             <string>  Disable</string>
            </property>
            <property name="icon">
-            <iconset resource="resources.qrc">
+            <iconset resource="../resources.qrc">
              <normaloff>:/icons/icons/FlashSparkleRegular.svg</normaloff>:/icons/icons/FlashSparkleRegular.svg</iconset>
            </property>
            <property name="iconSize">
@@ -381,7 +376,7 @@ background: rgba(255, 255, 255, 10);
             <string>  Settings</string>
            </property>
            <property name="icon">
-            <iconset resource="resources.qrc">
+            <iconset resource="../resources.qrc">
              <normaloff>:/icons/icons/FlashSettingsRegular.svg</normaloff>:/icons/icons/FlashSettingsRegular.svg</iconset>
            </property>
            <property name="iconSize">
@@ -418,7 +413,7 @@ background: rgba(255, 255, 255, 10);
             <string>  Exit</string>
            </property>
            <property name="icon">
-            <iconset resource="resources.qrc">
+            <iconset resource="../resources.qrc">
              <normaloff>:/icons/icons/FlashOffRegular.svg</normaloff>:/icons/icons/FlashOffRegular.svg</iconset>
            </property>
            <property name="iconSize">
@@ -442,7 +437,7 @@ background: rgba(255, 255, 255, 10);
  </widget>
  <layoutdefault spacing="0" margin="0"/>
  <resources>
-  <include location="resources.qrc"/>
+  <include location="../resources.qrc"/>
  </resources>
  <connections/>
  <designerdata>
