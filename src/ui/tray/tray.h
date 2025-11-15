@@ -1,16 +1,13 @@
 #pragma once
 #include <QSystemTrayIcon>
-#include "../resources/ui_EasyLangSwitcher_tray.h"
-#include "../helpers/iconHelper.h"
-#include "../helpers/acrylicHelper.h"
-#include "../helpers/hoverHelper.h"
-#include "settings.h"
+#include <QPropertyAnimation>
+#include "ui_EasyLangSwitcher_tray.h"
 
 class TrayManager final : public QWidget {
     Q_OBJECT
 
 public:
-    explicit TrayManager(SettingsWindow &settingsWindow, QWidget *parent = nullptr);
+    explicit TrayManager(QWidget *parent = nullptr);
 
     void showAtCursor();
 
@@ -28,7 +25,6 @@ protected:
 
 private:
     Ui::main_frame ui;
-    SettingsWindow &settingsWindow;
     QSystemTrayIcon trayIcon;
     bool enabled = true;
     QPropertyAnimation *fadeIn = nullptr;

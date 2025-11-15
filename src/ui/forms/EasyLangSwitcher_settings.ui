@@ -398,7 +398,7 @@ background: rgba(32, 32, 32, 175);
 }</string>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="main_container_page_1">
          <layout class="QVBoxLayout" name="vlayout_main_container_page_1">

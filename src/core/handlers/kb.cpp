@@ -1,11 +1,11 @@
-#include "keyboard.h"
-#include "../widgets/settings.h"
+#include "kb.h"
+#include "../../core/config/app_config.h"
 #include <QDebug>
 
 thread_local KeyboardHandler *KeyboardHandler::instance = nullptr;
 
-KeyboardHandler::KeyboardHandler(SettingsData &data, QObject *parent)
-    : QObject(parent), settings(data) {
+KeyboardHandler::KeyboardHandler(QObject *parent)
+    : QObject(parent) {
     timer.setSingleShot(true);
     connect(&timer, &QTimer::timeout, this, [this]() {
         longPressDetected = true;
@@ -39,12 +39,12 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
         const bool isDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
         const bool isUp = (wParam == WM_KEYUP || wParam == WM_SYSKEYUP);
 
-        if (kb->vkCode == instance->settings.hotkeyVk) {
+        if (kb->vkCode == AppConfig::hotkeyVk) {
             if (isDown && !instance->keyPressed) {
                 instance->keyPressed = true;
                 instance->longPressDetected = false;
                 instance->pressTime = GetTickCount();
-                instance->timer.start(instance->settings.switchDelayMs);
+                instance->timer.start(AppConfig::switchDelayMs);
             } else if (isUp && instance->keyPressed) {
                 instance->timer.stop();
                 instance->keyPressed = false;

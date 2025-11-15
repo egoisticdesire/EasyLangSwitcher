@@ -1,12 +1,16 @@
 #include "tray.h"
+#include "../../core/helpers/iconHelper.h"
+#include "../../core/helpers/acrylicHelper.h"
+#include "../../core/helpers/hoverHelper.h"
+#include "../../core/config/app_config.h"
 #include <QApplication>
 #include <QCursor>
 #include <QTimer>
 #include <QGraphicsOpacityEffect>
 #include <QMouseEvent>
 
-TrayManager::TrayManager(SettingsWindow &settingsWindow, QWidget *parent)
-    : QWidget(parent), settingsWindow(settingsWindow) {
+TrayManager::TrayManager(QWidget *parent)
+    : QWidget(parent) {
     ui.setupUi(this);
     setWindowFlags(Qt::Popup | Qt::NoDropShadowWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
@@ -38,25 +42,23 @@ TrayManager::TrayManager(SettingsWindow &settingsWindow, QWidget *parent)
 
 void TrayManager::setupTrayIcon() {
     trayIcon.setIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
-    trayIcon.setToolTip("Easy Lang Switcher");
+    trayIcon.setToolTip("EasyLangSwitcher");
     trayIcon.setVisible(true);
 
     connect(&trayIcon, &QSystemTrayIcon::activated, this,
             [this](const QSystemTrayIcon::ActivationReason reason) {
                 switch (reason) {
-                    case QSystemTrayIcon::Trigger: {
+                    case QSystemTrayIcon::Trigger:
                         // ЛКМ — быстрый вкл/выкл
                         enabled = !enabled;
                         emit keyboardToggled(enabled);
                         updateTrayIcon();
                         break;
-                    }
-                    case QSystemTrayIcon::Context: {
+                    case QSystemTrayIcon::Context:
                         // ПКМ — показать меню
                         if (isVisible()) hideAnimated();
                         else showAtCursor();
                         break;
-                    }
                     default:
                         break;
                 }
@@ -64,10 +66,9 @@ void TrayManager::setupTrayIcon() {
 }
 
 void TrayManager::setupUiBehavior() {
-    connect(ui.settings_btn, &QToolButton::clicked, this, [this]() {
-        settingsWindow.show();
-        hideAnimated();
-    });
+    // временно скрываем кнопку настроек
+    ui.settings_btn->hide();
+
     connect(ui.exit_btn, &QToolButton::clicked, this, [this]() {
         emit exitRequested();
     });
@@ -84,8 +85,8 @@ void TrayManager::setupUiBehavior() {
 
 void TrayManager::updateInfo() const {
     ui.status_value->setText(enabled ? tr("Enabled") : tr("Disabled"));
-    ui.hotkey_value->setText(settingsWindow.getHotkeyName());
-    ui.delay_value->setText(QString::number(settingsWindow.getSwitchDelayMs()));
+    ui.hotkey_value->setText(AppConfig::hotkeyName);
+    ui.delay_value->setText(QString::number(AppConfig::switchDelayMs));
     ui.toggle_btn->setText(enabled ? tr("  Disable") : tr("  Enable"));
 
     ui.toggle_btn->setIcon(
@@ -93,14 +94,37 @@ void TrayManager::updateInfo() const {
             ? IconHelper::loadIcon(":/icons/icons/FlashSparkleRegular.svg")
             : IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled.svg")
     );
-    ui.settings_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FlashSettingsRegular.svg"));
+    // до тех пор, пока нет кнопки Settings
+    // ui.settings_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FlashSettingsRegular.svg"));
     ui.exit_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FlashOffRegular.svg"));
 }
 
 void TrayManager::showAtCursor() {
     updateInfo();
+
+    // размер окна
     resize(sizeHint());
-    move(QCursor::pos() + QPoint(3, -height() - 3));
+    // до тех пор, пока нет кнопки Settings
+    setFixedHeight(sizeHint().height() - 5);
+
+    // получаем текущий экран под курсором
+    const QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
+    if (!screen) screen = QGuiApplication::primaryScreen();
+
+    const QRect screenGeom = screen->geometry(); // доступная область (без панели задач)
+    QPoint pos = QCursor::pos() + QPoint(3, -height() - 3);
+
+    // проверяем выход за правый или левый край
+    if (pos.x() + width() > screenGeom.right()) pos.setX(screenGeom.right() - width());
+    if (pos.x() < screenGeom.left()) pos.setX(screenGeom.left());
+
+    // проверяем выход за верхний или нижний край
+    if (pos.y() + height() > screenGeom.bottom()) pos.setY(screenGeom.bottom() - height());
+    if (pos.y() < screenGeom.top()) pos.setY(screenGeom.top());
+
+    // применяем скорректированную позицию
+    move(pos);
+
     setWindowOpacity(0.0);
     setVisible(true);
     raise();

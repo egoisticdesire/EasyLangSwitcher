@@ -12,8 +12,8 @@ class IconHelper {
 public:
     static QIcon loadIcon(
         const QString &path,
-        const QSize &size = QSize(22, 22),
-        const QColor &color = QColor(221, 221, 221)
+        const QColor &color = QColor(200, 200, 200),
+        const QSize &size = QSize(22, 22)
     ) {
         if (path.endsWith(".svg", Qt::CaseInsensitive)) {
             QFile file(path);
