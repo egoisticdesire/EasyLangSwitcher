@@ -111,16 +111,22 @@ void TrayManager::showAtCursor() {
     const QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
     if (!screen) screen = QGuiApplication::primaryScreen();
 
-    const QRect screenGeom = screen->geometry(); // доступная область (без панели задач)
-    QPoint pos = QCursor::pos() + QPoint(3, -height() - 3);
+    const QRect workArea = screen->geometry();
+    const QPoint cursorPos = QCursor::pos();
 
-    // проверяем выход за правый или левый край
-    if (pos.x() + width() > screenGeom.right()) pos.setX(screenGeom.right() - width());
-    if (pos.x() < screenGeom.left()) pos.setX(screenGeom.left());
+    QPoint pos = cursorPos;
 
-    // проверяем выход за верхний или нижний край
-    if (pos.y() + height() > screenGeom.bottom()) pos.setY(screenGeom.bottom() - height());
-    if (pos.y() < screenGeom.top()) pos.setY(screenGeom.top());
+    // горизонтальная ориентация
+    if (pos.x() + width() > workArea.right())
+        pos.rx() -= width() + 3;
+    else
+        pos.rx() += 3;
+
+    // вертикальная ориентация
+    if (pos.y() + height() > workArea.bottom())
+        pos.ry() -= height() + 3;
+    else
+        pos.ry() += 3;
 
     // применяем скорректированную позицию
     move(pos);

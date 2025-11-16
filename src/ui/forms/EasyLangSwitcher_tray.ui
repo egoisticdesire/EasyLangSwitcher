@@ -64,8 +64,9 @@
      </property>
      <property name="styleSheet">
       <string notr="true">QFrame#background_frame {
-border-radius: 8px;
-border: 1px solid rgba(255, 255, 255, 30);
+/*border-radius: 8px;
+border: 1px solid rgba(255, 255, 255, 66);*/
+border: 1px solid transparent;
 background: transparent;
 }</string>
      </property>
@@ -115,6 +116,7 @@ QLabel#delay_value,
 QLabel#status_key,
 QLabel#status_value {
 margin: 2px;
+padding: 3px 0;
 border-radius: 5px;
 color: rgba(255, 255, 255, 100);
 background: transparent;
