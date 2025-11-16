@@ -35,6 +35,31 @@ struct WINDOWCOMPOSITIONATTRIBDATA {
 
 using pSetWindowCompositionAttribute = BOOL(WINAPI *)(HWND, WINDOWCOMPOSITIONATTRIBDATA *);
 
+// Проверка версии Windows
+inline bool isWindows11OrGreater() {
+    typedef LONG (WINAPI*RtlGetVersionPtr)(PRTL_OSVERSIONINFOEXW);
+    RTL_OSVERSIONINFOEXW rovi{};
+    rovi.dwOSVersionInfoSize = sizeof(rovi);
+    const auto rtlGetVersion = reinterpret_cast<RtlGetVersionPtr>(
+        GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "RtlGetVersion"));
+    if (rtlGetVersion && rtlGetVersion(&rovi) == 0) {
+        return (rovi.dwMajorVersion == 10 && rovi.dwBuildNumber >= 22000);
+    }
+    return false;
+}
+
+inline bool isWindows10OrGreater() {
+    typedef LONG (WINAPI*RtlGetVersionPtr)(PRTL_OSVERSIONINFOEXW);
+    RTL_OSVERSIONINFOEXW rovi{};
+    rovi.dwOSVersionInfoSize = sizeof(rovi);
+    const auto rtlGetVersion = reinterpret_cast<RtlGetVersionPtr>(
+        GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "RtlGetVersion"));
+    if (rtlGetVersion && rtlGetVersion(&rovi) == 0) {
+        return (rovi.dwMajorVersion == 10);
+    }
+    return false;
+}
+
 class AcrylicHelper {
 public:
     static void enableAcrylic(const QWidget *widget, const DWORD alpha = 0x40, const DWORD rgb = 0x202020) {
@@ -43,34 +68,57 @@ public:
         const auto hwnd = reinterpret_cast<HWND>(widget->winId());
         if (!hwnd) return;
 
-        // Убираем WS_EX_LAYERED, если есть (чтобы DWM корректно применил blur)
+        // Убираем WS_EX_LAYERED
         if (const LONG ex = GetWindowLongW(hwnd, GWL_EXSTYLE); ex & WS_EX_LAYERED) {
             SetWindowLongW(hwnd, GWL_EXSTYLE, ex & ~WS_EX_LAYERED);
         }
 
-        // Скругление углов окна через DWM
-        constexpr DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
-        constexpr int DWMWCP_ROUND = 2;
-        const HRESULT hrCorner = DwmSetWindowAttribute(
-            hwnd,
-            DWMWA_WINDOW_CORNER_PREFERENCE,
-            &DWMWCP_ROUND,
-            sizeof(DWMWCP_ROUND)
-        );
-        if (FAILED(hrCorner)) {
-            // qDebug() << "DwmSetWindowAttribute corner failed:" << hrCorner;
-        }
-
-        // Акрил через SetWindowCompositionAttribute
         const auto setWindowCompositionAttribute =
                 reinterpret_cast<pSetWindowCompositionAttribute>(
                     GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetWindowCompositionAttribute"));
         if (!setWindowCompositionAttribute) return;
 
         ACCENT_POLICY policy{};
-        policy.AccentState = ACCENT_ENABLE_ACRYLICBLURBEHIND;
-        policy.GradientColor = (alpha << 24) | rgb;
-        policy.AccentFlags = 2;
+
+        if (isWindows11OrGreater()) {
+            // Win11: акрил с радиусом углов
+            policy.AccentState = ACCENT_ENABLE_ACRYLICBLURBEHIND;
+            policy.GradientColor = (alpha << 24) | rgb;
+            policy.AccentFlags = 2;
+
+            // Скругление углов через DWM
+            constexpr DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+            constexpr int DWMWCP_ROUND = 2;
+            const HRESULT hrCorner = DwmSetWindowAttribute(
+                hwnd,
+                DWMWA_WINDOW_CORNER_PREFERENCE,
+                &DWMWCP_ROUND,
+                sizeof(DWMWCP_ROUND)
+            );
+            if (FAILED(hrCorner)) {
+                // qDebug() << "DwmSetWindowAttribute corner failed:" << hrCorner;
+            }
+
+            // Скругление региона
+            if (const HRGN hrgn = CreateRoundRectRgn(
+                0, 0, widget->width() + 1, widget->height() + 1,
+                ACRYLIC_WINDOW_RADIUS, ACRYLIC_WINDOW_RADIUS
+            )) {
+                SetWindowRgn(hwnd, hrgn, TRUE);
+            }
+        } else if (isWindows10OrGreater()) {
+            // Win10: простой blur без скруглений
+            policy.AccentState = ACCENT_ENABLE_BLURBEHIND;
+            policy.GradientColor = (0xE0 << 24) | rgb; // 0xCC (~80%) | 0xE0 (~88%) | 0xF0 (~94%)
+            policy.AccentFlags = 2;
+
+            // Прямоугольная область
+            if (const HRGN hrgn = CreateRectRgn(0, 0, widget->width() + 1, widget->height() + 1)) {
+                SetWindowRgn(hwnd, hrgn, TRUE);
+            }
+        } else {
+            return; // ниже Win10 не поддерживаем
+        }
 
         WINDOWCOMPOSITIONATTRIBDATA data{};
         data.Attribute = WCA_ACCENT_POLICY;
@@ -78,33 +126,24 @@ public:
         data.SizeOfData = sizeof(policy);
 
         setWindowCompositionAttribute(hwnd, &data);
-
-        // Скругление региона
-        if (const HRGN hrgn = CreateRoundRectRgn(
-            0,
-            0,
-            widget->width() + 1,
-            widget->height() + 1,
-            ACRYLIC_WINDOW_RADIUS,
-            ACRYLIC_WINDOW_RADIUS
-        )) {
-            SetWindowRgn(hwnd, hrgn, TRUE);
-        }
     }
 
     static void updateRegion(const QWidget *widget) {
         if (!widget) return;
         const auto hwnd = reinterpret_cast<HWND>(widget->winId());
         if (!hwnd) return;
-        if (const HRGN hrgn = CreateRoundRectRgn(
-            0,
-            0,
-            widget->width() + 1,
-            widget->height() + 1,
-            ACRYLIC_WINDOW_RADIUS,
-            ACRYLIC_WINDOW_RADIUS
-        )) {
-            SetWindowRgn(hwnd, hrgn, TRUE);
+
+        if (isWindows11OrGreater()) {
+            if (const HRGN hrgn = CreateRoundRectRgn(
+                0, 0, widget->width() + 1, widget->height() + 1,
+                ACRYLIC_WINDOW_RADIUS, ACRYLIC_WINDOW_RADIUS
+            )) {
+                SetWindowRgn(hwnd, hrgn, TRUE);
+            }
+        } else if (isWindows10OrGreater()) {
+            if (const HRGN hrgn = CreateRectRgn(0, 0, widget->width() + 1, widget->height() + 1)) {
+                SetWindowRgn(hwnd, hrgn, TRUE);
+            }
         }
     }
 };

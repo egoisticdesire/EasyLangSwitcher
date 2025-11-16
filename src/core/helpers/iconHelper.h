@@ -13,7 +13,7 @@ public:
     static QIcon loadIcon(
         const QString &path,
         const QColor &color = QColor(200, 200, 200),
-        const QSize &size = QSize(22, 22)
+        const QSize &size = QSize(18, 18)
     ) {
         if (path.endsWith(".svg", Qt::CaseInsensitive)) {
             QFile file(path);
