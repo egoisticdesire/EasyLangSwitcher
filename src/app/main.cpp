@@ -1,9 +1,11 @@
+#include "../core/helpers/iconHelper.h"
 #include "../core/handlers/kb.h"
 #include "../ui/tray/tray.h"
 #include <QApplication>
 
 int main(int argc, char *argv[]) {
     const QApplication app(argc, argv);
+    app.setWindowIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
 
     // Трей-менеджер
     TrayManager tray;
