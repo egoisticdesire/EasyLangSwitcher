@@ -104,29 +104,6 @@ background: rgba(255, 255, 255, 5);
           <number>0</number>
          </property>
          <item>
-          <widget class="QToolButton" name="btn_btc">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="../resources.qrc">
-             <normaloff>:/icons/icons/TokenBitcoin.svg</normaloff>:/icons/icons/TokenBitcoin.svg</iconset>
-           </property>
-           <property name="iconSize">
-            <size>
-             <width>36</width>
-             <height>36</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QToolButton" name="btn_trx">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -138,7 +115,7 @@ background: rgba(255, 255, 255, 5);
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../resources.qrc">
+            <iconset resource="../../../resources/resources.qrc">
              <normaloff>:/icons/icons/TokenTrx.svg</normaloff>:/icons/icons/TokenTrx.svg</iconset>
            </property>
            <property name="iconSize">
@@ -161,31 +138,8 @@ background: rgba(255, 255, 255, 5);
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../resources.qrc">
+            <iconset resource="../../../resources/resources.qrc">
              <normaloff>:/icons/icons/TokenTon.svg</normaloff>:/icons/icons/TokenTon.svg</iconset>
-           </property>
-           <property name="iconSize">
-            <size>
-             <width>36</width>
-             <height>36</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QToolButton" name="btn_usdt">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="../resources.qrc">
-             <normaloff>:/icons/icons/TokenUsdt.svg</normaloff>:/icons/icons/TokenUsdt.svg</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -207,7 +161,7 @@ background: rgba(255, 255, 255, 5);
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../resources.qrc">
+            <iconset resource="../../../resources/resources.qrc">
              <normaloff>:/icons/icons/Boosty.svg</normaloff>:/icons/icons/Boosty.svg</iconset>
            </property>
            <property name="iconSize">
@@ -227,7 +181,7 @@ background: rgba(255, 255, 255, 5);
   </layout>
  </widget>
  <resources>
-  <include location="../resources.qrc"/>
+  <include location="../../../resources/resources.qrc"/>
  </resources>
  <connections/>
 </ui>
