@@ -169,7 +169,7 @@ background: rgba(255, 255, 255, 15);
                <string>General</string>
               </property>
               <property name="icon">
-               <iconset resource="../resources.qrc">
+               <iconset resource="../../../resources/resources.qrc">
                 <normaloff>:/icons/icons/SettingsFilled.svg</normaloff>:/icons/icons/SettingsFilled.svg</iconset>
               </property>
               <property name="iconSize">
@@ -209,7 +209,7 @@ background: rgba(255, 255, 255, 15);
                <string>Exclusions</string>
               </property>
               <property name="icon">
-               <iconset resource="../resources.qrc">
+               <iconset resource="../../../resources/resources.qrc">
                 <normaloff>:/icons/icons/TableSimpleExcludeRegular.svg</normaloff>:/icons/icons/TableSimpleExcludeRegular.svg</iconset>
               </property>
               <property name="iconSize">
@@ -246,7 +246,7 @@ background: rgba(255, 255, 255, 15);
                <string>Indicator</string>
               </property>
               <property name="icon">
-               <iconset resource="../resources.qrc">
+               <iconset resource="../../../resources/resources.qrc">
                 <normaloff>:/icons/icons/CursorClickRegular.svg</normaloff>:/icons/icons/CursorClickRegular.svg</iconset>
               </property>
               <property name="iconSize">
@@ -283,7 +283,7 @@ background: rgba(255, 255, 255, 15);
                <string>Info</string>
               </property>
               <property name="icon">
-               <iconset resource="../resources.qrc">
+               <iconset resource="../../../resources/resources.qrc">
                 <normaloff>:/icons/icons/InfoRegular.svg</normaloff>:/icons/icons/InfoRegular.svg</iconset>
               </property>
               <property name="iconSize">
@@ -1015,7 +1015,7 @@ outline: none;
                   <string/>
                  </property>
                  <property name="pixmap">
-                  <pixmap resource="../resources.qrc">:/icons/icons/InfoRegular.svg</pixmap>
+                  <pixmap resource="../../../resources/resources.qrc">:/icons/icons/InfoRegular.svg</pixmap>
                  </property>
                  <property name="scaledContents">
                   <bool>true</bool>
@@ -1893,7 +1893,7 @@ outline: none;
                   <string>  Add Application...</string>
                  </property>
                  <property name="icon">
-                  <iconset resource="../resources.qrc">
+                  <iconset resource="../../../resources/resources.qrc">
                    <normaloff>:/icons/icons/AppsFilled.svg</normaloff>:/icons/icons/AppsFilled.svg</iconset>
                  </property>
                  <property name="iconSize">
@@ -1913,7 +1913,7 @@ outline: none;
                   <string>  Add Regular Expression...</string>
                  </property>
                  <property name="icon">
-                  <iconset resource="../resources.qrc">
+                  <iconset resource="../../../resources/resources.qrc">
                    <normaloff>:/icons/icons/Regex.svg</normaloff>:/icons/icons/Regex.svg</iconset>
                  </property>
                  <property name="iconSize">
@@ -2945,7 +2945,7 @@ You can support the further development of the project.
                <string/>
               </property>
               <property name="pixmap">
-               <pixmap resource="../resources.qrc">:/icons/icons/FlashSparkleFilled2.png</pixmap>
+               <pixmap resource="../../../resources/resources.qrc">:/icons/icons/FlashSparkleFilled2.png</pixmap>
               </property>
               <property name="scaledContents">
                <bool>true</bool>
@@ -3109,7 +3109,7 @@ outline: none;
                   <string/>
                  </property>
                  <property name="icon">
-                  <iconset resource="../resources.qrc">
+                  <iconset resource="../../../resources/resources.qrc">
                    <normaloff>:/icons/icons/github.svg</normaloff>:/icons/icons/github.svg</iconset>
                  </property>
                  <property name="iconSize">
@@ -3141,7 +3141,7 @@ outline: none;
                   <string/>
                  </property>
                  <property name="icon">
-                  <iconset resource="../resources.qrc">
+                  <iconset resource="../../../resources/resources.qrc">
                    <normaloff>:/icons/icons/WalletCreditCardFilled.svg</normaloff>:/icons/icons/WalletCreditCardFilled.svg</iconset>
                  </property>
                  <property name="iconSize">
@@ -3225,6 +3225,7 @@ outline: none;
   <tabstop>btn_support</tabstop>
  </tabstops>
  <resources>
+  <include location="../../../resources/resources.qrc"/>
   <include location="../resources.qrc"/>
  </resources>
  <connections>
@@ -3239,8 +3240,8 @@ outline: none;
      <y>129</y>
     </hint>
     <hint type="destinationlabel">
-     <x>828</x>
-     <y>129</y>
+     <x>822</x>
+     <y>132</y>
     </hint>
    </hints>
   </connection>
@@ -3251,12 +3252,12 @@ outline: none;
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>590</x>
-     <y>127</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
     <hint type="destinationlabel">
-     <x>643</x>
-     <y>132</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
    </hints>
   </connection>
@@ -3267,12 +3268,12 @@ outline: none;
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>626</x>
-     <y>116</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
     <hint type="destinationlabel">
-     <x>596</x>
-     <y>119</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
    </hints>
   </connection>
@@ -3283,12 +3284,12 @@ outline: none;
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>593</x>
-     <y>190</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
     <hint type="destinationlabel">
-     <x>624</x>
-     <y>194</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
    </hints>
   </connection>
@@ -3299,12 +3300,12 @@ outline: none;
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>621</x>
-     <y>179</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
     <hint type="destinationlabel">
-     <x>594</x>
-     <y>179</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
    </hints>
   </connection>
@@ -3315,12 +3316,12 @@ outline: none;
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>591</x>
-     <y>254</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
     <hint type="destinationlabel">
-     <x>623</x>
-     <y>257</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
    </hints>
   </connection>
@@ -3331,12 +3332,12 @@ outline: none;
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>628</x>
-     <y>241</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
     <hint type="destinationlabel">
-     <x>597</x>
-     <y>241</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
    </hints>
   </connection>
@@ -3347,12 +3348,12 @@ outline: none;
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>593</x>
-     <y>317</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
     <hint type="destinationlabel">
-     <x>638</x>
-     <y>318</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
    </hints>
   </connection>
@@ -3363,12 +3364,12 @@ outline: none;
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>623</x>
-     <y>306</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
     <hint type="destinationlabel">
-     <x>594</x>
-     <y>306</y>
+     <x>249</x>
+     <y>29</y>
     </hint>
    </hints>
   </connection>
