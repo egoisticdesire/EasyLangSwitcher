@@ -15,7 +15,7 @@ The application starts in the system tray and provides basic actions:
 - **Left Click** — toggle on/off (enabled by default)
 - **Right Click** — open the menu (includes information about current configuration)
 
-_Please note that the application does not work in UAC windows.  
+> _Please note that the application does not work in UAC windows.  
 Additionally, some modern Windows 11 applications (for example, the updated Settings app and Calculator) may not respond
 to layout switching. The reasons for this are currently unknown, and attempts to make it work have been unsuccessful._
 
