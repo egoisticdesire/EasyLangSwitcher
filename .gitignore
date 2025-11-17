@@ -14,6 +14,7 @@
 /CMakeFiles/
 /CMakeCache.txt
 /cmakesetup_*/
+/*dist*/
 
 # Compiled object files
 *.slo
