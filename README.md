@@ -1,4 +1,4 @@
-# EasyLangSwitcher
+# <img src="resources/icons/FlashSparkleFilled2.png" width="32" height="32" style="margin-right:12px;"> EasyLangSwitcher
 
 **EasyLangSwitcher** is a simple and lightweight Windows application that allows you to switch keyboard layouts using
 **a single key**. Switching cycles through all languages added in the system:
