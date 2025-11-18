@@ -64,7 +64,7 @@ color: rgb(150, 255, 120);
          <string/>
         </property>
         <property name="pixmap">
-         <pixmap resource="../resources.qrc">:/icons/icons/CheckmarkDone.svg</pixmap>
+         <pixmap resource="../../../resources/resources.qrc">:/icons/icons/CheckmarkDone.svg</pixmap>
         </property>
         <property name="scaledContents">
          <bool>true</bool>
@@ -84,8 +84,8 @@ color: rgb(150, 255, 120);
   </layout>
  </widget>
  <resources>
-  <include location="../resources.qrc"/>
-  <include location="resources.qrc"/>
+  <include location="../../../resources/resources.qrc"/>
+  <include location="../../../resources/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

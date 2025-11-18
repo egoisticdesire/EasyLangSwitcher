@@ -24,7 +24,7 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
-    Ui::main_frame ui;
+    Ui::main_frame ui{};
     QSystemTrayIcon trayIcon;
     bool enabled = true;
     QPropertyAnimation *fadeIn = nullptr;

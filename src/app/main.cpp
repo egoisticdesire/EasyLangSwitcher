@@ -5,13 +5,11 @@
 
 int main(int argc, char *argv[]) {
     const QApplication app(argc, argv);
-    app.setWindowIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
+    QApplication::setWindowIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
 
-    // Трей-менеджер
     TrayManager tray;
     tray.show();
 
-    // Хэндлер клавиатуры
     KeyboardHandler kbHandler;
     kbHandler.start();
 
