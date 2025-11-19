@@ -51,7 +51,7 @@
      <property name="styleSheet">
       <string notr="true">QWidget#background_widget {
 /*border-radius: 8px;*/
-background: rgba(32, 32, 32, 25);
+background: rgba(32, 32, 32, 10);
 }</string>
      </property>
      <layout class="QHBoxLayout" name="hlayout_background_widget">
@@ -416,6 +416,9 @@ QFrame#key_select_frame QLineEdit:focus {
 border-bottom: 1px solid rgba(50, 125, 255, 150);
 background: rgba(255, 255, 255, 10);
 }
+QFrame#key_select_frame QLineEdit[hasText=&quot;true&quot;] {
+background: rgba(255, 255, 255, 15);
+}
 QToolButton#btn_restore_default {
 margin-right: 6px;
 margin-bottom: 6px;
@@ -433,11 +436,22 @@ border-radius: 8px;
 color: rgba(255, 255, 255, 150);
 background: transparent;
 }
-QFrame#key_select_frame QLineEdit:hover,
+QFrame#key_select_frame QPushButton[customActive=&quot;true&quot;],
+QFrame#key_select_frame QPushButton:checked[customActive=&quot;true&quot;] {
+color: rgba(255,255,255,150);
+}
+QFrame#key_select_frame QPushButton:hover[customActive=&quot;true&quot;] {
+color: rgba(255, 255, 255, 255);
+}
 QFrame#key_select_frame QPushButton:hover,
 QFrame#app_theme_frame QPushButton:hover,
 QFrame#app_startup_frame QPushButton:hover,
-QFrame#app_lang_frame QPushButton:hover,
+QFrame#app_lang_frame QPushButton:hover {
+color: rgba(255, 255, 255, 255);
+/*background: rgba(255, 255, 255, 15);*/
+background: transparent;
+}
+QFrame#key_select_frame QLineEdit:hover,
 QToolButton#btn_restore_default:hover {
 color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
@@ -1503,7 +1517,11 @@ color: rgba(255, 255, 255, 150);
 background: transparent;
 }
 QFrame#add_exclusions_frame QPushButton:hover,
-QFrame#exclusions_rules_frame QPushButton:hover,
+QFrame#exclusions_rules_frame QPushButton:hover {
+color: rgba(255, 255, 255, 255);
+/*background: rgba(255, 255, 255, 15);*/
+background: transparent;
+}
 QToolButton#btn_clear_all:hover {
 color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
@@ -1882,7 +1900,8 @@ QFrame#indicator_manage_frame QPushButton:hover,
 QFrame#indicator_langs_frame QPushButton:hover,
 QFrame#indicator_color_frame QPushButton:hover {
 color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 15);
+/*background: rgba(255, 255, 255, 15);*/
+background: transparent;
 }
 QFrame#indicator_manage_frame QPushButton:pressed,
 QFrame#indicator_langs_frame QPushButton:pressed,

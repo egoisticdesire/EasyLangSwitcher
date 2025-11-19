@@ -1,7 +1,7 @@
 #pragma once
-#include <QFrame>
 #include <QButtonGroup>
 #include <QPropertyAnimation>
+#include <QLineEdit>
 #include <QWidget>
 
 class AnimatedSelector final : public QObject {
@@ -24,7 +24,14 @@ private:
     QFrame *m_indicator = nullptr;
     QFrame *m_frame = nullptr;
     QButtonGroup *m_group = nullptr;
+    QLineEdit *m_customEdit = nullptr;
 
 private slots:
     void animateToButton(const QAbstractButton *btn);
+
+    void onCustomEditChanged(const QString &text) const;
+
+    void updateButtonColors() const;
+
+    void updateEditStyle() const;
 };
