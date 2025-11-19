@@ -8,6 +8,7 @@
 #include <QTimer>
 #include <QGraphicsOpacityEffect>
 #include <QMouseEvent>
+#include <QPushButton>
 
 TrayManager::TrayManager(QWidget *parent)
     : QWidget(parent) {
@@ -16,6 +17,10 @@ TrayManager::TrayManager(QWidget *parent)
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setFocusPolicy(Qt::StrongFocus);
+
+    // Создаём окно настроек один раз (можно создать лениво при первом клике)
+    settingsWindow = new SettingsWindow(nullptr);
+    settingsWindow->setAttribute(Qt::WA_DeleteOnClose, false);
 
     ui.info_frame->installEventFilter(this);
     qApp->installEventFilter(this);
@@ -66,8 +71,13 @@ void TrayManager::setupTrayIcon() {
 }
 
 void TrayManager::setupUiBehavior() {
-    // временно скрываем кнопку настроек
-    ui.settings_btn->hide();
+    connect(ui.settings_btn, &QPushButton::clicked, this, [this]() {
+        if (!settingsWindow) {
+            settingsWindow = new SettingsWindow(nullptr);
+            settingsWindow->setAttribute(Qt::WA_DeleteOnClose, false);
+        }
+        settingsWindow->openCentered();
+    });
 
     connect(ui.exit_btn, &QToolButton::clicked, this, [this]() {
         emit exitRequested();
@@ -94,8 +104,7 @@ void TrayManager::updateInfo() const {
             ? IconHelper::loadIcon(":/icons/icons/FlashSparkleRegular.svg")
             : IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled.svg")
     );
-    // до тех пор, пока нет кнопки Settings
-    // ui.settings_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FlashSettingsRegular.svg"));
+    ui.settings_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FlashSettingsRegular.svg"));
     ui.exit_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FlashOffRegular.svg"));
 }
 
@@ -104,8 +113,6 @@ void TrayManager::showAtCursor() {
 
     // размер окна
     resize(sizeHint());
-    // до тех пор, пока нет кнопки Settings
-    setFixedHeight(sizeHint().height() - 5);
 
     // получаем текущий экран под курсором
     const QScreen *screen = QGuiApplication::screenAt(QCursor::pos());

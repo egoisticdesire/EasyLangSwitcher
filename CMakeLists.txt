@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 4.0)
+add_compile_options(/utf-8)
 
 set(APP_NAME "EasyLangSwitcher")
 
@@ -44,6 +45,8 @@ add_executable(${APP_NAME}
         # ui
         src/ui/tray/tray.cpp
         src/ui/tray/tray.h
+        src/ui/widgets/settings.cpp
+        src/ui/widgets/settings.h
 
         # resources
         resources/resources.qrc

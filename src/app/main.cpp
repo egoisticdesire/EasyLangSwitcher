@@ -5,6 +5,7 @@
 
 int main(int argc, char *argv[]) {
     const QApplication app(argc, argv);
+    QApplication::setQuitOnLastWindowClosed(false);
     QApplication::setWindowIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
 
     TrayManager tray;

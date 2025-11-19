@@ -1,7 +1,8 @@
 #pragma once
+#include "ui_EasyLangSwitcher_tray.h"
+#include "../../ui/widgets/settings.h"
 #include <QSystemTrayIcon>
 #include <QPropertyAnimation>
-#include "ui_EasyLangSwitcher_tray.h"
 
 class TrayManager final : public QWidget {
     Q_OBJECT
@@ -26,6 +27,7 @@ protected:
 private:
     Ui::main_frame ui{};
     QSystemTrayIcon trayIcon;
+    SettingsWindow *settingsWindow = nullptr;
     bool enabled = true;
     QPropertyAnimation *fadeIn = nullptr;
     QPropertyAnimation *fadeOut = nullptr;
