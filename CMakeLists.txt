@@ -45,8 +45,12 @@ add_executable(${APP_NAME}
         src/ui/helpers/iconHelper.h
         src/ui/tray/tray.cpp
         src/ui/tray/tray.h
+        src/ui/widgets/animated_selector.cpp
+        src/ui/widgets/animated_selector.h
         src/ui/widgets/settings.cpp
         src/ui/widgets/settings.h
+        src/ui/widgets/window_dragger.cpp
+        src/ui/widgets/window_dragger.h
 
         # resources
         resources/resources.qrc

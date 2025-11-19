@@ -1,9 +1,10 @@
 #pragma once
 #include "../../ui/helpers/acrylicHelper.h"
 #include "ui_EasyLangSwitcher_settings.h"
-#include <QPoint>
+#include "animated_selector.h"
+#include "window_dragger.h"
 
-class SettingsWindow : public QWidget {
+class SettingsWindow final : public QWidget {
     Q_OBJECT
 
 public:
@@ -14,12 +15,6 @@ public:
     void openCentered();
 
 protected:
-    void mousePressEvent(QMouseEvent *event) override;
-
-    void mouseMoveEvent(QMouseEvent *event) override;
-
-    void mouseReleaseEvent(QMouseEvent *event) override;
-
     void showEvent(QShowEvent *event) override;
 
     bool event(QEvent *ev) override;
@@ -27,6 +22,6 @@ protected:
 private:
     Ui::main_widget ui{};
 
-    bool dragging = false;
-    QPoint dragStartPos;
+    AnimatedSelector *selector = nullptr;
+    WindowDragger *dragger = nullptr;
 };
