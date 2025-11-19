@@ -12,6 +12,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     // системные флаги окна
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     setAttribute(Qt::WA_TranslucentBackground);
+    setFocusPolicy(Qt::ClickFocus);
 
     // Esc → закрытие
     auto *closeAction = new QAction(this);
