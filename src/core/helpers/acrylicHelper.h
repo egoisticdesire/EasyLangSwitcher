@@ -146,4 +146,44 @@ public:
             }
         }
     }
+
+    static void disableAcrylic(const QWidget *widget) {
+        if (!widget) return;
+        const auto hwnd = reinterpret_cast<HWND>(widget->winId());
+        if (!hwnd) return;
+
+        const auto setWindowCompositionAttribute =
+                reinterpret_cast<pSetWindowCompositionAttribute>(
+                    GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetWindowCompositionAttribute"));
+        if (!setWindowCompositionAttribute) return;
+
+        ACCENT_POLICY policy{};
+        policy.AccentState = ACCENT_DISABLED;
+        policy.AccentFlags = 0;
+        policy.GradientColor = 0;
+        WINDOWCOMPOSITIONATTRIBDATA data{};
+        data.Attribute = WCA_ACCENT_POLICY;
+        data.Data = &policy;
+        data.SizeOfData = sizeof(policy);
+        setWindowCompositionAttribute(hwnd, &data);
+    }
+
+    static void setAcrylicEnabled(
+        const QWidget *widget,
+        const bool enabled,
+        const DWORD activeAlpha = 0x40,
+        const DWORD activeRgb = 0x202020,
+        const DWORD inactiveAlpha = 0xFF,
+        const DWORD inactiveRgb = 0x101010
+    ) {
+        if (!widget) return;
+
+        if (enabled) {
+            // акрил — окно активно
+            enableAcrylic(widget, activeAlpha, activeRgb);
+        } else {
+            // статичный фон — окно не активно
+            enableAcrylic(widget, inactiveAlpha, inactiveRgb);
+        }
+    }
 };
