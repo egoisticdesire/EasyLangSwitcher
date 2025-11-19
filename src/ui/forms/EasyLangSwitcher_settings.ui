@@ -50,7 +50,7 @@
      </property>
      <property name="styleSheet">
       <string notr="true">QWidget#background_widget {
-border-radius: 8px;
+/*border-radius: 8px;*/
 background: rgba(32, 32, 32, 50);
 }</string>
      </property>
@@ -85,9 +85,10 @@ background: rgba(32, 32, 32, 50);
         </property>
         <property name="styleSheet">
          <string notr="true">QFrame#sider_container {
-border-top-left-radius: 8px;
+/*border-top-left-radius: 8px;
 border-bottom-left-radius: 8px;
-border: 1px solid rgba(255, 255, 255, 30);
+border: 1px solid rgba(255, 255, 255, 66);*/
+border: 1px solid transparent;
 border-right: 2px solid rgba(12, 12, 12, 100);
 background: transparent;
 }
@@ -95,7 +96,24 @@ QFrame#sider_container QToolButton:focus,
 QFrame#sider_container QPushButton:focus {
 outline: none;
 }
-</string>
+QFrame#top_sider_container QToolButton,
+QFrame#bot_sider_container QPushButton {
+margin: 3px;
+padding: 4px 10px 5px 10px;
+border-radius: 5px;
+}
+QFrame#top_sider_container QToolButton:checked,
+QFrame#bot_sider_container QPushButton {
+background: rgba(255, 255, 255, 10);
+}
+QFrame#top_sider_container QToolButton:hover,
+QFrame#bot_sider_container QPushButton:hover {
+background: rgba(255, 255, 255, 15);
+}
+QFrame#top_sider_container QToolButton:pressed,
+QFrame#bot_sider_container QPushButton:pressed {
+background: rgba(255, 255, 255, 7);
+}</string>
         </property>
         <layout class="QVBoxLayout" name="vlayout_sider_frame">
          <property name="spacing">
@@ -108,7 +126,7 @@ outline: none;
           <number>3</number>
          </property>
          <property name="rightMargin">
-          <number>3</number>
+          <number>2</number>
          </property>
          <property name="bottomMargin">
           <number>3</number>
@@ -119,22 +137,6 @@ outline: none;
             <font>
              <pointsize>10</pointsize>
             </font>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QFrame#top_sider_container QToolButton {
-margin: 3px;
-padding: 4px 10px 5px 10px;
-border-radius: 5px;
-}
-QFrame#top_sider_container QToolButton:checked {
-background: rgba(255, 255, 255, 20);
-}
-QFrame#top_sider_container QToolButton:hover {
-background: rgba(255, 255, 255, 25);
-}
-QFrame#top_sider_container QToolButton:pressed {
-background: rgba(255, 255, 255, 15);
-}</string>
            </property>
            <layout class="QVBoxLayout" name="vlayout_top_btns_sider">
             <property name="spacing">
@@ -331,20 +333,6 @@ background: rgba(255, 255, 255, 15);
              <pointsize>10</pointsize>
             </font>
            </property>
-           <property name="styleSheet">
-            <string notr="true">QFrame#bot_sider_container QPushButton {
-margin: 3px;
-padding: 4px 10px 5px 10px;
-border-radius: 5px;
-background: rgba(255, 255, 255, 20);
-}
-QFrame#bot_sider_container QPushButton:hover {
-background: rgba(255, 255, 255, 25);
-}
-QFrame#bot_sider_container QPushButton:pressed {
-background: rgba(255, 255, 255, 15);
-}</string>
-           </property>
            <layout class="QVBoxLayout" name="vlayout_bottom_btns_sider">
             <property name="spacing">
              <number>0</number>
@@ -391,9 +379,11 @@ background: rgba(255, 255, 255, 15);
         </property>
         <property name="styleSheet">
          <string notr="true">QStackedWidget#content_container {
-border-top-right-radius: 8px;
+/*border-top-right-radius: 8px;
 border-bottom-right-radius: 8px;
-border: 1px solid rgba(255, 255, 255, 30);
+border: 1px solid rgba(255, 255, 255, 66);*/
+border: 1px solid transparent;
+border-left: 1px solid rgba(255, 255, 255, 30);
 background: rgba(32, 32, 32, 175);
 }</string>
         </property>
@@ -401,6 +391,79 @@ background: rgba(32, 32, 32, 175);
          <number>0</number>
         </property>
         <widget class="QWidget" name="main_container_page_1">
+         <property name="styleSheet">
+          <string notr="true">QFrame#key_select_frame,
+QFrame#app_theme_frame,
+QFrame#app_startup_frame,
+QFrame#app_lang_frame {
+padding: 1px;
+border-radius: 10px;
+border: 1px solid rgba(255, 255, 255, 30);
+background: rgba(255, 255, 255, 10);
+}
+QFrame#key_select_frame {
+margin-right: 20px;
+}
+QFrame#key_select_frame QLineEdit {
+height: 100%;
+margin: 1px;
+padding: 2px 13px 2px 17px;
+border-radius: 8px;
+border-bottom: 1px solid transparent;
+background: transparent;
+}
+QFrame#key_select_frame QLineEdit:focus {
+border-bottom: 1px solid rgba(50, 125, 255, 150);
+background: rgba(255, 255, 255, 10);
+}
+QToolButton#btn_restore_default {
+margin-right: 6px;
+margin-bottom: 6px;
+padding: 3px 9px 4px 10px;
+border-radius: 5px;
+color: rgba(255, 255, 255, 150);
+background: transparent;
+}
+QFrame#key_select_frame QPushButton,
+QFrame#app_theme_frame QPushButton,
+QFrame#app_startup_frame QPushButton,
+QFrame#app_lang_frame QPushButton {
+margin: 1px;
+border-radius: 8px;
+color: rgba(255, 255, 255, 150);
+background: transparent;
+}
+QFrame#key_select_frame QLineEdit:hover,
+QFrame#key_select_frame QPushButton:hover,
+QFrame#app_theme_frame QPushButton:hover,
+QFrame#app_startup_frame QPushButton:hover,
+QFrame#app_lang_frame QPushButton:hover,
+QToolButton#btn_restore_default:hover {
+color: rgba(255, 255, 255, 255);
+background: rgba(255, 255, 255, 15);
+}
+QFrame#key_select_frame QLineEdit:pressed,
+QFrame#key_select_frame QPushButton:pressed,
+QFrame#app_theme_frame QPushButton:pressed,
+QFrame#app_startup_frame QPushButton:pressed,
+QFrame#app_lang_frame QPushButton:pressed,
+QToolButton#btn_restore_default:pressed {
+background: rgba(255, 255, 255, 7);
+}
+QFrame#key_select_frame QPushButton:checked,
+QFrame#app_theme_frame QPushButton:checked,
+QFrame#app_startup_frame QPushButton:checked,
+QFrame#app_lang_frame QPushButton:checked {
+color: rgba(255, 255, 255, 255);
+}
+QFrame#key_select_frame QPushButton:focus,
+QFrame#app_theme_frame QPushButton:focus,
+QFrame#app_startup_frame QPushButton:focus,
+QFrame#app_lang_frame QPushButton:focus,
+QToolButton#btn_restore_default:focus {
+outline: none;
+}</string>
+         </property>
          <layout class="QVBoxLayout" name="vlayout_main_container_page_1">
           <property name="spacing">
            <number>0</number>
@@ -426,10 +489,10 @@ background: rgba(32, 32, 32, 175);
              <number>20</number>
             </property>
             <property name="rightMargin">
-             <number>20</number>
+             <number>0</number>
             </property>
             <property name="bottomMargin">
-             <number>20</number>
+             <number>0</number>
             </property>
             <property name="spacing">
              <number>20</number>
@@ -453,47 +516,6 @@ background: rgba(32, 32, 32, 175);
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QFrame#key_select_frame {
-padding: 1px;
-border-radius: 10px;
-border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(255, 255, 255, 10);
-}
-QFrame#key_select_frame QLineEdit {
-height: 100%;
-margin: 1px;
-padding: 2px 13px 2px 17px;
-border-radius: 8px;
-border-bottom: 1px solid transparent;
-background: transparent;
-}
-QFrame#key_select_frame QLineEdit:focus {
-border-bottom: 1px solid rgba(50, 125, 255, 150);
-background: rgba(255, 255, 255, 10);
-}
-QFrame#key_select_frame QPushButton {
-margin: 1px;
-border-radius: 8px;
-color: rgba(255, 255, 255, 150);
-background: transparent;
-}
-QFrame#key_select_frame QLineEdit:hover,
-QFrame#key_select_frame QPushButton:hover {
-color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 15);
-}
-QFrame#key_select_frame QLineEdit:pressed,
-QFrame#key_select_frame QPushButton:pressed {
-background: rgba(255, 255, 255, 5);
-}
-QFrame#key_select_frame QPushButton:checked {
-color: rgba(255, 255, 255, 255);
-}
-QFrame#key_select_frame QPushButton:focus {
-outline: none;
-}</string>
               </property>
               <layout class="QGridLayout" name="grid_select_key_value">
                <property name="leftMargin">
@@ -818,9 +840,6 @@ outline: none;
                  <property name="focusPolicy">
                   <enum>Qt::FocusPolicy::ClickFocus</enum>
                  </property>
-                 <property name="styleSheet">
-                  <string notr="true"/>
-                 </property>
                  <property name="locale">
                   <locale language="Russian" country="Russia"/>
                  </property>
@@ -841,33 +860,6 @@ outline: none;
                <font>
                 <pointsize>10</pointsize>
                </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QFrame#app_startup_frame {
-padding: 1px;
-border-radius: 10px;
-border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(255, 255, 255, 10);
-}
-QFrame#app_startup_frame QPushButton {
-margin: 1px;
-border-radius: 8px;
-color: rgba(255, 255, 255, 150);
-background: transparent;
-}
-QFrame#app_startup_frame QPushButton:hover {
-color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 15);
-}
-QFrame#app_startup_frame QPushButton:pressed {
-background: rgba(255, 255, 255, 5);
-}
-QFrame#app_startup_frame QPushButton:checked {
-color: rgba(255, 255, 255, 255);
-}
-QFrame#app_startup_frame QPushButton:focus {
-outline: none;
-}</string>
               </property>
               <layout class="QHBoxLayout" name="hlayout_app_lang_value_frame_3">
                <property name="spacing">
@@ -1047,33 +1039,6 @@ outline: none;
                 <pointsize>10</pointsize>
                </font>
               </property>
-              <property name="styleSheet">
-               <string notr="true">QFrame#app_theme_frame {
-padding: 1px;
-border-radius: 10px;
-border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(255, 255, 255, 10);
-}
-QFrame#app_theme_frame QPushButton {
-margin: 1px;
-border-radius: 8px;
-color: rgba(255, 255, 255, 150);
-background: transparent;
-}
-QFrame#app_theme_frame QPushButton:hover {
-color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 15);
-}
-QFrame#app_theme_frame QPushButton:pressed {
-background: rgba(255, 255, 255, 5);
-}
-QFrame#app_theme_frame QPushButton:checked {
-color: rgba(255, 255, 255, 255);
-}
-QFrame#app_theme_frame QPushButton:focus {
-outline: none;
-}</string>
-              </property>
               <layout class="QHBoxLayout" name="hlayout_app_lang_value_frame_2">
                <property name="spacing">
                 <number>0</number>
@@ -1215,22 +1180,6 @@ outline: none;
               <property name="focusPolicy">
                <enum>Qt::FocusPolicy::NoFocus</enum>
               </property>
-              <property name="styleSheet">
-               <string notr="true">QToolButton#btn_restore_default {
-padding: 3px 9px 4px 10px;
-border-radius: 8px;
-background: transparent;
-}
-QToolButton#btn_restore_default:hover {
-background: rgba(255, 255, 255, 25);
-}
-QToolButton#btn_restore_default:pressed {
-background: rgba(255, 255, 255, 15);
-}
-QToolButton#btn_restore_default:focus {
-outline: none;
-}</string>
-              </property>
               <property name="text">
                <string>Restore default settings</string>
               </property>
@@ -1295,7 +1244,10 @@ outline: none;
                </font>
               </property>
               <property name="styleSheet">
-               <string notr="true">QFrame#key_delay_frame QSlider {
+               <string notr="true">QFrame#key_delay_frame {
+margin-right: 20px;
+}
+QFrame#key_delay_frame QSlider {
 border-radius: 8px;
 padding: 3px 5px;
 }
@@ -1415,33 +1367,6 @@ background: rgba(255, 255, 255, 10);
                 <pointsize>10</pointsize>
                </font>
               </property>
-              <property name="styleSheet">
-               <string notr="true">QFrame#app_lang_frame {
-padding: 1px;
-border-radius: 10px;
-border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(255, 255, 255, 10);
-}
-QFrame#app_lang_frame QPushButton {
-margin: 1px;
-border-radius: 8px;
-color: rgba(255, 255, 255, 150);
-background: transparent;
-}
-QFrame#app_lang_frame QPushButton:hover {
-color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 15);
-}
-QFrame#app_lang_frame QPushButton:pressed {
-background: rgba(255, 255, 255, 5);
-}
-QFrame#app_lang_frame QPushButton:checked {
-color: rgba(255, 255, 255, 255);
-}
-QFrame#app_lang_frame QPushButton:focus {
-outline: none;
-}</string>
-              </property>
               <layout class="QHBoxLayout" name="hlayout_app_lang_value_frame">
                <property name="spacing">
                 <number>0</number>
@@ -1548,6 +1473,59 @@ outline: none;
          </layout>
         </widget>
         <widget class="QWidget" name="main_container_page_2">
+         <property name="styleSheet">
+          <string notr="true">QFrame#add_exclusions_frame QPushButton {
+margin-right: 20px;
+padding: 7px 10px 8px 10px;
+border-radius: 10px;
+background: rgba(255, 255, 255, 10);
+}
+QFrame#exclusions_rules_frame {
+margin-bottom: 20px;
+padding: 1px;
+border-radius: 10px;
+border: 1px solid rgba(255, 255, 255, 30);
+background: rgba(255, 255, 255, 10);
+}
+QFrame#exclusions_rules_frame QPushButton {
+margin: 1px;
+padding: 3px 5px 4px 5px;
+border-radius: 8px;
+color: rgba(255, 255, 255, 150);
+background: transparent;
+}
+QToolButton#btn_clear_all {
+margin-right: 6px;
+margin-bottom: 6px;
+padding: 3px 9px 4px 10px;
+border-radius: 5px;
+color: rgba(255, 255, 255, 150);
+background: transparent;
+}
+QFrame#add_exclusions_frame QPushButton:hover,
+QFrame#exclusions_rules_frame QPushButton:hover,
+QToolButton#btn_clear_all:hover {
+color: rgba(255, 255, 255, 255);
+background: rgba(255, 255, 255, 15);
+}
+QFrame#add_exclusions_frame QPushButton:pressed,
+QFrame#exclusions_rules_frame QPushButton:pressed,
+QToolButton#btn_clear_all:pressed {
+background: rgba(255, 255, 255, 7);
+}
+QFrame#exclusions_rules_frame QPushButton:checked {
+color: rgba(255, 255, 255, 255);
+}
+QFrame#add_exclusions_frame QPushButton:focus,
+QFrame#exclusions_rules_frame QPushButton:focus,
+QToolButton#btn_clear_all:focus {
+outline: none;
+}
+
+
+
+</string>
+         </property>
          <layout class="QVBoxLayout" name="vlayout_main_container_page_2">
           <property name="spacing">
            <number>0</number>
@@ -1573,10 +1551,10 @@ outline: none;
              <number>20</number>
             </property>
             <property name="rightMargin">
-             <number>20</number>
+             <number>0</number>
             </property>
             <property name="bottomMargin">
-             <number>20</number>
+             <number>0</number>
             </property>
             <property name="spacing">
              <number>20</number>
@@ -1592,22 +1570,6 @@ outline: none;
               <property name="focusPolicy">
                <enum>Qt::FocusPolicy::NoFocus</enum>
               </property>
-              <property name="styleSheet">
-               <string notr="true">QToolButton#btn_clear_all {
-padding: 3px 9px 4px 10px;
-border-radius: 8px;
-background: transparent;
-}
-QToolButton#btn_clear_all:hover {
-background: rgba(255, 255, 255, 25);
-}
-QToolButton#btn_clear_all:pressed {
-background: rgba(255, 255, 255, 15);
-}
-QToolButton#btn_clear_all:focus {
-outline: none;
-}</string>
-              </property>
               <property name="text">
                <string>Clear List</string>
               </property>
@@ -1620,6 +1582,7 @@ outline: none;
              <widget class="QFrame" name="exclusions_rules_table_frame">
               <property name="styleSheet">
                <string notr="true">QFrame#exclusions_rules_table_frame {
+margin-right: 20px;
 background: rgba(255, 255, 255, 10);
 border-radius: 10px;
 }
@@ -1756,34 +1719,6 @@ height: 13px;
             </item>
             <item row="2" column="0" colspan="2" alignment="Qt::AlignmentFlag::AlignBottom">
              <widget class="QFrame" name="exclusions_rules_frame">
-              <property name="styleSheet">
-               <string notr="true">QFrame#exclusions_rules_frame {
-padding: 1px;
-border-radius: 10px;
-border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(255, 255, 255, 10);
-}
-QFrame#exclusions_rules_frame QPushButton {
-margin: 1px;
-padding: 3px 5px 4px 5px;
-border-radius: 8px;
-color: rgba(255, 255, 255, 150);
-background: transparent;
-}
-QFrame#exclusions_rules_frame QPushButton:hover {
-color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 15);
-}
-QFrame#exclusions_rules_frame QPushButton:pressed {
-background: rgba(255, 255, 255, 5);
-}
-QFrame#exclusions_rules_frame QPushButton:checked {
-color: rgba(255, 255, 255, 255);
-}
-QFrame#exclusions_rules_frame QPushButton:focus {
-outline: none;
-}</string>
-              </property>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
                <property name="spacing">
                 <number>0</number>
@@ -1855,22 +1790,6 @@ outline: none;
             </item>
             <item row="0" column="0" colspan="3">
              <widget class="QFrame" name="add_exclusions_frame">
-              <property name="styleSheet">
-               <string notr="true">QFrame#add_exclusions_frame QPushButton {
-padding: 7px 10px 8px 10px;
-border-radius: 10px;
-background: rgba(255, 255, 255, 20);
-}
-QFrame#add_exclusions_frame QPushButton:hover {
-background: rgba(255, 255, 255, 25);
-}
-QFrame#add_exclusions_frame QPushButton:pressed {
-background: rgba(255, 255, 255, 15);
-}
-QFrame#add_exclusions_frame QPushButton:focus {
-outline: none;
-}</string>
-              </property>
               <layout class="QHBoxLayout" name="hlayout_add_btns">
                <property name="spacing">
                 <number>20</number>
@@ -1935,6 +1854,73 @@ outline: none;
          </layout>
         </widget>
         <widget class="QWidget" name="main_container_page_3">
+         <property name="styleSheet">
+          <string notr="true">QFrame#indicator_manage_frame,
+QFrame#indicator_langs_frame,
+QFrame#indicator_color_frame {
+padding: 1px;
+border-radius: 10px;
+border: 1px solid rgba(255, 255, 255, 30);
+background: rgba(255, 255, 255, 10);
+}
+QFrame#indicator_manage_frame QPushButton,
+QFrame#indicator_langs_frame QPushButton,
+QFrame#indicator_color_frame QPushButton {
+margin: 1px;
+border-radius: 8px;
+color: rgba(255, 255, 255, 150);
+background: transparent;
+}
+QFrame#indicator_manage_frame QPushButton,
+QFrame#indicator_langs_frame QPushButton {
+padding: 5px 10px 6px 10px;
+}
+QFrame#indicator_color_frame QPushButton {
+padding: 9px 10px 10px 10px;
+}
+QFrame#indicator_manage_frame QPushButton:hover,
+QFrame#indicator_langs_frame QPushButton:hover,
+QFrame#indicator_color_frame QPushButton:hover {
+color: rgba(255, 255, 255, 255);
+background: rgba(255, 255, 255, 15);
+}
+QFrame#indicator_manage_frame QPushButton:pressed,
+QFrame#indicator_langs_frame QPushButton:pressed,
+QFrame#indicator_color_frame QPushButton:pressed {
+background: rgba(255, 255, 255, 7);
+}
+QFrame#indicator_manage_frame QPushButton:checked,
+QFrame#indicator_langs_frame QPushButton:checked,
+QFrame#indicator_color_frame QPushButton:checked {
+color: rgba(255, 255, 255, 255);
+}
+QFrame#indicator_manage_frame QPushButton:focus,
+QFrame#indicator_langs_frame QPushButton:focus,
+QFrame#indicator_color_frame QPushButton:focus {
+outline: none;
+}
+QFrame#indicator_preview_frame {
+background: rgba(255, 255, 255, 10);
+border-radius: 10px;
+}
+QFrame#preview_inner_frame {
+background: rgba(26, 26, 26, 175);
+border-radius: 6px;
+}
+QFrame#preview_background {
+padding: 1px;
+background: rgba(55, 125, 255, 200);
+/*background: rgba(255, 185, 0, 200);*/
+border-radius: 7px;
+}
+QLabel#preview_label {
+padding: 0 4px 1px 4px;
+color: rgba(55, 125, 255, 200);
+/*color: rgba(255, 185, 0, 200);*/
+background: rgba(32, 32, 32, 225);
+border-radius: 5px;
+}</string>
+         </property>
          <layout class="QVBoxLayout" name="vlayout_main_container_page_3">
           <property name="spacing">
            <number>0</number>
@@ -1952,7 +1938,7 @@ outline: none;
            <number>0</number>
           </property>
           <item>
-           <layout class="QGridLayout" name="grid_main_container_page_3" rowstretch="0,1">
+           <layout class="QGridLayout" name="grid_main_container_page_3" rowstretch="0,0">
             <property name="leftMargin">
              <number>20</number>
             </property>
@@ -1968,105 +1954,6 @@ outline: none;
             <property name="spacing">
              <number>20</number>
             </property>
-            <item row="0" column="0" colspan="3">
-             <widget class="QFrame" name="indicator_manage_frame">
-              <property name="styleSheet">
-               <string notr="true">QFrame#indicator_manage_frame {
-padding: 1px;
-border-radius: 10px;
-border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(255, 255, 255, 10);
-}
-QFrame#indicator_manage_frame QPushButton {
-margin: 1px;
-padding: 4px 10px 5px 10px;
-border-radius: 8px;
-color: rgba(255, 255, 255, 150);
-background: transparent;
-}
-QFrame#indicator_manage_frame QPushButton:hover {
-color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 15);
-}
-QFrame#indicator_manage_frame QPushButton:pressed {
-background: rgba(255, 255, 255, 5);
-}
-QFrame#indicator_manage_frame QPushButton:checked {
-color: rgba(255, 255, 255, 255);
-}
-QFrame#indicator_manage_frame QPushButton:focus {
-outline: none;
-}</string>
-              </property>
-              <layout class="QHBoxLayout" name="hlayout_indicator_manage_frame">
-               <property name="spacing">
-                <number>0</number>
-               </property>
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <item>
-                <widget class="QPushButton" name="btn_enable_indicator">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Enable indicator</string>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
-                 <property name="autoExclusive">
-                  <bool>true</bool>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="btn_disable_indicator">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Disable indicator</string>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                 <property name="checked">
-                  <bool>false</bool>
-                 </property>
-                 <property name="autoExclusive">
-                  <bool>true</bool>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
             <item row="1" column="0" colspan="3">
              <widget class="QFrame" name="color_container_frame">
               <layout class="QGridLayout" name="grid_color_container_frame" rowstretch="3,1" columnstretch="1,2,0">
@@ -2124,10 +2011,10 @@ QFrame#color_sliders_frame QSpinBox::down-button:hover {
 background: rgba(255, 255, 255, 15);
 }
 QFrame#color_sliders_frame QSpinBox::up-button:pressed {
-background: rgba(255, 255, 255, 5);
+background: rgba(255, 255, 255, 7);
 }
 QFrame#color_sliders_frame QSpinBox::down-button:pressed {
-background: rgba(255, 255, 255, 5);
+background: rgba(255, 255, 255, 7);
 }
 QFrame#color_sliders_frame QSpinBox::up-arrow {
 image: url(:/icons/icons/CaretUpFilled.svg);
@@ -2381,9 +2268,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgb(75, 75, 75), stop
                      </item>
                      <item>
                       <widget class="QFrame" name="blue_slider_frame">
-                       <property name="styleSheet">
-                        <string notr="true"/>
-                       </property>
                        <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1,0">
                         <property name="spacing">
                          <number>20</number>
@@ -2510,29 +2394,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgb(75, 75, 75), stop
                </item>
                <item row="1" column="1">
                 <widget class="QFrame" name="indicator_preview_frame">
-                 <property name="styleSheet">
-                  <string notr="true">QFrame#indicator_preview_frame {
-background: rgba(255, 255, 255, 10);
-border-radius: 10px;
-}
-QFrame#preview_inner_frame {
-background: rgba(26, 26, 26, 175);
-border-radius: 6px;
-}
-QFrame#preview_background {
-padding: 1px;
-background: rgba(55, 125, 255, 200);
-/*background: rgba(255, 185, 0, 200);*/
-border-radius: 7px;
-}
-QLabel#preview_label {
-padding: 0 4px 1px 4px;
-color: rgba(55, 125, 255, 200);
-/*color: rgba(255, 185, 0, 200);*/
-background: rgba(32, 32, 32, 225);
-border-radius: 5px;
-}</string>
-                 </property>
                  <layout class="QHBoxLayout" name="hlayout_indicator_preview_frame">
                   <property name="spacing">
                    <number>0</number>
@@ -2613,34 +2474,6 @@ border-radius: 5px;
                 <layout class="QVBoxLayout" name="vlayout_indicator_color">
                  <item>
                   <widget class="QFrame" name="indicator_color_frame">
-                   <property name="styleSheet">
-                    <string notr="true">QFrame#indicator_color_frame {
-padding: 1px;
-border-radius: 10px;
-border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(255, 255, 255, 10);
-}
-QFrame#indicator_color_frame QPushButton {
-margin: 1px;
-padding: 9px 10px 10px 10px;
-border-radius: 8px;
-color: rgba(255, 255, 255, 150);
-background: transparent;
-}
-QFrame#indicator_color_frame QPushButton:hover {
-color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 15);
-}
-QFrame#indicator_color_frame QPushButton:pressed {
-background: rgba(255, 255, 255, 5);
-}
-QFrame#indicator_color_frame QPushButton:checked {
-color: rgba(255, 255, 255, 255);
-}
-QFrame#indicator_color_frame QPushButton:focus {
-outline: none;
-}</string>
-                   </property>
                    <layout class="QVBoxLayout" name="vlayout_color_indicator_btns_frame">
                     <property name="spacing">
                      <number>0</number>
@@ -2760,34 +2593,6 @@ outline: none;
                      <height>0</height>
                     </size>
                    </property>
-                   <property name="styleSheet">
-                    <string notr="true">QFrame#indicator_langs_frame {
-padding: 1px;
-border-radius: 10px;
-border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(255, 255, 255, 10);
-}
-QFrame#indicator_langs_frame QPushButton {
-margin: 1px;
-padding: 5px 10px 6px 10px;
-border-radius: 8px;
-color: rgba(255, 255, 255, 150);
-background: transparent;
-}
-QFrame#indicator_langs_frame QPushButton:hover {
-color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 15);
-}
-QFrame#indicator_langs_frame QPushButton:pressed {
-background: rgba(255, 255, 255, 5);
-}
-QFrame#indicator_langs_frame QPushButton:checked {
-color: rgba(255, 255, 255, 255);
-}
-QFrame#indicator_langs_frame QPushButton:focus {
-outline: none;
-}</string>
-                   </property>
                    <layout class="QVBoxLayout" name="vlayout_indicator_langs_frame">
                     <property name="spacing">
                      <number>0</number>
@@ -2881,11 +2686,103 @@ outline: none;
               </layout>
              </widget>
             </item>
+            <item row="0" column="0" colspan="3">
+             <widget class="QFrame" name="indicator_manage_frame">
+              <layout class="QHBoxLayout" name="hlayout_indicator_manage_frame">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QPushButton" name="btn_enable_indicator">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Enable indicator</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="btn_disable_indicator">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Disable indicator</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="checked">
+                  <bool>false</bool>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
         </widget>
         <widget class="QWidget" name="main_container_page_4">
+         <property name="styleSheet">
+          <string notr="true">QFrame#app_help_info_label {
+color: rgba(255, 255, 255, 235);
+background: rgba(255, 255, 255, 10);
+border-radius: 10px;
+padding: 10px;
+}
+QFrame#help_frame QPushButton {
+border-radius: 8px;
+background: transparent;
+}
+QFrame#help_frame QPushButton:focus {
+outline: none;
+}
+QLabel#help_switches_label {
+color: rgb(255, 115, 115);
+}
+QLabel#help_counter_label {
+color: rgb(255, 185, 0);
+}</string>
+         </property>
          <layout class="QVBoxLayout" name="vlayout_main_container_page_4">
           <property name="spacing">
            <number>0</number>
@@ -2963,14 +2860,6 @@ You can support the further development of the project.
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="styleSheet">
-               <string notr="true">QLabel#help_switches_label {
-color: rgb(255, 115, 115);
-}
-QLabel#help_counter_label {
-color: rgb(255, 185, 0);
-}</string>
-              </property>
               <layout class="QHBoxLayout" name="hlayout_switches_labels_frame" stretch="0,0">
                <property name="spacing">
                 <number>5</number>
@@ -3016,14 +2905,6 @@ color: rgb(255, 185, 0);
             </item>
             <item row="0" column="0" colspan="3">
              <widget class="QLabel" name="app_help_info_label">
-              <property name="styleSheet">
-               <string notr="true">QFrame#app_help_info_label {
-color: rgba(255, 255, 255, 235);
-background: rgba(255, 255, 255, 10);
-border-radius: 10px;
-padding: 10px;
-}</string>
-              </property>
               <property name="text">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
 &lt;p align=&quot;justify&quot;&gt;
@@ -3066,15 +2947,6 @@ See the current layout thanks to convenient visual indication.
             </item>
             <item row="3" column="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignBottom">
              <widget class="QFrame" name="help_frame">
-              <property name="styleSheet">
-               <string notr="true">QFrame#help_frame QPushButton {
-border-radius: 8px;
-background: transparent;
-}
-QFrame#help_frame QPushButton:focus {
-outline: none;
-}</string>
-              </property>
               <layout class="QHBoxLayout" name="hlayout_info_btns_frame">
                <property name="spacing">
                 <number>10</number>
@@ -3227,6 +3099,7 @@ outline: none;
  <resources>
   <include location="../../../resources/resources.qrc"/>
   <include location="../../../resources/resources.qrc"/>
+  <include location="C:/Users/resources/resources.qrc"/>
  </resources>
  <connections>
   <connection>
