@@ -3,6 +3,7 @@
 #include "ui_EasyLangSwitcher_settings.h"
 #include "animated_selector.h"
 #include "window_dragger.h"
+#include <QVector>
 
 class SettingsWindow final : public QWidget {
     Q_OBJECT
@@ -22,6 +23,9 @@ protected:
 private:
     Ui::main_widget ui{};
 
-    AnimatedSelector *selector = nullptr;
+    QVector<AnimatedSelector *> selectors; // вместо selector1,2,3...
+
     WindowDragger *dragger = nullptr;
+
+    void addSelectorForFrame(QFrame *frame); // метод для инициализации анимации на фрейме
 };

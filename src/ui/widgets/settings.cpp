@@ -22,9 +22,11 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     connect(ui.btn_close_bot_sider, &QPushButton::clicked,
             closeAction, &QAction::trigger);
 
-    // Индикатор выбора клавиш
-    selector = new AnimatedSelector(this);
-    selector->bindToFrame(ui.key_select_frame);
+    // Добавляем анимированные индикаторы
+    addSelectorForFrame(ui.key_select_frame);
+    addSelectorForFrame(ui.app_startup_frame);
+    addSelectorForFrame(ui.app_theme_frame);
+    addSelectorForFrame(ui.app_lang_frame);
 
     // Drag по пустой области
     dragger = new WindowDragger(this);
@@ -34,6 +36,17 @@ SettingsWindow::SettingsWindow(QWidget *parent)
 }
 
 SettingsWindow::~SettingsWindow() = default;
+
+
+void SettingsWindow::addSelectorForFrame(QFrame *frame) {
+    if (!frame) return;
+
+    const auto sel = new AnimatedSelector(this);
+    sel->bindToFrame(frame);
+    selectors.append(sel);
+
+    QTimer::singleShot(0, sel, &AnimatedSelector::initPosition);
+}
 
 
 void SettingsWindow::showEvent(QShowEvent *event) {
@@ -46,7 +59,11 @@ void SettingsWindow::showEvent(QShowEvent *event) {
     });
 
     // корректно разместить индикатор
-    QTimer::singleShot(0, selector, &AnimatedSelector::initPosition);
+    QTimer::singleShot(0, this, [this]() {
+        for (const AnimatedSelector *sel: selectors) {
+            if (sel) sel->initPosition();
+        }
+    });
 }
 
 
