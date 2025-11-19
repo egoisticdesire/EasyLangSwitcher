@@ -1,5 +1,5 @@
 #pragma once
-
+#include "../../ui/helpers/acrylicHelper.h"
 #include "ui_EasyLangSwitcher_settings.h"
 #include <QPoint>
 

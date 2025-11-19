@@ -36,13 +36,13 @@ add_executable(${APP_NAME}
         src/core/config/app_config.h
         src/core/handlers/kb.cpp
         src/core/handlers/kb.h
-        src/core/helpers/acrylicHelper.h
-        src/core/helpers/hoverHelper.h
-        src/core/helpers/iconHelper.h
         src/core/i18n/lang.cpp
         src/core/i18n/lang.h
 
         # ui
+        src/ui/helpers/acrylicHelper.h
+        src/ui/helpers/hoverHelper.h
+        src/ui/helpers/iconHelper.h
         src/ui/tray/tray.cpp
         src/ui/tray/tray.h
         src/ui/widgets/settings.cpp

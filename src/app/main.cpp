@@ -1,5 +1,5 @@
-#include "../core/helpers/iconHelper.h"
 #include "../core/handlers/kb.h"
+#include "../ui/helpers/iconHelper.h"
 #include "../ui/tray/tray.h"
 #include <QApplication>
 

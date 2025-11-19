@@ -1,8 +1,8 @@
 #include "tray.h"
-#include "../../core/helpers/iconHelper.h"
-#include "../../core/helpers/acrylicHelper.h"
-#include "../../core/helpers/hoverHelper.h"
 #include "../../core/config/app_config.h"
+#include "../../ui/helpers/iconHelper.h"
+#include "../../ui/helpers/acrylicHelper.h"
+#include "../../ui/helpers/hoverHelper.h"
 #include <QApplication>
 #include <QCursor>
 #include <QTimer>
