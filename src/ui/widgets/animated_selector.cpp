@@ -7,39 +7,42 @@
 AnimatedSelector::AnimatedSelector(QWidget *parent) : QObject(parent) {
 }
 
-void AnimatedSelector::bindToFrame(QFrame *frame) {
+void AnimatedSelector::bindToFrame(QFrame *frame, const QString &extraStyle) {
     m_frame = frame;
-    if (!m_frame)
-        return;
+    if (!m_frame) return;
 
-    // создаём индикатор
     m_indicator = new QFrame(m_frame);
     m_indicator->setObjectName("animatedIndicator");
-    m_indicator->setStyleSheet(
-        "margin: 1px;"
-        "color: rgba(255,255,255,255);"
-        "background-color: rgba(255,255,255,15);"
-        "border-radius: 8px;"
-    );
+
+    // БАЗОВЫЙ стиль (всегда активен)
+    const QString baseStyle =
+            "margin: 1px;"
+            "color: rgba(255, 255, 255, 255);"
+            "background-color: rgba(255, 255, 255, 15);"
+            "border-radius: 8px;";
+
+    // ЕСЛИ пользователь передал extraStyle → ДОБАВЛЯЕМ, а не заменяем
+    QString finalStyle = baseStyle;
+    if (!extraStyle.isEmpty())
+        finalStyle += extraStyle;
+
+    m_indicator->setStyleSheet(finalStyle);
+
     m_indicator->setAttribute(Qt::WA_TransparentForMouseEvents);
     m_indicator->hide();
 
-    // подключаем кнопки
+    // Кнопки
     QList<QPushButton *> buttons = m_frame->findChildren<QPushButton *>();
-    for (auto *b: buttons)
-        b->setCheckable(true);
+    for (auto *b: buttons) b->setCheckable(true);
 
-    // группа
     m_group = new QButtonGroup(this);
     m_group->setExclusive(true);
+    for (auto *b: buttons) m_group->addButton(b);
 
-    for (auto *b: buttons)
-        m_group->addButton(b);
-
-    // сигнал выбора
     connect(m_group, &QButtonGroup::buttonClicked,
             this, &AnimatedSelector::animateToButton);
 }
+
 
 void AnimatedSelector::initPosition() const {
     if (!m_group || !m_indicator)

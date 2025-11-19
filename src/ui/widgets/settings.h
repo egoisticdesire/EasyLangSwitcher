@@ -23,9 +23,9 @@ protected:
 private:
     Ui::main_widget ui{};
 
-    QVector<AnimatedSelector *> selectors; // вместо selector1,2,3...
+    QVector<AnimatedSelector *> selectors;
 
     WindowDragger *dragger = nullptr;
 
-    void addSelectorForFrame(QFrame *frame); // метод для инициализации анимации на фрейме
+    void addSelectorForFrame(QFrame *frame, const QString &extraStyle = QString());
 };

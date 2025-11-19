@@ -11,7 +11,7 @@ public:
     explicit AnimatedSelector(QWidget *parent);
 
     // подключение к любому контейнеру
-    void bindToFrame(QFrame *frame);
+    void bindToFrame(QFrame *frame, const QString &extraStyle = QString());
 
     // опционально — старт с выбранной кнопки
     void initPosition() const;

@@ -29,20 +29,19 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     addSelectorForFrame(ui.app_lang_frame);
 
     // Drag по пустой области
-    dragger = new WindowDragger(this);
-
     // можно указать, что кнопка закрытия — интерактивная
+    dragger = new WindowDragger(this);
     dragger->addIgnoredWidget(ui.btn_close_bot_sider);
 }
 
 SettingsWindow::~SettingsWindow() = default;
 
 
-void SettingsWindow::addSelectorForFrame(QFrame *frame) {
+void SettingsWindow::addSelectorForFrame(QFrame *frame, const QString &extraStyle) {
     if (!frame) return;
 
     const auto sel = new AnimatedSelector(this);
-    sel->bindToFrame(frame);
+    sel->bindToFrame(frame, extraStyle);
     selectors.append(sel);
 
     QTimer::singleShot(0, sel, &AnimatedSelector::initPosition);
