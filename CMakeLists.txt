@@ -33,7 +33,8 @@ add_executable(${APP_NAME}
         src/app/main.cpp
 
         # core
-        src/core/config/app_config.h
+        src/core/config/app_settings.cpp
+        src/core/config/app_settings.h
         src/core/handlers/kb.cpp
         src/core/handlers/kb.h
         src/core/i18n/lang.cpp

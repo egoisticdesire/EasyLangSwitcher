@@ -1,5 +1,5 @@
 #include "tray.h"
-#include "../../core/config/app_config.h"
+#include "../../core/config/app_settings.h"
 #include "../helpers/acrylicHelper.h"
 #include "../helpers/hoverHelper.h"
 #include "../helpers/iconHelper.h"
@@ -95,8 +95,8 @@ void TrayManager::setupUiBehavior() {
 
 void TrayManager::updateInfo() const {
     ui.status_value->setText(enabled ? tr("Enabled") : tr("Disabled"));
-    ui.hotkey_value->setText(AppConfig::hotkeyName);
-    ui.delay_value->setText(QString::number(AppConfig::switchDelayMs));
+    ui.hotkey_value->setText(AppSettings::hotkeyName);
+    ui.delay_value->setText(QString::number(AppSettings::switchDelayMs));
     ui.toggle_btn->setText(enabled ? tr("  Disable") : tr("  Enable"));
 
     ui.toggle_btn->setIcon(

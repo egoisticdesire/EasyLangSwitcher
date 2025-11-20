@@ -1,5 +1,5 @@
 #include "kb.h"
-#include "../config/app_config.h"
+#include "../config/app_settings.h"
 #include <QDebug>
 
 thread_local KeyboardHandler *KeyboardHandler::instance = nullptr;
@@ -39,12 +39,12 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
         const bool isDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
         const bool isUp = (wParam == WM_KEYUP || wParam == WM_SYSKEYUP);
 
-        if (kb->vkCode == AppConfig::hotkeyVk) {
+        if (kb->vkCode == AppSettings::hotkeyVk) {
             if (isDown && !instance->keyPressed) {
                 instance->keyPressed = true;
                 instance->longPressDetected = false;
                 instance->pressTime = GetTickCount();
-                instance->timer.start(AppConfig::switchDelayMs);
+                instance->timer.start(AppSettings::switchDelayMs);
             } else if (isUp && instance->keyPressed) {
                 instance->timer.stop();
                 instance->keyPressed = false;
