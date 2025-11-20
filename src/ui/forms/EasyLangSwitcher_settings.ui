@@ -407,17 +407,21 @@ margin-right: 20px;
 QFrame#key_select_frame QLineEdit {
 height: 100%;
 margin: 1px;
-padding: 2px 13px 2px 17px;
+padding: 2px;
 border-radius: 8px;
-border-bottom: 1px solid transparent;
-background: transparent;
-}
-QFrame#key_select_frame QLineEdit:focus {
-border-bottom: 1px solid rgba(50, 125, 255, 150);
-background: rgba(255, 255, 255, 10);
+background: rgba(26, 26, 26, 175);
 }
 QFrame#key_select_frame QLineEdit[hasText=&quot;true&quot;] {
-background: rgba(255, 255, 255, 15);
+padding: 2px 25px 2px 5px;
+background: rgba(26, 26, 26, 175);
+}
+QFrame#key_select_frame QLineEdit[hasText=&quot;true&quot;]:hover,
+QFrame#key_select_frame QLineEdit:hover {
+background: rgba(22, 22, 22, 175);
+}
+QFrame#key_select_frame QLineEdit[hasText=&quot;true&quot;]:focus,
+QFrame#key_select_frame QLineEdit:focus {
+background: rgba(16, 16, 16, 175);
 }
 QToolButton#btn_restore_default {
 margin-right: 6px;
@@ -448,10 +452,9 @@ QFrame#app_theme_frame QPushButton:hover,
 QFrame#app_startup_frame QPushButton:hover,
 QFrame#app_lang_frame QPushButton:hover {
 color: rgba(255, 255, 255, 255);
-/*background: rgba(255, 255, 255, 15);*/
 background: transparent;
 }
-QFrame#key_select_frame QLineEdit:hover,
+QFrame#key_select_frame QLineEdit:hove,
 QToolButton#btn_restore_default:hover {
 color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
@@ -856,9 +859,6 @@ outline: none;
                  </property>
                  <property name="locale">
                   <locale language="Russian" country="Russia"/>
-                 </property>
-                 <property name="clearButtonEnabled">
-                  <bool>true</bool>
                  </property>
                  <property name="maximumSequenceLength">
                   <longLong>1</longLong>
@@ -1900,7 +1900,6 @@ QFrame#indicator_manage_frame QPushButton:hover,
 QFrame#indicator_langs_frame QPushButton:hover,
 QFrame#indicator_color_frame QPushButton:hover {
 color: rgba(255, 255, 255, 255);
-/*background: rgba(255, 255, 255, 15);*/
 background: transparent;
 }
 QFrame#indicator_manage_frame QPushButton:pressed,
@@ -1929,13 +1928,11 @@ border-radius: 6px;
 QFrame#preview_background {
 padding: 1px;
 background: rgba(55, 125, 255, 200);
-/*background: rgba(255, 185, 0, 200);*/
 border-radius: 7px;
 }
 QLabel#preview_label {
 padding: 0 4px 1px 4px;
 color: rgba(55, 125, 255, 200);
-/*color: rgba(255, 185, 0, 200);*/
 background: rgba(32, 32, 32, 225);
 border-radius: 5px;
 }</string>
@@ -1998,18 +1995,18 @@ border-radius: 5px;
 background: rgba(255, 255, 255, 10);
 border-radius: 10px;
 }
-/*
-QFrame#color_sliders_inner_frame {
-background: rgba(26, 26, 26, 175);
-border-radius: 6px;
-}
-*/
 QFrame#color_sliders_frame QSpinBox{
 width: 0;
 border-radius: 8px;
 padding: 3px 15px 3px 3px;
 color: rgba(255, 255, 255, 225);
 background: rgba(26, 26, 26, 175);
+}
+QFrame#color_sliders_frame QSpinBox:hover {
+background: rgba(22, 22, 22, 175);
+}
+QFrame#color_sliders_frame QSpinBox:focus {
+background: rgba(16, 16, 16, 175);
 }
 QFrame#color_sliders_frame QSpinBox::up-button {
 background: rgba(255, 255, 255, 10);
@@ -2024,10 +2021,10 @@ border-bottom-right-radius: 5px;
 margin: 2px 2px 3px 0;
 }
 QFrame#color_sliders_frame QSpinBox::up-button:hover {
-background: rgba(255, 255, 255, 15);
+background: rgba(255, 255, 255, 25);
 }
 QFrame#color_sliders_frame QSpinBox::down-button:hover {
-background: rgba(255, 255, 255, 15);
+background: rgba(255, 255, 255, 25);
 }
 QFrame#color_sliders_frame QSpinBox::up-button:pressed {
 background: rgba(255, 255, 255, 7);
@@ -3116,8 +3113,6 @@ See the current layout thanks to convenient visual indication.
   <tabstop>btn_support</tabstop>
  </tabstops>
  <resources>
-  <include location="../../../resources/resources.qrc"/>
-  <include location="../../../resources/resources.qrc"/>
   <include location="../../../resources/resources.qrc"/>
  </resources>
  <connections>

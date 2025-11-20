@@ -1,6 +1,8 @@
 <RCC>
   <qresource prefix="icons">
     <file>icons/ExternalLink.svg</file>
+    <file>icons/ClearFilled.svg</file>
+    <file>icons/ClearFilled2.svg</file>
     <file>icons/CopyFilled.svg</file>
     <file>icons/Boosty.svg</file>
     <file>icons/TokenTon.svg</file>
