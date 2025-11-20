@@ -45,6 +45,7 @@ add_executable(${APP_NAME}
         src/ui/helpers/hoverHelper.h
         src/ui/helpers/iconHelper.h
         src/ui/helpers/keySequenceHelper.h
+        src/ui/helpers/vkMapper.h
         src/ui/tray/tray.cpp
         src/ui/tray/tray.h
         src/ui/widgets/animated_selector.cpp
