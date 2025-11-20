@@ -1,5 +1,4 @@
 #pragma once
-#include "../../ui/helpers/acrylicHelper.h"
 #include "ui_EasyLangSwitcher_settings.h"
 #include "animated_selector.h"
 #include "window_dragger.h"

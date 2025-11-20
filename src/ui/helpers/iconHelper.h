@@ -1,5 +1,4 @@
 #pragma once
-
 #include <QIcon>
 #include <QPixmap>
 #include <QPainter>

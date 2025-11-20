@@ -2,7 +2,6 @@
 #include <QPushButton>
 #include <QPropertyAnimation>
 #include <QTimer>
-#include <QDebug>
 #include <qstyle.h>
 
 AnimatedSelector::AnimatedSelector(QWidget *parent)
@@ -18,9 +17,9 @@ void AnimatedSelector::bindToFrame(QFrame *frame, const QString &extraStyle) {
 
     const QString finalStyle =
             "margin: 1px;"
-            "color: rgba(255, 255, 255, 255);"
-            "background-color: rgba(255, 255, 255, 15);"
             "border-radius: 8px;"
+            "color: rgba(255, 255, 255, 255);"
+            "background: rgba(255, 255, 255, 15);"
             + extraStyle;
     m_indicator->setStyleSheet(finalStyle);
     m_indicator->setAttribute(Qt::WA_TransparentForMouseEvents);

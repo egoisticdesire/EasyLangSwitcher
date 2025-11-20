@@ -1,6 +1,6 @@
 #pragma once
 #include "ui_EasyLangSwitcher_tray.h"
-#include "../../ui/widgets/settings.h"
+#include "../widgets/settings.h"
 #include <QSystemTrayIcon>
 #include <QPropertyAnimation>
 

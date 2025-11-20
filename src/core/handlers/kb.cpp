@@ -1,5 +1,5 @@
 #include "kb.h"
-#include "../../core/config/app_config.h"
+#include "../config/app_config.h"
 #include <QDebug>
 
 thread_local KeyboardHandler *KeyboardHandler::instance = nullptr;

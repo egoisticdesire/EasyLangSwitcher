@@ -1,5 +1,4 @@
 #pragma once
-
 #include <QtWidgets/QWidget>
 #include <Windows.h>
 #include <dwmapi.h>
