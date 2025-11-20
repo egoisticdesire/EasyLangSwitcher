@@ -1,4 +1,7 @@
 #include "settings.h"
+#include "../helpers/acrylicHelper.h"
+#include "../helpers/iconHelper.h"
+#include "../helpers/keySequenceHelper.h"
 #include <QGuiApplication>
 #include <QTimer>
 #include <QScreen>
@@ -8,6 +11,15 @@
 SettingsWindow::SettingsWindow(QWidget *parent)
     : QWidget(parent) {
     ui.setupUi(this);
+    ui.key_select_label_img->setPixmap(
+        IconHelper::loadIcon(":/icons/icons/InfoRegular.svg", QColor(175, 175, 175)).pixmap(16, 16));
+
+    new KeySequenceHelper(
+        this,
+        "btn_sequence",
+        IconHelper::loadIcon(":/icons/icons/ClearFilled.svg", QColor(175, 175, 175), QSize(12, 12))
+    );
+
 
     // системные флаги окна
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
