@@ -1,4 +1,5 @@
 #include "app_settings.h"
+#include <Windows.h>
 
 int AppSettings::defaultHotkeyVk = VK_LCONTROL;
 QString AppSettings::defaultHotkeyName = "Left Ctrl";

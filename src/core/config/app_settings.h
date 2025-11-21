@@ -1,7 +1,5 @@
 #pragma once
-#include <QString>
 #include <QSettings>
-#include <Windows.h>
 
 class AppSettings {
 public:
@@ -9,12 +7,12 @@ public:
 
     static void save();
 
-    // текущие значения (runtime)
+    // текущие значения
     static int hotkeyVk;
     static QString hotkeyName;
     static int switchDelayMs;
 
-    // дефолты в том же файле
+    // дефолтные значения
     static int defaultHotkeyVk;
     static QString defaultHotkeyName;
     static int defaultSwitchDelayMs;
