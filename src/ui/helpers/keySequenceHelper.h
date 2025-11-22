@@ -4,6 +4,17 @@
 #include <QKeySequenceEdit>
 #include <QToolButton>
 #include <QLineEdit>
+#include <QDebug>
+#include "../helpers/vkMapper.h"
+
+/*
+KeySequenceHelper:
+— блокирует модификаторы в отображаемой последовательности (оставляет только основную клавишу)
+— эмитирует signal hotkeySelected(mainVk, modifiersMask, name)
+— при очистке эмитит (0,0,"")
+— защищён от рекурсивных setKeySequence и дублей
+— восстанавливает кастомный placeholder даже при смене фокуса
+*/
 
 class KeySequenceHelper final : public QObject {
     Q_OBJECT
@@ -19,66 +30,136 @@ public:
         m_edit = root->findChild<QKeySequenceEdit *>(objectName);
         if (!m_edit) return;
 
-        // отключаем стандартную кнопку очистки
         m_edit->setClearButtonEnabled(false);
 
-        // находим внутренний QLineEdit
         m_lineEdit = m_edit->findChild<QLineEdit *>();
         if (m_lineEdit) {
             m_lineEdit->setAlignment(Qt::AlignCenter);
             m_lineEdit->setPlaceholderText(m_placeholder);
         }
 
-        // создаем внешнюю кнопку очистки
         m_btn = new QToolButton(m_edit);
         m_btn->setIcon(icon);
         m_btn->setCursor(Qt::ArrowCursor);
         m_btn->setAutoRaise(true);
         m_btn->setVisible(!m_edit->keySequence().isEmpty());
         m_btn->setStyleSheet(R"(
-            QToolButton {
-                margin: 1px 0 0 0;
-                padding: 3px 1px 1px 2px;
-                border: none;
-                border-radius: 6px;
-                background: transparent;
-            }
-            QToolButton:hover {
-                background: rgba(255, 255, 255, 25);
-            }
-            QToolButton:pressed {
-                background: rgba(255, 255, 255, 7);
-            }
+            QToolButton { margin: 1px 0 0 0;
+                        padding: 3px 1px 1px 2px;
+                        border: none;
+                        border-radius: 6px;
+                        background: transparent; }
+            QToolButton:hover { background: rgba(255, 255, 255, 25); }
+            QToolButton:pressed { background: rgba(255, 255, 255, 7); }
         )");
 
-        // очистка последовательности по кнопке
         connect(m_btn, &QToolButton::clicked, this, [this]() {
             if (!m_edit) return;
+            m_internalUpdate = true;
             m_edit->setKeySequence(QKeySequence());
-            if (m_lineEdit)
-                m_lineEdit->setPlaceholderText(m_placeholder);
+            if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+            m_btn->setVisible(false);
+            m_internalUpdate = false;
+
+            qDebug() << "KeySequenceHelper: clear button pressed";
+            if (m_lastEmittedVk != 0 || !m_lastEmittedName.isEmpty()) {
+                m_lastEmittedVk = 0;
+                m_lastEmittedName.clear();
+                emit hotkeySelected(0, 0, QString());
+            }
         });
 
-        // обновление кнопки и placeholder при изменении последовательности
         connect(m_edit, &QKeySequenceEdit::keySequenceChanged, this, [this]() {
             if (!m_edit) return;
-            m_btn->setVisible(!m_edit->keySequence().isEmpty());
-            if (m_edit->keySequence().isEmpty() && m_lineEdit)
-                m_lineEdit->setPlaceholderText(m_placeholder);
+            if (m_internalUpdate) return;
+
+            const QKeySequence seq = m_edit->keySequence();
+
+            if (seq.isEmpty()) {
+                m_btn->setVisible(false);
+                if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+                qDebug() << "KeySequenceHelper: sequence cleared (via edit)";
+
+                if (m_lastEmittedVk != 0 || !m_lastEmittedName.isEmpty()) {
+                    m_lastEmittedVk = 0;
+                    m_lastEmittedName.clear();
+                    emit hotkeySelected(0, 0, QString());
+                }
+                return;
+            }
+
+            // обрезать модификаторы и извлечь первый элемент
+            const QKeyCombination raw = seq[0];
+            const int baseKey = raw.key() & ~(
+                                    Qt::ShiftModifier | Qt::ControlModifier |
+                                    Qt::AltModifier | Qt::MetaModifier
+                                );
+
+            int vk = 0;
+            QString name;
+            if (baseKey != 0 && baseKey != Qt::Key_unknown) {
+                const QKeySequence cleanSeq(baseKey);
+
+                // устанавливаем очищенную последовательность, если она отличается
+                if (m_edit->keySequence() != cleanSeq) {
+                    m_internalUpdate = true;
+                    m_edit->setKeySequence(cleanSeq);
+                    if (m_lineEdit && m_lineEdit->placeholderText().isEmpty())
+                        m_lineEdit->setPlaceholderText(m_placeholder);
+                    m_btn->setVisible(true);
+                    m_internalUpdate = false;
+                } else {
+                    m_btn->setVisible(true);
+                }
+
+                vk = VkMapper::sequenceToVk(cleanSeq);
+                name = vk ? VkMapper::vkToName(vk) : cleanSeq.toString(QKeySequence::NativeText);
+            } else {
+                const QString fallback = seq.toString(QKeySequence::NativeText);
+                m_internalUpdate = true;
+                m_edit->setKeySequence(QKeySequence());
+                if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+                m_btn->setVisible(false);
+                m_internalUpdate = false;
+                vk = 0;
+                name = fallback;
+            }
+
+            if (vk != m_lastEmittedVk || name != m_lastEmittedName) {
+                m_lastEmittedVk = vk;
+                m_lastEmittedName = name;
+                qDebug() << "KeySequenceHelper: selected cleaned vk =" << vk << "name =" << name;
+                emit hotkeySelected(vk, 0, name);
+            }
         });
 
-        // установка фильтра событий для кнопки и edit
+        // переопределение плейсхолдера "Press shortcut"
         m_edit->installEventFilter(this);
         if (m_lineEdit) m_lineEdit->installEventFilter(this);
 
         updatePosition();
     }
 
+signals:
+    void hotkeySelected(int mainVk, int modifiersMask, const QString &name);
+
 protected:
     bool eventFilter(QObject *w, QEvent *ev) override {
         if (w == m_edit || w == m_lineEdit) {
+            // сохранять позицию при изменении размера/шрифта
             if (ev->type() == QEvent::Resize || ev->type() == QEvent::FontChange) {
                 updatePosition();
+            }
+
+            // переопределение плейсхолдера "Press shortcut"
+            if (ev->type() == QEvent::FocusIn) {
+                if (m_lineEdit) {
+                    QTimer::singleShot(0, [this]() {
+                        if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+                    });
+                }
+            } else if (ev->type() == QEvent::FocusOut) {
+                if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
             }
         }
         return QObject::eventFilter(w, ev);
@@ -92,17 +173,15 @@ private:
         const int btnW = m_btn->sizeHint().width();
         const int btnH = m_btn->sizeHint().height() - 1;
         constexpr int margin = 4;
-
-        m_btn->setGeometry(
-            m_edit->width() - btnW - margin,
-            (h - btnH) / 2,
-            btnW,
-            btnH
-        );
+        m_btn->setGeometry(m_edit->width() - btnW - margin, (h - btnH) / 2, btnW, btnH);
     }
 
     QKeySequenceEdit *m_edit = nullptr;
     QLineEdit *m_lineEdit = nullptr;
     QToolButton *m_btn = nullptr;
     QString m_placeholder;
+
+    bool m_internalUpdate = false;
+    int m_lastEmittedVk = -1;
+    QString m_lastEmittedName;
 };

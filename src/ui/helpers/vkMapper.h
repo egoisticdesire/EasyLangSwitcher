@@ -3,7 +3,7 @@
 #include <QKeySequence>
 
 /*
-    Модуль для конвертации Virtual-Key ↔ человекочитаемое имя.
+Модуль для конвертации Virtual-Key ↔ человекочитаемое имя.
 */
 
 namespace VkMapper {
@@ -191,7 +191,7 @@ namespace VkMapper {
     }
 
     // ====================================================
-    // 3. Преобразование VK → человекочитаемое имя
+    // 3. Преобразование VK → читаемое имя
     // ====================================================
     inline QString vkToName(const int vk) {
         if (const auto &map = vkToNameMap(); map.contains(vk))
@@ -205,7 +205,7 @@ namespace VkMapper {
         if (vk >= '0' && vk <= '9')
             return QString(QChar(vk));
 
-        // OEM-символы → используем OS-мэппинг Qt
+        // OEM-символы → используем OS-маппинг Qt
         const QKeySequence seq(vk);
         if (const QString text = seq.toString(QKeySequence::NativeText); !text.isEmpty())
             return text;
