@@ -1,5 +1,11 @@
 #pragma once
 #include <QSettings>
+#include <QString>
+
+/*
+AppSettings
+— централизованное хранение настроек (runtime + defaults)
+*/
 
 class AppSettings {
 public:
@@ -7,18 +13,24 @@ public:
 
     static void save();
 
-    // текущие значения
-    static int hotkeyVk;
+    // runtime
+    static int hotkeyMainVk;
+
+    static int hotkeyModifiers;
+
     static QString hotkeyName;
+
     static int switchDelayMs;
 
-    // дефолтные значения
-    static int defaultHotkeyVk;
+    // defaults
+    static int defaultHotkeyModifiers;
+
     static QString defaultHotkeyName;
+
     static int defaultSwitchDelayMs;
 
+    static int defaultHotkeyMainVk;
+
 private:
-    static inline QSettings settings{
-        "EasyLangSwitcher", "EasyLangSwitcher"
-    };
+    static inline QSettings settings{"EasyLangSwitcher", "EasyLangSwitcher"};
 };
