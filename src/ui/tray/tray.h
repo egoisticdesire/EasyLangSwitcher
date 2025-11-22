@@ -4,6 +4,11 @@
 #include <QSystemTrayIcon>
 #include <QPropertyAnimation>
 
+/*
+TrayManager
+— менеджер трея
+*/
+
 class TrayManager final : public QWidget {
     Q_OBJECT
 
@@ -26,10 +31,15 @@ protected:
 
 private:
     Ui::main_frame ui{};
+
     QSystemTrayIcon trayIcon;
+
     SettingsWindow *settingsWindow = nullptr;
+
     bool enabled = true;
+
     QPropertyAnimation *fadeIn = nullptr;
+
     QPropertyAnimation *fadeOut = nullptr;
 
     void updateTrayIcon();

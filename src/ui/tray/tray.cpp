@@ -9,6 +9,7 @@
 #include <QGraphicsOpacityEffect>
 #include <QMouseEvent>
 #include <QPushButton>
+#include <QDebug>
 
 TrayManager::TrayManager(QWidget *parent)
     : QWidget(parent) {
@@ -18,7 +19,6 @@ TrayManager::TrayManager(QWidget *parent)
     setAttribute(Qt::WA_ShowWithoutActivating);
     setFocusPolicy(Qt::StrongFocus);
 
-    // Создаём окно настроек один раз (можно создать лениво при первом клике)
     settingsWindow = new SettingsWindow(nullptr);
     settingsWindow->setAttribute(Qt::WA_DeleteOnClose, false);
 
@@ -43,6 +43,8 @@ TrayManager::TrayManager(QWidget *parent)
 
     setWindowOpacity(0.0);
     hide();
+
+    updateInfo();
 }
 
 void TrayManager::setupTrayIcon() {
@@ -78,6 +80,14 @@ void TrayManager::setupUiBehavior() {
         }
         settingsWindow->openCentered();
     });
+
+    // отслеживание изменений настроек, чтобы информация в меню обновлялась
+    if (settingsWindow) {
+        connect(settingsWindow, &SettingsWindow::settingsChanged, this, [this]() {
+            qDebug() << "[TrayManager] received settingsChanged - updating info";
+            updateInfo();
+        });
+    }
 
     connect(ui.exit_btn, &QToolButton::clicked, this, [this]() {
         emit exitRequested();
@@ -124,17 +134,11 @@ void TrayManager::showAtCursor() {
     QPoint pos = cursorPos;
 
     // горизонтальная ориентация
-    if (pos.x() + width() > workArea.right())
-        pos.rx() -= width() + 3;
-    else
-        pos.rx() += 3;
-
+    if (pos.x() + width() > workArea.right()) pos.rx() -= width() + 3;
+    else pos.rx() += 3;
     // вертикальная ориентация
-    if (pos.y() + height() > workArea.bottom())
-        pos.ry() -= height() + 3;
-    else
-        pos.ry() += 3;
-
+    if (pos.y() + height() > workArea.bottom()) pos.ry() -= height() + 3;
+    else pos.ry() += 3;
     // применяем скорректированную позицию
     move(pos);
 
