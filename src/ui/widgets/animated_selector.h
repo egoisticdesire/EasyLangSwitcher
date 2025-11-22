@@ -3,6 +3,7 @@
 #include <QPropertyAnimation>
 #include <QLineEdit>
 #include <QWidget>
+#include <QFrame>
 
 class AnimatedSelector final : public QObject {
     Q_OBJECT
