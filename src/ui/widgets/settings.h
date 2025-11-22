@@ -3,6 +3,15 @@
 #include "animated_selector.h"
 #include "window_dragger.h"
 #include <QVector>
+#include <QTimer>
+
+/*
+SettingsWindow
+— управление выбором клавишей-триггером
+— автосохранение (1s) при реальных изменениях
+— восстановление предыдущего preset при очистке input-поля
+— единый маппинг preset кнопок
+*/
 
 class SettingsWindow final : public QWidget {
     Q_OBJECT
@@ -13,6 +22,9 @@ public:
     ~SettingsWindow() override;
 
     void openCentered();
+
+signals:
+    void settingsChanged();
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -26,5 +38,29 @@ private:
 
     WindowDragger *dragger = nullptr;
 
+    QTimer autosaveTimer;
+
+    static constexpr int autosaveIntervalMs = 1000;
+
+    bool hasPendingChanges = false;
+
+    int previousPresetVk = 0;
+
+    QString previousPresetName;
+
+    QHash<QString, int> presetMap;
+
     void addSelectorForFrame(QFrame *frame, const QString &extraStyle = QString());
+
+    void buildPresetMap();
+
+    int vkFromPresetObjectName(const QString &obj) const;
+
+    static QString nameFromVk(int vk);
+
+    void applyHotkeyIfChanged(int newVk, const QString &newName);
+
+    void markChanged();
+
+    void restorePreviousPresetIfNeeded();
 };
