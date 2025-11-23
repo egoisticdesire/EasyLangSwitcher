@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>main_widget</class>
- <widget class="QWidget" name="main_widget">
+ <class>settings_warning_main_widget</class>
+ <widget class="QWidget" name="settings_warning_main_widget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -10,7 +10,7 @@
     <height>180</height>
    </rect>
   </property>
-  <layout class="QVBoxLayout" name="vlayout_main_widget">
+  <layout class="QVBoxLayout" name="vlayout_settings_warning_main_widget">
    <property name="spacing">
     <number>0</number>
    </property>

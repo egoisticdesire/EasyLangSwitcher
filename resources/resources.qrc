@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>icons/WarningSolid.svg</file>
     <file>icons/ExternalLink.svg</file>
     <file>icons/ClearFilled.svg</file>
     <file>icons/ClearFilled2.svg</file>

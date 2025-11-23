@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>main_frame</class>
- <widget class="QWidget" name="main_frame">
+ <class>tray_main_widget</class>
+ <widget class="QWidget" name="tray_main_widget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -39,7 +39,7 @@
     <pointsize>10</pointsize>
    </font>
   </property>
-  <layout class="QVBoxLayout" name="v_layout_main_frame">
+  <layout class="QVBoxLayout" name="v_layout_tray_main_widget">
    <property name="spacing">
     <number>0</number>
    </property>

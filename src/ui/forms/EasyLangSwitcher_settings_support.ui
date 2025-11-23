@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>main_widget</class>
- <widget class="QWidget" name="main_widget">
+ <class>support_main_widget</class>
+ <widget class="QWidget" name="support_main_widget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -25,7 +25,7 @@
   <property name="windowTitle">
    <string/>
   </property>
-  <layout class="QVBoxLayout" name="vlayout_main_widget">
+  <layout class="QVBoxLayout" name="vlayout_support_main_widget">
    <property name="spacing">
     <number>0</number>
    </property>
