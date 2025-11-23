@@ -1346,14 +1346,14 @@ QFrame#key_delay_frame QSpinBox::down-button:pressed {
 background: rgba(255, 255, 255, 7);
 }
 QFrame#key_delay_frame QSpinBox::up-arrow {
-image: url(:/icons/icons/CaretUpFilled.svg);
-width: 12px;
-height: 12px;
+image: url(:/icons/icons/CaretUpFilledLight.svg);
+width: 10px;
+height: 10px;
 }
 QFrame#key_delay_frame QSpinBox::down-arrow {
-image: url(:/icons/icons/CaretDownFilled.svg);
-width: 12px;
-height: 12px;
+image: url(:/icons/icons/CaretDownFilledLight.svg);
+width: 10px;
+height: 10px;
 }
 QFrame#key_delay_frame QSpinBox::up-arrow:pressed {
 background: transparent;
@@ -2095,14 +2095,14 @@ QFrame#color_sliders_frame QSpinBox::down-button:pressed {
 background: rgba(255, 255, 255, 7);
 }
 QFrame#color_sliders_frame QSpinBox::up-arrow {
-image: url(:/icons/icons/CaretUpFilled.svg);
-width: 12px;
-height: 12px;
+image: url(:/icons/icons/CaretUpFilledLight.svg);
+width: 10px;
+height: 10px;
 }
 QFrame#color_sliders_frame QSpinBox::down-arrow {
-image: url(:/icons/icons/CaretDownFilled.svg);
-width: 12px;
-height: 12px;
+image: url(:/icons/icons/CaretDownFilledLight.svg);
+width: 10px;
+height: 10px;
 }
 QFrame#color_sliders_frame QSpinBox::up-arrow:pressed {
 background: transparent;

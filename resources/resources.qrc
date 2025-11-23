@@ -1,5 +1,9 @@
 <RCC>
   <qresource prefix="icons">
+    <file>icons/CaretDownFilledDark.svg</file>
+    <file>icons/CaretDownFilledLight.svg</file>
+    <file>icons/CaretUpFilledDark.svg</file>
+    <file>icons/CaretUpFilledLight.svg</file>
     <file>icons/WarningSolid.svg</file>
     <file>icons/ExternalLink.svg</file>
     <file>icons/ClearFilled.svg</file>
@@ -8,8 +12,6 @@
     <file>icons/Boosty.svg</file>
     <file>icons/TokenTon.svg</file>
     <file>icons/TokenTrx.svg</file>
-    <file>icons/CaretDownFilled.svg</file>
-    <file>icons/CaretUpFilled.svg</file>
     <file>icons/InfoRegular.svg</file>
     <file>icons/CursorClickFilled.svg</file>
     <file>icons/CursorClickRegular.svg</file>
