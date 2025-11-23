@@ -40,10 +40,10 @@ int main(int argc, char *argv[]) {
     KeyboardHandler kbHandler;
     kbHandler.start();
 
-    QObject::connect(&app, &QApplication::aboutToQuit, [&]() {
+    QObject::connect(&app, &QApplication::aboutToQuit, [&] {
         kbHandler.stop();
     });
-    QObject::connect(&tray, &TrayManager::exitRequested, [&]() {
+    QObject::connect(&tray, &TrayManager::exitRequested, [&] {
         QApplication::quit();
     });
     QObject::connect(&tray, &TrayManager::keyboardToggled, [&](const bool enabled) {

@@ -131,13 +131,34 @@ SettingsWindow::SettingsWindow(QWidget *parent)
             if (auto *seqEdit = findChild<QKeySequenceEdit *>("btn_sequence")) {
                 seqEdit->setKeySequence(QKeySequence());
                 seqEdit->clearFocus();
-                // move focus away to window so placeholder shows correctly
                 this->setFocus(Qt::OtherFocusReason);
-                // ensure placeholder is set (KeySequenceHelper will also guard)
                 if (auto *le = seqEdit->findChild<QLineEdit *>()) le->setPlaceholderText(QStringLiteral("Key..."));
             }
         });
     }
+
+    ui.key_delay_slider->setValue(AppSettings::switchDelayMs);
+    ui.key_delay_spinbox->setValue(AppSettings::switchDelayMs);
+
+    connect(ui.key_delay_slider, &QSlider::valueChanged,
+            this, [this](const int v) {
+                if (AppSettings::switchDelayMs != v) {
+                    AppSettings::switchDelayMs = v;
+                    ui.key_delay_spinbox->setValue(v); // синхронизируем
+                    markChanged();
+                }
+            });
+
+    connect(ui.key_delay_spinbox, qOverload<int>(&QSpinBox::valueChanged),
+            this, [this](const int v) {
+                if (AppSettings::switchDelayMs != v) {
+                    AppSettings::switchDelayMs = v;
+                    ui.key_delay_slider->setValue(v); // синхронизируем
+                    markChanged();
+                }
+            });
+
+
     LOG_DEBUG() << "SettingsWindow initialized";
 }
 
