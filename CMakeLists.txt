@@ -19,13 +19,13 @@ if (NOT QT_DIR)
     message(FATAL_ERROR "Please set QT_DIR environment variable to Qt installation path")
 endif ()
 
-set(CMAKE_PREFIX "${QT_DIR}/6.10.0/msvc2022_64")
-set(QT_BIN_DIR "${CMAKE_PREFIX}/bin")
+set(CMAKE_PREFIX_PATH  "${QT_DIR}/6.10.1/msvc2022_64")
+set(QT_BIN_DIR "${CMAKE_PREFIX_PATH}/bin")
 set(WINDEPLOYQT "${QT_BIN_DIR}/windeployqt6.exe")
 set(AUTOGEN_INCLUDE "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}_autogen/include")
 set(DIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dist/release")
 
-find_package(Qt6 COMPONENTS Core Gui Widgets Svg REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets Svg Multimedia REQUIRED)
 
 file(GLOB_RECURSE UI_FILES "src/ui/forms/*.ui")
 
@@ -78,7 +78,7 @@ target_sources(${APP_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 
 target_include_directories(${APP_NAME} PRIVATE "${AUTOGEN_INCLUDE}")
 
-target_link_libraries(${APP_NAME} Qt::Core Qt::Gui Qt::Widgets Qt::Svg)
+target_link_libraries(${APP_NAME} Qt::Core Qt::Gui Qt::Widgets Qt::Svg Qt::Multimedia)
 
 if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     add_custom_command(TARGET ${APP_NAME} POST_BUILD
@@ -102,6 +102,7 @@ if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Gui.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Widgets.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Svg.dll" "${DIST_DIR}/"
+            COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Multimedia.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX}/plugins/platforms/qwindows.dll" "${DIST_DIR}/platforms/"
             COMMENT "Deploying minimal set to ${DIST_DIR}"
     )

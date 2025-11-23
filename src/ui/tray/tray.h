@@ -3,6 +3,7 @@
 #include "../widgets/settings.h"
 #include <QSystemTrayIcon>
 #include <QPropertyAnimation>
+#include <QSoundEffect>
 
 /*
 TrayManager
@@ -53,4 +54,8 @@ private:
     void animateToggleButton();
 
     void hideAnimated() const;
+
+    QSoundEffect *effectOn = nullptr;
+
+    QSoundEffect *effectOff = nullptr;
 };

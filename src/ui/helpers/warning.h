@@ -5,6 +5,7 @@
 #include "../widgets/window_dragger.h"
 #include <QDialog>
 #include <QScreen>
+#include <QSoundEffect>
 
 class WarningDialog final : public QDialog {
     Q_OBJECT
@@ -35,6 +36,10 @@ public:
 
         dragger = new WindowDragger(this);
         dragger->addIgnoredWidget(ui.btn_close);
+
+        effect = new QSoundEffect(this);
+        effect->setSource(QUrl("qrc:/sounds/sounds/error.wav"));
+        effect->setVolume(0.1f);
     }
 
     void setText(const QString &text) const {
@@ -56,10 +61,14 @@ public:
         show();
         raise();
         activateWindow();
+
+        if (effect) effect->play();
     }
 
 private:
     Ui::warning_main_widget ui{};
 
     WindowDragger *dragger = nullptr;
+
+    QSoundEffect *effect = nullptr;
 };

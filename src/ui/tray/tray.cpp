@@ -10,6 +10,7 @@
 #include <QGraphicsOpacityEffect>
 #include <QMouseEvent>
 #include <QPushButton>
+#include <QSoundEffect>
 
 TrayManager::TrayManager(QWidget *parent)
     : QWidget(parent) {
@@ -38,6 +39,14 @@ TrayManager::TrayManager(QWidget *parent)
     fadeOut->setEasingCurve(QEasingCurve::InCubic);
     connect(fadeOut, &QPropertyAnimation::finished, this, &QWidget::hide);
 
+    effectOn = new QSoundEffect(this);
+    effectOn->setSource(QUrl("qrc:/sounds/sounds/on.wav"));
+    effectOn->setVolume(0.15f);
+
+    effectOff = new QSoundEffect(this);
+    effectOff->setSource(QUrl("qrc:/sounds/sounds/off.wav"));
+    effectOff->setVolume(0.15f);
+
     setupUiBehavior();
     setupTrayIcon();
 
@@ -60,7 +69,12 @@ void TrayManager::setupTrayIcon() {
                     case QSystemTrayIcon::Trigger:
                         // ЛКМ — быстрый вкл/выкл
                         enabled = !enabled;
+
+                        if (enabled) effectOn->play();
+                        else effectOff->play();
+
                         emit keyboardToggled(enabled);
+
                         LOG_INFO() << "Keyboard toggled via tray: " << (enabled ? "'enabled'" : "'disabled'");
                         updateTrayIcon();
                         break;
@@ -100,6 +114,10 @@ void TrayManager::setupUiBehavior() {
     });
     connect(ui.toggle_btn, &QToolButton::clicked, this, [this]() {
         enabled = !enabled;
+
+        if (enabled) effectOn->play();
+        else effectOff->play();
+
         emit keyboardToggled(enabled);
         animateToggleButton();
         updateTrayIcon();

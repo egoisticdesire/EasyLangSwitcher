@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     const HANDLE hMutex = CreateMutex(nullptr, TRUE, L"MyUniqueFlashSparkleMutex");
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         WarningDialog dlg;
-        dlg.setText("Application is already running!");
+        dlg.setText("EasyLangSwitcher is already running!");
         dlg.openCentered();
         dlg.exec();
         return 0;
