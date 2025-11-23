@@ -1,6 +1,7 @@
 #include "../core/config/logger.h"
 #include "../core/handlers/kb.h"
 #include "../ui/helpers/iconHelper.h"
+#include "../ui/helpers/warning.h"
 #include "../ui/tray/tray.h"
 #include "../core/config/app_settings.h"
 #include <QApplication>
@@ -9,6 +10,18 @@
 #include <io.h>
 
 int main(int argc, char *argv[]) {
+    const QApplication app(argc, argv);
+
+    // Проверка на уже запущенный экземпляр
+    const HANDLE hMutex = CreateMutex(nullptr, TRUE, L"MyUniqueFlashSparkleMutex");
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        WarningDialog dlg;
+        dlg.setText("Application is already running!");
+        dlg.exec();
+        return 0;
+    }
+
+
     SetConsoleOutputCP(CP_UTF8);
     _setmode(_fileno(stdout), _O_U16TEXT);
 
@@ -16,7 +29,6 @@ int main(int argc, char *argv[]) {
     LOG_INFO() << "Logger initialized with level: "
             << (Logger::_debug ? "DEBUG" : "INFO");
 
-    const QApplication app(argc, argv);
     QApplication::setQuitOnLastWindowClosed(false);
     QApplication::setWindowIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
 
@@ -38,5 +50,11 @@ int main(int argc, char *argv[]) {
         kbHandler.setActive(enabled);
     });
 
-    return QApplication::exec();
+    const int result = QApplication::exec();
+
+    // Освобождаем мьютекс при выходе
+    ReleaseMutex(hMutex);
+    CloseHandle(hMutex);
+
+    return result;
 }
