@@ -47,7 +47,7 @@ public:
         m_btn->setVisible(!m_edit->keySequence().isEmpty());
         m_btn->setStyleSheet(R"(
             QToolButton { margin: 1px 0 0 0;
-                        padding: 3px 1px 1px 2px;
+                        padding: 2px 1px 2px 2px;
                         border: none;
                         border-radius: 6px;
                         background: transparent; }

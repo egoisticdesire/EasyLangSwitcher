@@ -41,11 +41,11 @@ TrayManager::TrayManager(QWidget *parent)
 
     effectOn = new QSoundEffect(this);
     effectOn->setSource(QUrl("qrc:/sounds/sounds/on.wav"));
-    effectOn->setVolume(0.15f);
+    effectOn->setVolume(0.25f);
 
     effectOff = new QSoundEffect(this);
     effectOff->setSource(QUrl("qrc:/sounds/sounds/off.wav"));
-    effectOff->setVolume(0.15f);
+    effectOff->setVolume(0.25f);
 
     setupUiBehavior();
     setupTrayIcon();
