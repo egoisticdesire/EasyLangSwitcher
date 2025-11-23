@@ -114,9 +114,14 @@ SettingsWindow::SettingsWindow(QWidget *parent)
             const QString name = nameFromVk(vk);
             qDebug() << "[SettingsWindow] preset selected" << obj << "vk=" << vk << "name=" << name;
 
+            // Обновляем hotkey
             applyHotkeyIfChanged(vk, name);
 
-            // clear seq edit and remove focus to avoid "Press shortcut"
+            // Теперь, когда инпут очищается, previousPresetVk = текущий vk
+            previousPresetVk = vk;
+            previousPresetName = name;
+
+            // Очищаем QKeySequenceEdit, чтобы плейсхолдер показывался
             if (auto *seqEdit = findChild<QKeySequenceEdit *>("btn_sequence")) {
                 seqEdit->setKeySequence(QKeySequence());
                 seqEdit->clearFocus();
