@@ -22,6 +22,10 @@ public:
 
     static int switchDelayMs;
 
+    static int previousHotkeyMainVk;
+
+    static QString previousHotkeyName;
+
     // defaults
     static int defaultHotkeyModifiers;
 

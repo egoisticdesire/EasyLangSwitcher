@@ -96,11 +96,11 @@ SettingsWindow::SettingsWindow(QWidget *parent)
                     }
 
                     if (presetMap.values().contains(AppSettings::hotkeyMainVk)) {
-                        previousPresetVk = AppSettings::hotkeyMainVk;
-                        previousPresetName = AppSettings::hotkeyName;
+                        AppSettings::previousHotkeyMainVk = AppSettings::hotkeyMainVk;
+                        AppSettings::previousHotkeyName = AppSettings::hotkeyName;
 
-                        LOG_DEBUG() << "Saved previous preset: vk=" << previousPresetVk
-                                << "; name='" << previousPresetName << "'";
+                        LOG_DEBUG() << "Saved previous preset: vk=" << AppSettings::previousHotkeyMainVk
+                << "; name='" << AppSettings::previousHotkeyName << "'";
                     } else {
                         LOG_DEBUG() << "Current hotkey is custom - not saving previous preset";
                     }
@@ -123,9 +123,9 @@ SettingsWindow::SettingsWindow(QWidget *parent)
             // Обновляем hotkey
             applyHotkeyIfChanged(vk, name);
 
-            // Теперь, когда инпут очищается, previousPresetVk = текущий vk
-            previousPresetVk = vk;
-            previousPresetName = name;
+            // Теперь, когда инпут очищается, сохраняем в AppSettings
+            AppSettings::previousHotkeyMainVk = vk;
+            AppSettings::previousHotkeyName = name;
 
             // Очищаем QKeySequenceEdit, чтобы плейсхолдер показывался
             if (auto *seqEdit = findChild<QKeySequenceEdit *>("btn_sequence")) {
@@ -139,21 +139,35 @@ SettingsWindow::SettingsWindow(QWidget *parent)
 
     ui.key_delay_slider->setValue(AppSettings::switchDelayMs);
     ui.key_delay_spinbox->setValue(AppSettings::switchDelayMs);
+    ui.key_delay_slider->setSingleStep(10);
+    ui.key_delay_slider->setPageStep(50);
+    ui.key_delay_slider->setTickInterval(10);
+    ui.key_delay_slider->setTracking(true);
+    ui.key_delay_spinbox->setSingleStep(10);
 
     connect(ui.key_delay_slider, &QSlider::valueChanged,
-            this, [this](const int v) {
-                if (AppSettings::switchDelayMs != v) {
-                    AppSettings::switchDelayMs = v;
-                    ui.key_delay_spinbox->setValue(v); // синхронизируем
+            this, [this](const int value) {
+                const int stepped = (value / 10) * 10;
+                if (value != stepped)
+                    ui.key_delay_slider->setValue(stepped);
+
+                if (AppSettings::switchDelayMs != stepped) {
+                    AppSettings::switchDelayMs = stepped;
+                    ui.key_delay_spinbox->setValue(stepped);
                     markChanged();
                 }
             });
 
     connect(ui.key_delay_spinbox, qOverload<int>(&QSpinBox::valueChanged),
-            this, [this](const int v) {
-                if (AppSettings::switchDelayMs != v) {
-                    AppSettings::switchDelayMs = v;
-                    ui.key_delay_slider->setValue(v); // синхронизируем
+            this, [this](const int value) {
+                const int stepped = ((value + 5) / 10) * 10;
+
+                if (value != stepped)
+                    ui.key_delay_spinbox->setValue(stepped);
+
+                if (AppSettings::switchDelayMs != stepped) {
+                    AppSettings::switchDelayMs = stepped;
+                    ui.key_delay_slider->setValue(stepped);
                     markChanged();
                 }
             });
@@ -282,29 +296,28 @@ void SettingsWindow::markChanged() {
 }
 
 void SettingsWindow::restorePreviousPresetIfNeeded() {
-    if (previousPresetVk != 0) {
-        if (AppSettings::hotkeyMainVk != previousPresetVk) {
-            AppSettings::hotkeyMainVk = previousPresetVk;
+    if (AppSettings::previousHotkeyMainVk != 0) {
+        if (AppSettings::hotkeyMainVk != AppSettings::previousHotkeyMainVk) {
+            AppSettings::hotkeyMainVk = AppSettings::previousHotkeyMainVk;
             AppSettings::hotkeyModifiers = 0;
-            AppSettings::hotkeyName = previousPresetName;
+            AppSettings::hotkeyName = AppSettings::previousHotkeyName;
 
-            for (const QList<QPushButton *> presetButtons = ui.key_select_frame->findChildren<QPushButton *>(); auto *
-                 btn: presetButtons) {
+            for (auto *btn: ui.key_select_frame->findChildren<QPushButton *>()) {
                 const int vk = vkFromPresetObjectName(btn->objectName());
-                btn->setChecked(vk != 0 && vk == previousPresetVk);
+                btn->setChecked(vk != 0 && vk == AppSettings::previousHotkeyMainVk);
             }
 
-            LOG_DEBUG() << "Previous preset restored: vk=" << previousPresetVk
-                    << "; name='" << previousPresetName << "'";
+            LOG_DEBUG() << "Previous preset restored: vk=" << AppSettings::previousHotkeyMainVk
+                        << "; name='" << AppSettings::previousHotkeyName << "'";
 
-            previousPresetVk = 0;
-            previousPresetName.clear();
+            AppSettings::previousHotkeyMainVk = 0;
+            AppSettings::previousHotkeyName.clear();
 
             markChanged();
         } else {
             emit settingsChanged();
-            previousPresetVk = 0;
-            previousPresetName.clear();
+            AppSettings::previousHotkeyMainVk = 0;
+            AppSettings::previousHotkeyName.clear();
 
             LOG_DEBUG() << "Previous preset not restored - hotkey already matches";
         }
