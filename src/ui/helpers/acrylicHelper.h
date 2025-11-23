@@ -1,4 +1,5 @@
 #pragma once
+#include <../../../src/core/config/logger.h>
 #include <QtWidgets/QWidget>
 #include <Windows.h>
 #include <dwmapi.h>
@@ -42,6 +43,8 @@ inline bool isWindows11OrGreater() {
     const auto rtlGetVersion = reinterpret_cast<RtlGetVersionPtr>(
         GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "RtlGetVersion"));
     if (rtlGetVersion && rtlGetVersion(&rovi) == 0) {
+        LOG_DEBUG() << "Windows version: "
+                << rovi.dwMajorVersion << "." << rovi.dwMinorVersion << "." << rovi.dwBuildNumber;
         return (rovi.dwMajorVersion == 10 && rovi.dwBuildNumber >= 22000);
     }
     return false;
@@ -54,6 +57,8 @@ inline bool isWindows10OrGreater() {
     const auto rtlGetVersion = reinterpret_cast<RtlGetVersionPtr>(
         GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "RtlGetVersion"));
     if (rtlGetVersion && rtlGetVersion(&rovi) == 0) {
+        LOG_DEBUG() << "Windows version: "
+                << rovi.dwMajorVersion << "." << rovi.dwMinorVersion << "." << rovi.dwBuildNumber;
         return (rovi.dwMajorVersion == 10);
     }
     return false;
@@ -67,6 +72,9 @@ public:
         const auto hwnd = reinterpret_cast<HWND>(widget->winId());
         if (!hwnd) return;
 
+        LOG_DEBUG() << "Enabling acrylic for widget: "
+                << widget->metaObject()->className() << " (" << widget->objectName() << ")" << " with hwnd: " << hwnd;
+
         // Убираем WS_EX_LAYERED
         if (const LONG ex = GetWindowLongW(hwnd, GWL_EXSTYLE); ex & WS_EX_LAYERED) {
             SetWindowLongW(hwnd, GWL_EXSTYLE, ex & ~WS_EX_LAYERED);
@@ -75,11 +83,16 @@ public:
         const auto setWindowCompositionAttribute =
                 reinterpret_cast<pSetWindowCompositionAttribute>(
                     GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetWindowCompositionAttribute"));
-        if (!setWindowCompositionAttribute) return;
+        if (!setWindowCompositionAttribute) {
+            LOG_DEBUG() << "Failed to get SetWindowCompositionAttribute";
+            return;
+        }
 
         ACCENT_POLICY policy{};
 
         if (isWindows11OrGreater()) {
+            LOG_DEBUG() << "Windows 11 acrylic mode enabled";
+
             // Win11: акрил с радиусом углов
             policy.AccentState = ACCENT_ENABLE_ACRYLICBLURBEHIND;
             policy.GradientColor = (alpha << 24) | rgb;
@@ -95,7 +108,7 @@ public:
                 sizeof(DWMWCP_ROUND)
             );
             if (FAILED(hrCorner)) {
-                // qDebug() << "DwmSetWindowAttribute corner failed:" << hrCorner;
+                LOG_DEBUG() << "DwmSetWindowAttribute corner failed: " << hrCorner;
             }
 
             // Скругление региона
@@ -106,6 +119,8 @@ public:
                 SetWindowRgn(hwnd, hrgn, TRUE);
             }
         } else if (isWindows10OrGreater()) {
+            LOG_DEBUG() << "Windows 10 blur mode enabled";
+
             // Win10: простой blur без скруглений
             policy.AccentState = ACCENT_ENABLE_BLURBEHIND;
             policy.GradientColor = (0xE0 << 24) | rgb; // 0xCC (~80%) | 0xE0 (~88%) | 0xF0 (~94%)
@@ -116,6 +131,7 @@ public:
                 SetWindowRgn(hwnd, hrgn, TRUE);
             }
         } else {
+            LOG_DEBUG() << "Windows version is less than 10, acrylic and blur not supported";
             return; // ниже Win10 не поддерживаем
         }
 
@@ -125,6 +141,7 @@ public:
         data.SizeOfData = sizeof(policy);
 
         setWindowCompositionAttribute(hwnd, &data);
+        LOG_DEBUG() << "Acrylic applied: alpha=" << alpha << ", rgb=" << rgb;
     }
 
     static void updateRegion(const QWidget *widget) {
@@ -151,10 +168,16 @@ public:
         const auto hwnd = reinterpret_cast<HWND>(widget->winId());
         if (!hwnd) return;
 
+        LOG_DEBUG() << "Disabling acrylic for widget: "
+                << widget->metaObject()->className() << " (" << widget->objectName() << ")" << " with hwnd: " << hwnd;
+
         const auto setWindowCompositionAttribute =
                 reinterpret_cast<pSetWindowCompositionAttribute>(
                     GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetWindowCompositionAttribute"));
-        if (!setWindowCompositionAttribute) return;
+        if (!setWindowCompositionAttribute) {
+            LOG_DEBUG() << "Failed to get SetWindowCompositionAttribute";
+            return;
+        }
 
         ACCENT_POLICY policy{};
         policy.AccentState = ACCENT_DISABLED;
@@ -165,6 +188,8 @@ public:
         data.Data = &policy;
         data.SizeOfData = sizeof(policy);
         setWindowCompositionAttribute(hwnd, &data);
+
+        LOG_DEBUG() << "Acrylic disabled";
     }
 
     static void setAcrylicEnabled(

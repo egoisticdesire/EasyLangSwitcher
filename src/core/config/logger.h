@@ -1,28 +1,57 @@
 #pragma once
 #include <iostream>
-#include <QString>
+#include <QFileInfo>
+#include <QRegularExpression>
 #include <QDateTime>
-#include <QTextStream>
 
 class Logger {
 public:
     enum class Level { DEBUG, INFO, WARN, ERR };
 
-    Logger(const char *className, int line, Level level = Level::DEBUG)
-        : m_level(level) {
-        // ANSI цвета
+    // тумблер: true = показывать DEBUG+, false = показывать только INFO+
+    static inline bool _debug;
+
+    static QString cleanFunction(const QString &func) {
+        static const QRegularExpression reCtor(R"(\{[^\}]+\})");
+        static const QRegularExpression reLambda(R"(<lambda_[^>]+>)");
+        static const QRegularExpression reOpCall(R"(::operator\s*\([^\)]*\))");
+        static const QRegularExpression reOpIndex(R"(::operator\[\])");
+        static const QRegularExpression reColons(R"(:{2,})");
+        static const QRegularExpression reTrailing(R"(::$)");
+
+        QString f = func;
+        f.replace(reCtor, "");
+        f.replace(reLambda, "");
+        f.replace(reOpCall, "");
+        f.replace(reOpIndex, "");
+        f.replace(reColons, "::");
+        f.replace(reTrailing, "");
+        return f.trimmed();
+    }
+
+    Logger(const char *file, const char *function, int line, Level level = Level::DEBUG)
+        : m_level(level), m_file(file), m_function(function), m_line(line) {
+        // минимальный уровень в зависимости от тумблера
+        Level minLevel = _debug ? Level::DEBUG : Level::INFO;
+        m_suppressed = (level < minLevel);
+
+        if (m_suppressed)
+            return;
+
+        // цвета
         m_reset = "\033[0m";
-        m_green = "\033[38;2;135;225;110m";
-        m_cyan = "\033[38;2;100;195;205m";
-        m_blue = "\033[38;2;4;96;215m";
-        m_lightGray = "\033[38;2;175;175;175m";
-        m_gold = "\033[38;2;234;191;0m";
         m_red = "\033[38;2;239;41;41m";
+        m_green = "\033[38;2;135;225;110m";
+        m_blue = "\033[38;2;4;96;215m";
+        m_cyan = "\033[38;2;100;195;205m";
+        m_gold = "\033[38;2;234;191;0m";
+        m_purple = "\033[38;2;200;120;200m";
+        m_gray = "\033[38;2;175;175;175m";
 
         switch (level) {
             case Level::DEBUG: m_levelColor = m_blue;
                 break;
-            case Level::INFO: m_levelColor = m_lightGray;
+            case Level::INFO: m_levelColor = m_gray;
                 break;
             case Level::WARN: m_levelColor = m_gold;
                 break;
@@ -30,36 +59,67 @@ public:
                 break;
         }
 
+        auto visibleLength = [](const QString &s) {
+            static const QRegularExpression reColors("\033\\[[0-9;]*m");
+            QString plain = s;
+            plain.remove(QRegularExpression(reColors));
+            return plain.length();
+        };
+
         QString timeStr = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz");
         QString levelStr = levelToString(level).leftJustified(9, ' ');
-        QString nameStr = QString(className).rightJustified(60, ' ');
+
+        QString formattedFileName = QString("%1%2%3")
+                .arg(m_purple, QFileInfo(file).fileName(), m_reset);
+
+        QString formattedFuncName = QString("%1%2%3")
+                .arg(m_cyan, cleanFunction(function), m_reset);
+
+        QString formattedName = QString("%1 %2→%3 %4")
+                .arg(formattedFileName, m_levelColor, m_reset, formattedFuncName);
+
+        qsizetype padRaw = 70 - visibleLength(formattedName);
+        if (int pad = static_cast<int>(padRaw); pad > 0)
+            formattedName = QString(pad, ' ') + formattedName;
+
         QString lineStr = QString::number(line).leftJustified(5, ' ');
 
-        m_stream << m_green << "[" << timeStr << "]" << m_reset << " "
+        m_stream
+                << m_green << "[" << timeStr << "]" << m_reset << " "
                 << m_levelColor << levelStr << m_reset << " "
-                << m_cyan << nameStr << m_reset
+                << formattedName
                 << m_levelColor << ":" << m_reset
                 << m_cyan << lineStr << m_reset
                 << " ";
     }
 
     ~Logger() {
-        const std::wstring wmsg = m_str.toStdWString();
-        std::wcout << wmsg << std::endl;
+        if (!m_suppressed) {
+            const std::wstring wmsg = m_str.toStdWString();
+            std::wcout << wmsg << std::endl;
+        }
     }
 
     template<typename T>
     Logger &operator<<(const T &value) {
-        QTextStream(&m_str) << m_levelColor << value << m_reset;
+        if (!m_suppressed) QTextStream(&m_str) << m_levelColor << value << m_reset;
         return *this;
     }
 
 private:
+    bool m_suppressed = false;
+
     QString m_str;
     QTextStream m_stream{&m_str};
+
     Level m_level;
     QString m_levelColor;
-    QString m_reset, m_green, m_cyan, m_blue, m_lightGray, m_gold, m_red;
+
+    QString m_reset, m_green, m_cyan, m_blue, m_gray, m_gold, m_red, m_purple;
+
+    const char *m_file;
+    const char *m_function;
+    int m_line;
 
     static QString levelToString(const Level lvl) {
         switch (lvl) {
@@ -72,7 +132,10 @@ private:
     }
 };
 
-#define LOG_DEBUG() Logger(__FUNCTION__, __LINE__, Logger::Level::DEBUG)
-#define LOG_INFO()  Logger(__FUNCTION__, __LINE__, Logger::Level::INFO)
-#define LOG_WARNING()  Logger(__FUNCTION__, __LINE__, Logger::Level::WARN)
-#define LOG_ERROR() Logger(__FUNCTION__, __LINE__, Logger::Level::ERR)
+
+// МАКРОСЫ
+// DEBUG создаётся только если включён
+#define LOG_DEBUG() if (!Logger::_debug) ; else Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::DEBUG)
+#define LOG_INFO() Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::INFO)
+#define LOG_WARNING() Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::WARN)
+#define LOG_ERROR() Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::ERR)
