@@ -3,13 +3,69 @@
 #include <QFileInfo>
 #include <QRegularExpression>
 #include <QDateTime>
+#include <QThread>
+#include <QQueue>
+#include <QMutex>
+#include <QWaitCondition>
+#include <QTextStream>
+
+class ThreadedLogger final : public QThread {
+    Q_OBJECT
+
+public:
+    enum class Level { DEBUG, INFO, WARN, ERR };
+
+    static ThreadedLogger &instance() {
+        static ThreadedLogger logger;
+        return logger;
+    }
+
+    void enqueue(const QString &msg) {
+        QMutexLocker locker(&m_mutex);
+        m_queue.enqueue(msg);
+        m_wait.wakeOne();
+    }
+
+    void run() override {
+        while (!m_terminate) {
+            QString msg;
+            {
+                QMutexLocker locker(&m_mutex);
+                if (m_queue.isEmpty()) {
+                    m_wait.wait(&m_mutex, 100);
+                }
+                if (!m_queue.isEmpty()) msg = m_queue.dequeue();
+            }
+            if (!msg.isEmpty()) {
+                const std::wstring wmsg = msg.toStdWString();
+                std::wcout << wmsg << std::endl;
+                // QString threadStr = QString("LoggerThread=%1").arg(reinterpret_cast<quintptr>(currentThreadId()));
+                // std::wcout << (threadStr + " " + msg).toStdWString() << std::endl;
+            }
+        }
+    }
+
+    void stop() {
+        m_terminate = true;
+        m_wait.wakeOne();
+        wait();
+    }
+
+private:
+    ThreadedLogger() { start(); }
+    ~ThreadedLogger() override { stop(); }
+
+    QQueue<QString> m_queue;
+    QMutex m_mutex;
+    QWaitCondition m_wait;
+    bool m_terminate = false;
+};
 
 class Logger {
 public:
     enum class Level { DEBUG, INFO, WARN, ERR };
 
-    // тумблер: true = показывать DEBUG+, false = показывать только INFO+
-    static inline bool _debug;
+    static inline bool _debug = true;
 
     static QString cleanFunction(const QString &func) {
         static const QRegularExpression reCtor(R"(\{[^\}]+\})");
@@ -34,9 +90,7 @@ public:
         // минимальный уровень в зависимости от тумблера
         Level minLevel = _debug ? Level::DEBUG : Level::INFO;
         m_suppressed = (level < minLevel);
-
-        if (m_suppressed)
-            return;
+        if (m_suppressed) return;
 
         // цвета
         m_reset = "\033[0m";
@@ -66,17 +120,14 @@ public:
             return plain.length();
         };
 
+        // QString threadStr = QString("Thread=%1").arg(reinterpret_cast<quintptr>(QThread::currentThreadId()));
+
         QString timeStr = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz");
         QString levelStr = levelToString(level).leftJustified(9, ' ');
 
-        QString formattedFileName = QString("%1%2%3")
-                .arg(m_purple, QFileInfo(file).fileName(), m_reset);
-
-        QString formattedFuncName = QString("%1%2%3")
-                .arg(m_cyan, cleanFunction(function), m_reset);
-
-        QString formattedName = QString("%1 %2→%3 %4")
-                .arg(formattedFileName, m_levelColor, m_reset, formattedFuncName);
+        QString formattedFileName = QString("%1%2%3").arg(m_purple, QFileInfo(file).fileName(), m_reset);
+        QString formattedFuncName = QString("%1%2%3").arg(m_cyan, cleanFunction(function), m_reset);
+        QString formattedName = QString("%1 %2→%3 %4").arg(formattedFileName, m_levelColor, m_reset, formattedFuncName);
 
         qsizetype padRaw = 70 - visibleLength(formattedName);
         if (int pad = static_cast<int>(padRaw); pad > 0)
@@ -85,6 +136,7 @@ public:
         QString lineStr = QString::number(line).leftJustified(5, ' ');
 
         m_stream
+                // << threadStr << " "
                 << m_green << "[" << timeStr << "]" << m_reset << " "
                 << m_levelColor << levelStr << m_reset << " "
                 << formattedName
@@ -94,10 +146,7 @@ public:
     }
 
     ~Logger() {
-        if (!m_suppressed) {
-            const std::wstring wmsg = m_str.toStdWString();
-            std::wcout << wmsg << std::endl;
-        }
+        if (!m_suppressed) ThreadedLogger::instance().enqueue(m_str);
     }
 
     template<typename T>
@@ -132,9 +181,6 @@ private:
     }
 };
 
-
-// МАКРОСЫ
-// DEBUG создаётся только если включён
 #define LOG_DEBUG() if (!Logger::_debug) ; else Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::DEBUG)
 #define LOG_INFO() Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::INFO)
 #define LOG_WARNING() Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::WARN)

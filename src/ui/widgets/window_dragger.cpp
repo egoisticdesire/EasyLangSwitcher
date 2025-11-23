@@ -1,10 +1,12 @@
 #include "window_dragger.h"
+#include "../../core/config/logger.h"
 
 #include <QMouseEvent>
 
 WindowDragger::WindowDragger(QWidget *target)
     : QObject(target), win(target) {
     win->installEventFilter(this);
+    LOG_DEBUG() << "WindowDragger initialized";
 }
 
 void WindowDragger::addIgnoredWidget(QWidget *w) {
