@@ -54,4 +54,12 @@
     <file>icons/TableSimpleExcludeFilled.svg</file>
     <file>icons/TableSimpleExcludeRegular.svg</file>
   </qresource>
+  <qresource prefix="sounds">
+    <file>sounds/off.wav</file>
+    <file>sounds/on.wav</file>
+    <file>sounds/click.wav</file>
+    <file>sounds/error.wav</file>
+    <file>sounds/notification.wav</file>
+    <file>sounds/notification_disable.wav</file>
+  </qresource>
 </RCC>

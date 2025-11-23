@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>280</width>
+    <width>310</width>
     <height>110</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>280</width>
+    <width>310</width>
     <height>110</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>280</width>
+    <width>310</width>
     <height>110</height>
    </size>
   </property>
@@ -192,7 +192,7 @@ border: 1px solid transparent;
            </font>
           </property>
           <property name="text">
-           <string>Application is already running!</string>
+           <string>EasyLangSwitcher is already running!</string>
           </property>
           <property name="wordWrap">
            <bool>true</bool>
