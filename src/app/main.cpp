@@ -10,6 +10,9 @@
 #include <io.h>
 
 int main(int argc, char *argv[]) {
+    SetConsoleOutputCP(CP_UTF8);
+    _setmode(_fileno(stdout), _O_U16TEXT);
+
     const QApplication app(argc, argv);
 
     // Проверка на уже запущенный экземпляр
@@ -17,13 +20,10 @@ int main(int argc, char *argv[]) {
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         WarningDialog dlg;
         dlg.setText("Application is already running!");
+        dlg.openCentered();
         dlg.exec();
         return 0;
     }
-
-
-    SetConsoleOutputCP(CP_UTF8);
-    _setmode(_fileno(stdout), _O_U16TEXT);
 
     Logger::_debug = true;
     LOG_INFO() << "Logger initialized with level: "

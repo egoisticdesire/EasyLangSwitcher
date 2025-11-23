@@ -169,13 +169,13 @@ bool SettingsWindow::event(QEvent *ev) {
             AcrylicHelper::setAcrylicEnabled(this, true);
             AcrylicHelper::updateRegion(this);
         });
-        LOG_DEBUG() << "SettingsWindow is active";
+        LOG_DEBUG() << "Settings window is active";
     } else if (ev->type() == QEvent::WindowDeactivate) {
         QTimer::singleShot(0, this, [this]() {
             AcrylicHelper::setAcrylicEnabled(this, false);
             AcrylicHelper::updateRegion(this);
         });
-        LOG_DEBUG() << "SettingsWindow is inactive";
+        LOG_DEBUG() << "Settings window is inactive";
     }
     return QWidget::event(ev);
 }
@@ -187,12 +187,11 @@ void SettingsWindow::openCentered() {
     QSize s = sizeHint();
     if (!s.isValid()) s = QSize(850, 500);
 
-    LOG_DEBUG() << "SettingsWindow size: " << QString("(%1, %2)").arg(s.width()).arg(s.height());
-
     const int x = geom.center().x() - s.width() / 2;
     const int y = geom.center().y() - s.height() / 2;
 
-    LOG_DEBUG() << "SettingsWindow position: " << QString("(%1, %2)").arg(x).arg(y);
+    LOG_DEBUG() << "Settings window size: " << QString("(%1, %2)").arg(s.width()).arg(s.height())
+                    << "; position: " << QString("(%1, %2)").arg(x).arg(y);
 
     resize(s);
     move(x, y);

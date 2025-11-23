@@ -4,6 +4,7 @@
 #include "acrylicHelper.h"
 #include "../widgets/window_dragger.h"
 #include <QDialog>
+#include <QScreen>
 
 class WarningDialog final : public QDialog {
     Q_OBJECT
@@ -38,6 +39,23 @@ public:
 
     void setText(const QString &text) const {
         ui.text_label->setText(text);
+    }
+
+    void openCentered() {
+        const QScreen *screen = QGuiApplication::primaryScreen();
+        if (!screen) screen = QGuiApplication::screens().first();
+        const QRect geom = screen->availableGeometry();
+
+        adjustSize();
+        const QSize s = size();
+
+        const int x = geom.center().x() - s.width() / 2;
+        const int y = geom.center().y() - s.height() / 2;
+
+        move(x, y);
+        show();
+        raise();
+        activateWindow();
     }
 
 private:
