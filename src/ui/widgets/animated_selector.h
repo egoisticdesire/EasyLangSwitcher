@@ -11,20 +11,21 @@ class AnimatedSelector final : public QObject {
 public:
     explicit AnimatedSelector(QWidget *parent);
 
-    // подключение к любому контейнеру
     void bindToFrame(QFrame *frame, const QString &extraStyle = QString());
 
-    // опционально — старт с выбранной кнопки
     void initPosition() const;
 
-    // доступ к индикатору
     QFrame *indicator() const { return m_indicator; }
 
 private:
     QWidget *m_parent = nullptr;
+
     QFrame *m_indicator = nullptr;
+
     QFrame *m_frame = nullptr;
+
     QButtonGroup *m_group = nullptr;
+
     QLineEdit *m_customEdit = nullptr;
 
 private slots:

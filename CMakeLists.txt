@@ -35,6 +35,7 @@ add_executable(${APP_NAME}
         # core
         src/core/config/app_settings.cpp
         src/core/config/app_settings.h
+        src/core/config/logger.h
         src/core/handlers/kb.cpp
         src/core/handlers/kb.h
         src/core/i18n/lang.cpp

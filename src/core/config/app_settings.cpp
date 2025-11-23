@@ -1,4 +1,5 @@
 #include "app_settings.h"
+#include "logger.h"
 #include <Windows.h>
 #include <QDebug>
 
@@ -17,10 +18,9 @@ void AppSettings::load() {
     hotkeyModifiers = settings.value("hotkey/mods", defaultHotkeyModifiers).toInt();
     hotkeyName = settings.value("hotkey/name", defaultHotkeyName).toString();
     switchDelayMs = settings.value("delay", defaultSwitchDelayMs).toInt();
-    qDebug() << "AppSettings::load -> mainVk =" << hotkeyMainVk
-            << "mods =" << hotkeyModifiers
-            << "name =" << hotkeyName
-            << "delay =" << switchDelayMs;
+
+    LOG_DEBUG() << "Loaded settings: vk=" << hotkeyMainVk
+            << "; name='" << hotkeyName << "'; delay=" << switchDelayMs;
 }
 
 void AppSettings::save() {
@@ -28,6 +28,7 @@ void AppSettings::save() {
     settings.setValue("hotkey/mods", hotkeyModifiers);
     settings.setValue("hotkey/name", hotkeyName);
     settings.setValue("delay", switchDelayMs);
-    qDebug() << "AppSettings::save -> persisted mainVk =" << hotkeyMainVk
-            << "name =" << hotkeyName;
+
+    LOG_DEBUG() << "Saved settings: vk=" << hotkeyMainVk
+            << "; name='" << hotkeyName << "'; delay=" << switchDelayMs;
 }

@@ -1,11 +1,11 @@
 #pragma once
+#include "../../core/config/logger.h"
+#include "../helpers/vkMapper.h"
 #include <QEvent>
 #include <QObject>
 #include <QKeySequenceEdit>
 #include <QToolButton>
 #include <QLineEdit>
-#include <QDebug>
-#include "../helpers/vkMapper.h"
 
 /*
 KeySequenceHelper:
@@ -27,6 +27,8 @@ public:
         const QString &placeholder = "Key...",
         QObject *parent = nullptr
     ) : QObject(parent), m_placeholder(placeholder) {
+        LOG_DEBUG() << "KeySequenceHelper initialized";
+
         m_edit = root->findChild<QKeySequenceEdit *>(objectName);
         if (!m_edit) return;
 
@@ -61,7 +63,8 @@ public:
             m_btn->setVisible(false);
             m_internalUpdate = false;
 
-            qDebug() << "KeySequenceHelper: clear button pressed";
+            LOG_DEBUG() << "Clear button pressed";
+
             if (m_lastEmittedVk != 0 || !m_lastEmittedName.isEmpty()) {
                 m_lastEmittedVk = 0;
                 m_lastEmittedName.clear();
@@ -78,7 +81,6 @@ public:
             if (seq.isEmpty()) {
                 m_btn->setVisible(false);
                 if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
-                qDebug() << "KeySequenceHelper: sequence cleared (via edit)";
 
                 if (m_lastEmittedVk != 0 || !m_lastEmittedName.isEmpty()) {
                     m_lastEmittedVk = 0;
@@ -91,9 +93,33 @@ public:
             // обрезать модификаторы и извлечь первый элемент
             const QKeyCombination raw = seq[0];
             const int baseKey = raw.key() & ~(
-                                    Qt::ShiftModifier | Qt::ControlModifier |
-                                    Qt::AltModifier | Qt::MetaModifier
+                                    Qt::ShiftModifier
+                                    | Qt::ControlModifier
+                                    | Qt::AltModifier
+                                    | Qt::MetaModifier
                                 );
+
+            if (blockedKeys.contains(baseKey)) {
+                const int vk = VkMapper::sequenceToVk(QKeySequence(baseKey));
+                const QString keyName = vk
+                                            ? VkMapper::vkToName(vk)
+                                            : QKeySequence(baseKey).toString(QKeySequence::NativeText);
+
+                LOG_DEBUG() << "Blocked key pressed: " << keyName;
+
+                m_internalUpdate = true;
+                m_edit->setKeySequence(QKeySequence());
+                if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+                m_btn->setVisible(false);
+                m_internalUpdate = false;
+
+                if (m_lastEmittedVk != 0 || !m_lastEmittedName.isEmpty()) {
+                    m_lastEmittedVk = 0;
+                    m_lastEmittedName.clear();
+                    emit hotkeySelected(0, 0, QString());
+                }
+                return;
+            }
 
             int vk = 0;
             QString name;
@@ -123,13 +149,16 @@ public:
                 m_internalUpdate = false;
                 vk = 0;
                 name = fallback;
+
+                LOG_DEBUG() << "Fallback sequence detected, raw seq=" << fallback;
             }
 
             if (vk != m_lastEmittedVk || name != m_lastEmittedName) {
                 m_lastEmittedVk = vk;
                 m_lastEmittedName = name;
-                qDebug() << "KeySequenceHelper: selected cleaned vk =" << vk << "name =" << name;
                 emit hotkeySelected(vk, 0, name);
+
+                LOG_DEBUG() << "Selected cleaned: vk=" << vk << "; name='" << name << "'";
             }
         });
 
@@ -184,4 +213,16 @@ private:
     bool m_internalUpdate = false;
     int m_lastEmittedVk = -1;
     QString m_lastEmittedName;
+
+    inline static const QSet<int> blockedKeys = {
+        Qt::Key_CapsLock,
+        Qt::Key_Backspace,
+        Qt::Key_Delete,
+        Qt::Key_Insert,
+        Qt::Key_Home,
+        Qt::Key_End,
+        Qt::Key_PageUp,
+        Qt::Key_PageDown,
+        Qt::Key_Escape,
+    };
 };

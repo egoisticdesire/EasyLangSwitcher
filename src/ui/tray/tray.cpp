@@ -1,4 +1,5 @@
 #include "tray.h"
+#include "../../core/config/logger.h"
 #include "../../core/config/app_settings.h"
 #include "../helpers/acrylicHelper.h"
 #include "../helpers/hoverHelper.h"
@@ -9,7 +10,6 @@
 #include <QGraphicsOpacityEffect>
 #include <QMouseEvent>
 #include <QPushButton>
-#include <QDebug>
 
 TrayManager::TrayManager(QWidget *parent)
     : QWidget(parent) {
@@ -45,6 +45,8 @@ TrayManager::TrayManager(QWidget *parent)
     hide();
 
     updateInfo();
+
+    LOG_DEBUG() << "TrayManager initialized";
 }
 
 void TrayManager::setupTrayIcon() {
@@ -59,12 +61,15 @@ void TrayManager::setupTrayIcon() {
                         // ЛКМ — быстрый вкл/выкл
                         enabled = !enabled;
                         emit keyboardToggled(enabled);
+                        LOG_INFO() << "Keyboard toggled via tray: " << (enabled ? "'enabled'" : "'disabled'");
                         updateTrayIcon();
                         break;
                     case QSystemTrayIcon::Context:
                         // ПКМ — показать меню
                         if (isVisible()) hideAnimated();
                         else showAtCursor();
+
+                        LOG_DEBUG() << "Tray menu triggered via context menu";
                         break;
                     default:
                         break;
@@ -84,19 +89,21 @@ void TrayManager::setupUiBehavior() {
     // отслеживание изменений настроек, чтобы информация в меню обновлялась
     if (settingsWindow) {
         connect(settingsWindow, &SettingsWindow::settingsChanged, this, [this]() {
-            qDebug() << "[TrayManager] received settingsChanged - updating info";
+            LOG_DEBUG() << "Received settings changed - updating info";
             updateInfo();
         });
     }
 
     connect(ui.exit_btn, &QToolButton::clicked, this, [this]() {
         emit exitRequested();
+        LOG_INFO() << "Exit requested via tray button";
     });
     connect(ui.toggle_btn, &QToolButton::clicked, this, [this]() {
         enabled = !enabled;
         emit keyboardToggled(enabled);
         animateToggleButton();
         updateTrayIcon();
+        LOG_INFO() << "Keyboard toggled via tray menu button: " << (enabled ? "'enabled'" : "'disabled'");
     });
 
     updateInfo();
@@ -150,9 +157,17 @@ void TrayManager::showAtCursor() {
 
     QTimer::singleShot(0, this, [this]() { AcrylicHelper::enableAcrylic(this); });
     fadeIn->start();
+
+    LOG_DEBUG() << "Tray menu shown at cursor position: " << QString("(%1, %2)").arg(pos.x()).arg(pos.y())
+            << "; size: " << QString("(%1, %2)").arg(width()).arg(height())
+            << "; screen: " << QString("(%1, %2)").arg(screen->geometry().width()).arg(screen->geometry().height())
+            << "; screen name: '" << screen->name() << "'";
 }
 
-void TrayManager::hideAnimated() const { if (isVisible()) fadeOut->start(); }
+void TrayManager::hideAnimated() const {
+    if (isVisible()) fadeOut->start();
+    LOG_DEBUG() << "Tray menu animation hidden";
+}
 
 bool TrayManager::eventFilter(QObject *obj, QEvent *event) {
     if (obj == ui.info_frame) {
@@ -160,9 +175,12 @@ bool TrayManager::eventFilter(QObject *obj, QEvent *event) {
         else if (event->type() == QEvent::Leave) HoverEffectHelper::animateHover(ui.info_frame, false);
     }
     if (isVisible() && event->type() == QEvent::MouseButtonPress) {
-        if (const auto *me = static_cast<QMouseEvent *>(event);
-            !geometry().contains(me->globalPosition().toPoint()))
+        const auto *me = static_cast<QMouseEvent *>(event);
+
+        if (const QPoint global = me->globalPosition().toPoint(); !geometry().contains(global)) {
             hideAnimated();
+            return true;
+        }
     }
     return QWidget::eventFilter(obj, event);
 }
@@ -194,6 +212,9 @@ void TrayManager::animateToggleButton() {
 
     connect(fadeOutBtn, &QPropertyAnimation::finished, [this, fadeInBtn]() {
         updateInfo();
+
+        LOG_DEBUG() << "Toggle button animation finished, info updated";
+
         fadeInBtn->start(QAbstractAnimation::DeleteWhenStopped);
     });
     connect(fadeInBtn, &QPropertyAnimation::finished, [effect]() { effect->deleteLater(); });

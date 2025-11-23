@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "../../core/config/logger.h"
 #include "../../core/config/app_settings.h"
 #include "../helpers/acrylicHelper.h"
 #include "../helpers/iconHelper.h"
@@ -10,7 +11,6 @@
 #include <QAction>
 #include <QPushButton>
 #include <QKeySequenceEdit>
-#include <QDebug>
 
 SettingsWindow::SettingsWindow(QWidget *parent)
     : QWidget(parent) {
@@ -33,10 +33,13 @@ SettingsWindow::SettingsWindow(QWidget *parent)
 
     autosaveTimer.setSingleShot(true);
     autosaveTimer.setInterval(autosaveIntervalMs);
+
+    LOG_DEBUG() << "Autosave timer configured, interval=" << autosaveIntervalMs;
+
     connect(&autosaveTimer, &QTimer::timeout, this, [this]() {
         AppSettings::save();
         hasPendingChanges = false;
-        qDebug() << "[SettingsWindow] autosave successfully.";
+        LOG_DEBUG() << "Autosave successfully";
     });
 
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
@@ -58,7 +61,6 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     dragger = new WindowDragger(this);
     dragger->addIgnoredWidget(ui.btn_close_bot_sider);
 
-
     const QList<QPushButton *> presetButtons = ui.key_select_frame->findChildren<QPushButton *>();
 
     bool matchedPreset = false;
@@ -67,7 +69,8 @@ SettingsWindow::SettingsWindow(QWidget *parent)
         if (const int vk = presetMap.value(obj, 0); vk != 0 && vk == AppSettings::hotkeyMainVk) {
             btn->setChecked(true);
             matchedPreset = true;
-            qDebug() << "[SettingsWindow] matched preset button" << obj << "for hotkey" << AppSettings::hotkeyName;
+
+            LOG_DEBUG() << "Matched preset button '" << obj << "' for hotkey '" << AppSettings::hotkeyName << "'";
         } else {
             btn->setChecked(false);
         }
@@ -77,7 +80,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
         if (auto *seq = findChild<QKeySequenceEdit *>("btn_sequence")) {
             if (const QString name = AppSettings::hotkeyName; !name.isEmpty()) {
                 seq->setKeySequence(QKeySequence(name));
-                qDebug() << "[SettingsWindow] populated sequence edit with saved custom key:" << name;
+                LOG_DEBUG() << "Populated sequence edit with saved custom key: '" << name << "'";
             }
         }
     }
@@ -86,7 +89,8 @@ SettingsWindow::SettingsWindow(QWidget *parent)
         connect(keyHelper, &KeySequenceHelper::hotkeySelected, this,
                 [this](const int mainVk, int /*mods*/, const QString &name) {
                     if (mainVk == 0) {
-                        qDebug() << "[SettingsWindow] sequence cleared by user";
+                        LOG_DEBUG() << "Sequence cleared by user";
+
                         restorePreviousPresetIfNeeded();
                         return;
                     }
@@ -94,13 +98,14 @@ SettingsWindow::SettingsWindow(QWidget *parent)
                     if (presetMap.values().contains(AppSettings::hotkeyMainVk)) {
                         previousPresetVk = AppSettings::hotkeyMainVk;
                         previousPresetName = AppSettings::hotkeyName;
-                        qDebug() << "[SettingsWindow] saved previousPreset vk=" << previousPresetVk << "name=" <<
-                                previousPresetName;
+
+                        LOG_DEBUG() << "Saved previous preset: vk=" << previousPresetVk
+                                << "; name='" << previousPresetName << "'";
                     } else {
-                        qDebug() << "[SettingsWindow] current hotkey is custom; not saving previousPreset";
+                        LOG_DEBUG() << "Current hotkey is custom - not saving previous preset";
                     }
 
-                    qDebug() << "[SettingsWindow] custom hotkey selected mainVk=" << mainVk << "name=" << name;
+                    LOG_DEBUG() << "Custom hotkey selected: vk=" << mainVk << "; name='" << name << "'";
                     applyHotkeyIfChanged(mainVk, name);
                 });
     }
@@ -112,7 +117,8 @@ SettingsWindow::SettingsWindow(QWidget *parent)
             const int vk = presetMap.value(obj, 0);
             if (vk == 0) return;
             const QString name = nameFromVk(vk);
-            qDebug() << "[SettingsWindow] preset selected" << obj << "vk=" << vk << "name=" << name;
+
+            LOG_DEBUG() << "Preset '" << obj << "' selected: vk=" << vk << "; name='" << name << "'";
 
             // Обновляем hotkey
             applyHotkeyIfChanged(vk, name);
@@ -132,6 +138,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
             }
         });
     }
+    LOG_DEBUG() << "SettingsWindow initialized";
 }
 
 SettingsWindow::~SettingsWindow() = default;
@@ -142,6 +149,7 @@ void SettingsWindow::addSelectorForFrame(QFrame *frame, const QString &extraStyl
     sel->bindToFrame(frame, extraStyle);
     selectors.append(sel);
     QTimer::singleShot(0, sel, &AnimatedSelector::initPosition);
+    LOG_DEBUG() << "Selector added for frame '" << frame->objectName() << "'";
 }
 
 void SettingsWindow::showEvent(QShowEvent *event) {
@@ -161,11 +169,13 @@ bool SettingsWindow::event(QEvent *ev) {
             AcrylicHelper::setAcrylicEnabled(this, true);
             AcrylicHelper::updateRegion(this);
         });
+        LOG_DEBUG() << "SettingsWindow is active";
     } else if (ev->type() == QEvent::WindowDeactivate) {
         QTimer::singleShot(0, this, [this]() {
             AcrylicHelper::setAcrylicEnabled(this, false);
             AcrylicHelper::updateRegion(this);
         });
+        LOG_DEBUG() << "SettingsWindow is inactive";
     }
     return QWidget::event(ev);
 }
@@ -176,8 +186,14 @@ void SettingsWindow::openCentered() {
     const QRect geom = screen->availableGeometry();
     QSize s = sizeHint();
     if (!s.isValid()) s = QSize(850, 500);
+
+    LOG_DEBUG() << "SettingsWindow size: " << QString("(%1, %2)").arg(s.width()).arg(s.height());
+
     const int x = geom.center().x() - s.width() / 2;
     const int y = geom.center().y() - s.height() / 2;
+
+    LOG_DEBUG() << "SettingsWindow position: " << QString("(%1, %2)").arg(x).arg(y);
+
     resize(s);
     move(x, y);
     show();
@@ -185,24 +201,23 @@ void SettingsWindow::openCentered() {
     activateWindow();
 }
 
-// ----- helpers -----
-
 void SettingsWindow::buildPresetMap() {
     presetMap.clear();
     for (const QList<QPushButton *> presetButtons = ui.key_select_frame->findChildren<QPushButton *>(); const auto *btn:
          presetButtons) {
         const QString obj = btn->objectName().toLower();
         int vk = 0;
-        if (obj.contains("lctrl") || obj.contains("btn_lctrl")) vk = VK_LCONTROL;
-        else if (obj.contains("rctrl") || obj.contains("btn_rctrl")) vk = VK_RCONTROL;
-        else if (obj.contains("lalt") || obj.contains("btn_lalt")) vk = VK_LMENU;
-        else if (obj.contains("ralt") || obj.contains("btn_ralt")) vk = VK_RMENU;
-        else if (obj.contains("lshift") || obj.contains("btn_lshift")) vk = VK_LSHIFT;
-        else if (obj.contains("rshift") || obj.contains("btn_rshift")) vk = VK_RSHIFT;
-        else if (obj.contains("caps") || obj.contains("btn_caps")) vk = VK_CAPITAL;
+        if (obj.contains("lctrl")) vk = VK_LCONTROL;
+        else if (obj.contains("rctrl")) vk = VK_RCONTROL;
+        else if (obj.contains("lalt")) vk = VK_LMENU;
+        else if (obj.contains("ralt")) vk = VK_RMENU;
+        else if (obj.contains("lshift")) vk = VK_LSHIFT;
+        else if (obj.contains("rshift")) vk = VK_RSHIFT;
+        else if (obj.contains("caps")) vk = VK_CAPITAL;
 
         if (vk != 0) presetMap.insert(btn->objectName(), vk);
     }
+    LOG_DEBUG() << "Preset map built: size=" << presetMap.size();
 }
 
 int SettingsWindow::vkFromPresetObjectName(const QString &obj) const {
@@ -215,11 +230,10 @@ QString SettingsWindow::nameFromVk(const int vk) {
 
 void SettingsWindow::applyHotkeyIfChanged(const int newVk, const QString &newName) {
     if (newVk == AppSettings::hotkeyMainVk && newName == AppSettings::hotkeyName) {
-        qDebug() << "[SettingsWindow] applyHotkeyIfChanged - no change";
+        LOG_DEBUG() << "Hotkey not changed";
         return;
     }
 
-    qDebug() << "[SettingsWindow] applyHotkeyIfChanged - applying vk=" << newVk << "name=" << newName;
     AppSettings::hotkeyMainVk = newVk;
     AppSettings::hotkeyModifiers = 0;
     AppSettings::hotkeyName = newName;
@@ -237,19 +251,19 @@ void SettingsWindow::markChanged() {
     if (!hasPendingChanges) {
         hasPendingChanges = true;
         autosaveTimer.start();
-        qDebug() << "[SettingsWindow] marked changed, autosave scheduled in 1s.";
+
+        LOG_DEBUG() << "Marked changed, autosave scheduled in " << autosaveIntervalMs / 1000 << " sec";
+
         emit settingsChanged();
     } else {
         autosaveTimer.start();
-        qDebug() << "[SettingsWindow] change already pending - timer restarted";
+        LOG_DEBUG() << "Change already pending - timer restarted";
     }
 }
 
 void SettingsWindow::restorePreviousPresetIfNeeded() {
     if (previousPresetVk != 0) {
         if (AppSettings::hotkeyMainVk != previousPresetVk) {
-            qDebug() << "[SettingsWindow] restoring previous preset vk=" << previousPresetVk << "name=" <<
-                    previousPresetName;
             AppSettings::hotkeyMainVk = previousPresetVk;
             AppSettings::hotkeyModifiers = 0;
             AppSettings::hotkeyName = previousPresetName;
@@ -260,6 +274,9 @@ void SettingsWindow::restorePreviousPresetIfNeeded() {
                 btn->setChecked(vk != 0 && vk == previousPresetVk);
             }
 
+            LOG_DEBUG() << "Previous preset restored: vk=" << previousPresetVk
+                    << "; name='" << previousPresetName << "'";
+
             previousPresetVk = 0;
             previousPresetName.clear();
 
@@ -268,8 +285,11 @@ void SettingsWindow::restorePreviousPresetIfNeeded() {
             emit settingsChanged();
             previousPresetVk = 0;
             previousPresetName.clear();
+
+            LOG_DEBUG() << "Previous preset not restored - hotkey already matches";
         }
     } else {
         emit settingsChanged();
+        LOG_DEBUG() << "No previous preset to restore";
     }
 }

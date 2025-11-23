@@ -1,4 +1,5 @@
 #include "animated_selector.h"
+#include "../../core/config/logger.h"
 #include <QPushButton>
 #include <QPropertyAnimation>
 #include <QTimer>
@@ -11,6 +12,8 @@ AnimatedSelector::AnimatedSelector(QWidget *parent)
 void AnimatedSelector::bindToFrame(QFrame *frame, const QString &extraStyle) {
     m_frame = frame;
     if (!m_frame) return;
+
+    LOG_DEBUG() << "Bound to frame: " << m_frame->objectName();
 
     m_indicator = new QFrame(m_frame);
     m_indicator->setObjectName("animatedIndicator");
@@ -38,6 +41,9 @@ void AnimatedSelector::bindToFrame(QFrame *frame, const QString &extraStyle) {
             this, &AnimatedSelector::animateToButton);
 
     m_customEdit = m_frame->findChild<QLineEdit *>();
+
+    LOG_DEBUG() << "Found buttons: " << buttons.size() << "; found custom edit: " << (m_customEdit != nullptr);
+
     if (m_customEdit) {
         connect(m_customEdit, &QLineEdit::textChanged,
                 this, &AnimatedSelector::onCustomEditChanged);
@@ -46,8 +52,7 @@ void AnimatedSelector::bindToFrame(QFrame *frame, const QString &extraStyle) {
 
 
 void AnimatedSelector::initPosition() const {
-    if (!m_group || !m_indicator)
-        return;
+    if (!m_group || !m_indicator) return;
 
     // Если кастомный текст есть — индикатор не нужен
     if (m_customEdit && !m_customEdit->text().trimmed().isEmpty()) {
@@ -65,11 +70,9 @@ void AnimatedSelector::initPosition() const {
             break;
         }
     }
-    if (!btn && !m_group->buttons().isEmpty())
-        btn = m_group->buttons().first();
+    if (!btn && !m_group->buttons().isEmpty()) btn = m_group->buttons().first();
 
-    if (!btn)
-        return;
+    if (!btn) return;
 
     // вычисляем геометрию кнопки в координатах фрейма
     QRect g = btn->geometry();
@@ -84,18 +87,21 @@ void AnimatedSelector::initPosition() const {
 }
 
 void AnimatedSelector::animateToButton(const QAbstractButton *btn) {
-    if (!m_indicator || !btn || !m_frame)
-        return;
+    if (!m_indicator || !btn || !m_frame) return;
 
     // если была кастомная строка → очищаем
     if (m_customEdit && !m_customEdit->text().isEmpty()) {
         m_customEdit->clear();
+        LOG_DEBUG() << "Custom edit is not empty, indicator hidden";
         updateEditStyle();
     }
 
     QRect endGeom = btn->geometry();
     const QPoint mapped = btn->mapTo(m_frame, QPoint(0, 0));
     endGeom.moveTopLeft(mapped);
+
+    LOG_DEBUG() << "Animating to button '" << btn->objectName()
+            << "' at position: " << QString("(%1, %2)").arg(endGeom.x()).arg(endGeom.y());
 
     const QRect startGeom = m_indicator->geometry();
 
@@ -137,9 +143,11 @@ void AnimatedSelector::onCustomEditChanged(const QString &text) const {
         }
 
         m_indicator->hide();
+        LOG_DEBUG() << "Indicator hidden";
     } else {
         // Вернуть индикатор и состояние кнопок
         initPosition();
+        LOG_DEBUG() << "Indicator shown";
     }
 
     updateButtonColors();
@@ -165,6 +173,7 @@ void AnimatedSelector::updateButtonColors() const {
 
 void AnimatedSelector::updateEditStyle() const {
     if (!m_customEdit) return;
+
     const bool hasText = !m_customEdit->text().trimmed().isEmpty();
     m_customEdit->setProperty("hasText", hasText);
     m_customEdit->style()->unpolish(m_customEdit);

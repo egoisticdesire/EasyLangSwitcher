@@ -1,8 +1,17 @@
+#include "../config/logger.h"
 #include "../config/app_settings.h"
 #include "kb.h"
-#include <QDebug>
 #include <vector>
 #include <unordered_set>
+
+static QString hklToLangLabel(HKL hkl) {
+    const LANGID langId = LOWORD(reinterpret_cast<DWORD_PTR>(hkl));
+    WCHAR name[LOCALE_NAME_MAX_LENGTH] = {};
+    if (LCIDToLocaleName(MAKELCID(langId, SORT_DEFAULT), name, LOCALE_NAME_MAX_LENGTH, 0)) {
+        return QString::fromWCharArray(name);
+    }
+    return QString("Unknown");
+}
 
 thread_local KeyboardHandler *KeyboardHandler::instance = nullptr;
 
@@ -14,26 +23,31 @@ KeyboardHandler::KeyboardHandler(QObject *parent)
         longPressDetected = true;
         // как только обнаружено долгое нажатие, любые ожидающие переключения отменяются
         pendingSwitch = false;
-        qDebug() << "[KeyboardHandler] longPressDetected = true";
+
+        LOG_DEBUG() << "longPressDetected=" << longPressDetected;
     });
 
     // таймер окна быстрого повторного нажатия: решает, выполнять переключение или нет
     doublePressTimer.setSingleShot(true);
     connect(&doublePressTimer, &QTimer::timeout, this, [this]() {
         // окно истекло: если есть pendingSwitch и не longPress и не подавлено => выполняем переключение
-        qDebug() << "[KeyboardHandler] double-window expired. pendingSwitch =" << pendingSwitch
-                << " longPressDetected =" << longPressDetected
-                << " suppressedByRapidRepeat =" << suppressedByRapidRepeat;
+        LOG_DEBUG() << "Double-press expired; "
+                "pendingSwitch=" << pendingSwitch
+                << "; longPressDetected=" << longPressDetected
+                << "; suppressedByRapidRepeat=" << suppressedByRapidRepeat;
 
         // если было ожидающее переключение и оно не подавлено/не longPress -> переключаем
         if (pendingSwitch && !longPressDetected && !suppressedByRapidRepeat) {
             switchKeyboardLayout();
-            qDebug() << "[KeyboardHandler] delayed switch executed";
+
+            LOG_DEBUG() << "Delayed switch executed";
         }
         // очистка флагов
         pendingSwitch = false;
         suppressedByRapidRepeat = false;
     });
+
+    LOG_DEBUG() << "KeyboardHandler initialized";
 }
 
 KeyboardHandler::~KeyboardHandler() {
@@ -44,9 +58,9 @@ void KeyboardHandler::start() {
     instance = this;
     hook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, nullptr, 0);
     if (!hook) {
-        qDebug() << "[KeyboardHandler] hook install failed";
+        LOG_WARNING() << "Hook install failed";
     } else {
-        qDebug() << "[KeyboardHandler] hook installed";
+        LOG_DEBUG() << "Hook installed";
     }
 }
 
@@ -55,7 +69,8 @@ void KeyboardHandler::stop() {
         UnhookWindowsHookEx(hook);
         hook = nullptr;
         instance = nullptr;
-        qDebug() << "[KeyboardHandler] hook removed";
+
+        LOG_DEBUG() << "Hook removed";
     }
 }
 
@@ -99,7 +114,7 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
             }
 
             if (otherKeyDown) {
-                qDebug() << "[KeyboardHandler] hotkey down ignored (combo)";
+                LOG_DEBUG() << "Hotkey down ignored (combo)";
             } else {
                 // проверяем интервал между нажатиями для быстрого повторного нажатия
                 const DWORD intervalSinceLastDown = now - instance->lastDownTime;
@@ -107,7 +122,8 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
                 if (const DWORD doublePress = static_cast<DWORD>(AppSettings::switchDelayMs);
                     intervalSinceLastDown <= doublePress) {
                     // обнаружено быстрое повторное нажатие: подавляем переключение, ведём себя как обычные клавиши
-                    qDebug() << "[KeyboardHandler] rapid repeat detected, suppress switch";
+                    LOG_DEBUG() << "Rapid repeat detected, suppress switch";
+
                     instance->suppressedByRapidRepeat = true;
 
                     // отменяем любые предыдущие действия
@@ -131,8 +147,7 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
                     // старт таймера окна повторного нажатия
                     instance->doublePressTimer.start(doublePress);
 
-                    qDebug() << "[KeyboardHandler] hotkey down detected vk=" << vk
-                            << " start longPressTimer and doublePress";
+                    LOG_DEBUG() << "Hotkey down detected vk=" << vk << "; start longPressTimer and doublePress";
                 }
 
                 // обновляем время последнего нажатия
@@ -143,31 +158,35 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
         else if (isUp && vk == configuredMain) {
             // если down не был потенциальным триггером, ничего не делаем
             if (!instance->keyPressed) {
-                qDebug() << "[KeyboardHandler] hotkey up normal";
+                LOG_DEBUG() << "Hotkey up normal";
             } else {
                 // останавливаем таймер долгого нажатия
                 instance->longPressTimer.stop();
 
                 const DWORD pressDuration = now - instance->pressTime;
-                qDebug() << "[KeyboardHandler] hotkey up vk=" << vk << " duration=" << pressDuration
-                        << " longPressDetected=" << instance->longPressDetected
-                        << " suppressedByRapidRepeat=" << instance->suppressedByRapidRepeat;
+
+                LOG_DEBUG() << "Hotkey up vk=" << vk
+                        << "; duration=" << pressDuration
+                        << "; longPressDetected=" << instance->longPressDetected
+                        << "; suppressedByRapidRepeat=" << instance->suppressedByRapidRepeat;
 
                 // если долгий тап -> стандартное поведение
                 if (instance->longPressDetected) {
                     instance->keyPressed = false;
                     instance->pendingSwitch = false;
                     instance->suppressedByRapidRepeat = false;
-                    qDebug() << "[KeyboardHandler] long press - normal";
+
+                    LOG_DEBUG() << "Long press - cancel special";
                 } else {
                     // короткое нажатие -> потенциальное переключение, ждём окно doublePress
                     if (!instance->doublePressTimer.isActive()) {
                         // окно уже истекло => переключаем сразу
                         if (!instance->suppressedByRapidRepeat) {
                             switchKeyboardLayout();
-                            qDebug() << "[KeyboardHandler] immediate switch executed";
+
+                            LOG_DEBUG() << "Immediate switch executed";
                         } else {
-                            qDebug() << "[KeyboardHandler] suppressed - do nothing";
+                            LOG_DEBUG() << "Suppressed - cancel special";
                         }
                         instance->keyPressed = false;
                         instance->pendingSwitch = false;
@@ -175,7 +194,8 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
                     } else {
                         // помечаем как ожидающее переключение
                         instance->pendingSwitch = true;
-                        qDebug() << "[KeyboardHandler] short press pendingSwitch";
+
+                        LOG_DEBUG() << "Short press pendingSwitch";
                         // keyPressed будет очищен после обработки doublePressTimer
                         instance->keyPressed = false;
                     }
@@ -192,7 +212,7 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
             instance->longPressDetected = false;
             instance->suppressedByRapidRepeat = false;
 
-            qDebug() << "[KeyboardHandler] combo detected - cancel special";
+            LOG_DEBUG() << "Combo detected - cancel special";
         }
     }
     return CallNextHookEx(nullptr, nCode, wParam, lParam);
@@ -243,6 +263,9 @@ void KeyboardHandler::switchKeyboardLayout() {
             SendInput(4, inputs, sizeof(INPUT));
         }
     });
-    qDebug() << "[KeyboardHandler] switch requested HKL:" << QString::number(
-        reinterpret_cast<qulonglong>(next), 16);
+
+    LOG_DEBUG() << "Switch layout: old='" << hklToLangLabel(current)
+            << "' (" << QString::number(reinterpret_cast<qulonglong>(current), 16) << ")"
+            << "; new='" << hklToLangLabel(next)
+            << "' (" << QString::number(reinterpret_cast<qulonglong>(next), 16) << ")";
 }
