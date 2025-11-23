@@ -8,10 +8,10 @@ int AppSettings::defaultHotkeyModifiers = 0;
 QString AppSettings::defaultHotkeyName = "Left Ctrl";
 int AppSettings::defaultSwitchDelayMs = 250;
 
-int AppSettings::hotkeyMainVk = AppSettings::defaultHotkeyMainVk;
-int AppSettings::hotkeyModifiers = AppSettings::defaultHotkeyModifiers;
-QString AppSettings::hotkeyName = AppSettings::defaultHotkeyName;
-int AppSettings::switchDelayMs = AppSettings::defaultSwitchDelayMs;
+int AppSettings::hotkeyMainVk = defaultHotkeyMainVk;
+int AppSettings::hotkeyModifiers = defaultHotkeyModifiers;
+QString AppSettings::hotkeyName = defaultHotkeyName;
+int AppSettings::switchDelayMs = defaultSwitchDelayMs;
 
 void AppSettings::load() {
     hotkeyMainVk = settings.value("hotkey/main_vk", defaultHotkeyMainVk).toInt();
