@@ -30,7 +30,7 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
-    Ui::main_frame ui{};
+    Ui::tray_main_widget ui{};
 
     QSystemTrayIcon trayIcon;
 

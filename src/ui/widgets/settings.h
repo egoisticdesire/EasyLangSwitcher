@@ -32,7 +32,7 @@ protected:
     bool event(QEvent *ev) override;
 
 private:
-    Ui::main_widget ui{};
+    Ui::settings_main_widget ui{};
 
     QVector<AnimatedSelector *> selectors;
 

@@ -1,7 +1,6 @@
 #include "app_settings.h"
 #include "logger.h"
 #include <Windows.h>
-#include <QDebug>
 
 int AppSettings::defaultHotkeyMainVk = VK_LCONTROL;
 int AppSettings::defaultHotkeyModifiers = 0;
