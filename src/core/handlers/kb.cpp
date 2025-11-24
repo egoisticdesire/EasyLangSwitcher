@@ -20,31 +20,31 @@ KeyboardHandler::KeyboardHandler(QObject *parent)
     // таймер долгого нажатия: если срабатывает => это долгий тап
     longPressTimer.setSingleShot(true);
     connect(&longPressTimer, &QTimer::timeout, this, [this]() {
-        longPressDetected = true;
         // как только обнаружено долгое нажатие, любые ожидающие переключения отменяются
-        pendingSwitch = false;
+        isLongPress = true;
+        switchPending = false;
 
-        LOG_DEBUG() << "longPressDetected=" << longPressDetected;
+        LOG_DEBUG() << "Long press detected";
     });
 
     // таймер окна быстрого повторного нажатия: решает, выполнять переключение или нет
     doublePressTimer.setSingleShot(true);
     connect(&doublePressTimer, &QTimer::timeout, this, [this]() {
-        // окно истекло: если есть pendingSwitch и не longPress и не подавлено => выполняем переключение
-        LOG_DEBUG() << "Double-press expired; "
-                "pendingSwitch=" << pendingSwitch
-                << "; longPressDetected=" << longPressDetected
-                << "; suppressedByRapidRepeat=" << suppressedByRapidRepeat;
+        // окно истекло: если есть switchPending и не longPress и не подавлено => выполняем переключение
+        LOG_DEBUG() << "Double-press window expired"
+                << ": switchPending=" << (switchPending ? "true" : "false")
+                << "; isLongPress=" << (isLongPress ? "true" : "false")
+                << "; rapidRepeatSuppressed=" << (rapidRepeatSuppressed ? "true" : "false");
 
         // если было ожидающее переключение и оно не подавлено/не longPress -> переключаем
-        if (pendingSwitch && !longPressDetected && !suppressedByRapidRepeat) {
+        if (switchPending && !isLongPress && !rapidRepeatSuppressed) {
             switchKeyboardLayout();
 
-            LOG_DEBUG() << "Delayed switch executed";
+            LOG_DEBUG() << "Switch executed after delay";
         }
         // очистка флагов
-        pendingSwitch = false;
-        suppressedByRapidRepeat = false;
+        switchPending = false;
+        rapidRepeatSuppressed = false;
     });
 
     LOG_DEBUG() << "KeyboardHandler initialized";
@@ -56,34 +56,26 @@ KeyboardHandler::~KeyboardHandler() {
 
 void KeyboardHandler::start() {
     instance = this;
-    hook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, nullptr, 0);
-    if (!hook) {
-        LOG_WARNING() << "Hook install failed";
+    keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, nullptr, 0);
+    if (!keyboardHook) {
+        LOG_WARNING() << "Hook installation failed";
     } else {
-        LOG_DEBUG() << "Hook installed";
+        LOG_DEBUG() << "Hook installed successfully";
     }
 }
 
 void KeyboardHandler::stop() {
-    if (hook) {
-        UnhookWindowsHookEx(hook);
-        hook = nullptr;
+    if (keyboardHook) {
+        UnhookWindowsHookEx(keyboardHook);
+        keyboardHook = nullptr;
         instance = nullptr;
 
         LOG_DEBUG() << "Hook removed";
     }
 }
 
-// проверка, является ли клавиша модификатором
-static bool isModifierVk(const int vk) {
-    return vk == VK_LCONTROL || vk == VK_RCONTROL ||
-           vk == VK_LSHIFT || vk == VK_RSHIFT ||
-           vk == VK_LMENU || vk == VK_RMENU ||
-           vk == VK_CAPITAL || vk == VK_LWIN || vk == VK_RWIN;
-}
-
 LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WPARAM wParam, const LPARAM lParam) {
-    if (nCode == HC_ACTION && instance && instance->active) {
+    if (nCode == HC_ACTION && instance && instance->isActive) {
         thread_local std::unordered_set<int> downKeys;
         const auto kb = reinterpret_cast<KBDLLHOOKSTRUCT *>(lParam);
         const bool isDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
@@ -92,8 +84,8 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
 
         // отслеживаем состояние Alt отдельно
         if (vk == VK_MENU || vk == VK_LMENU || vk == VK_RMENU) {
-            if (isDown) instance->altDown = true;
-            if (isUp) instance->altDown = false;
+            if (isDown) instance->isAltDown = true;
+            if (isUp) instance->isAltDown = false;
         }
 
         if (isDown) downKeys.insert(vk);
@@ -105,114 +97,167 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
         // обработка нажатия основной клавиши
         if (isDown && vk == configuredMain) {
             // проверяем, нажаты ли другие клавиши => комбо
+            // считаем комбо при наличии любой другой зажатой клавише,
+            // включая модификаторы (чтобы "Modifier -> Trigger" тоже было комбо).
             bool otherKeyDown = false;
             for (const int d: downKeys) {
                 if (d == vk) continue;
-                if (isModifierVk(d)) continue;
                 otherKeyDown = true;
                 break;
             }
 
             if (otherKeyDown) {
-                LOG_DEBUG() << "Hotkey down ignored (combo)";
+                // Комбо — сбрасываем сценарий триггера и разрешаем нативное поведение
+                instance->triggerKeyDown = false;
+                instance->isLongPress = false;
+                instance->switchPending = false;
+                instance->rapidRepeatSuppressed = false;
+                instance->longPressTimer.stop();
+                instance->doublePressTimer.stop();
+
+                LOG_DEBUG() << "Combo: cancel trigger";
+
+                // нативное поведение разрешено для всех клавиш в сценарии комбо
+                return CallNextHookEx(nullptr, nCode, wParam, lParam);
+            }
+            // проверяем интервал между нажатиями для быстрого повторного нажатия
+            const DWORD intervalSinceLastDown = now - instance->lastTriggerDownTime;
+
+            if (const DWORD doublePress = static_cast<DWORD>(AppSettings::switchDelayMs);
+                intervalSinceLastDown <= doublePress) {
+                // обнаружено быстрое повторное нажатие: трактуем как отмену переключения
+                // и возвращаем нативное поведение
+                LOG_DEBUG() << "Rapid repeat: native key allowed";
+
+                instance->rapidRepeatSuppressed = true;
+
+                // отменяем любые предыдущие действия
+                instance->switchPending = false;
+                instance->isLongPress = false;
+                instance->longPressTimer.stop();
+                instance->doublePressTimer.stop();
+                instance->triggerKeyDown = false;
+                instance->lastTriggerDownTime = now;
+
+                // разрешаем нативное поведение
+                return CallNextHookEx(nullptr, nCode, wParam, lParam);
             } else {
-                // проверяем интервал между нажатиями для быстрого повторного нажатия
-                const DWORD intervalSinceLastDown = now - instance->lastDownTime;
+                // возможное первое нажатие одиночного/длительного нажатия;
+                // старт таймера долгого нажатия и окна повторного нажатия
+                instance->triggerKeyDown = true;
+                instance->isLongPress = false;
+                instance->rapidRepeatSuppressed = false;
+                instance->pressStartTime = now;
+                instance->switchPending = false;
 
-                if (const DWORD doublePress = static_cast<DWORD>(AppSettings::switchDelayMs);
-                    intervalSinceLastDown <= doublePress) {
-                    // обнаружено быстрое повторное нажатие: подавляем переключение, ведём себя как обычные клавиши
-                    LOG_DEBUG() << "Rapid repeat detected, suppress switch";
+                // запускаем longPressTimer and doublePressTimer
+                instance->longPressTimer.start(AppSettings::switchDelayMs);
+                instance->doublePressTimer.start(doublePress);
 
-                    instance->suppressedByRapidRepeat = true;
+                LOG_DEBUG() << "Hotkey down vk=" << vk << ": start longPressTimer and doublePressTimer";
 
-                    // отменяем любые предыдущие действия
-                    instance->pendingSwitch = false;
-                    instance->longPressDetected = false;
-                    instance->longPressTimer.stop();
-                    instance->doublePressTimer.stop();
+                instance->lastTriggerDownTime = now;
 
-                    // не считаем это специальным нажатием триггера
-                    instance->keyPressed = false;
-                } else {
-                    // возможное первое нажатие одиночного/длительного нажатия;
-                    // старт таймера долгого нажатия и окна повторного нажатия
-                    instance->keyPressed = true;
-                    instance->longPressDetected = false;
-                    instance->suppressedByRapidRepeat = false;
-                    instance->pressTime = now;
-                    instance->pendingSwitch = false;
-                    instance->longPressTimer.start(AppSettings::switchDelayMs);
-
-                    // старт таймера окна повторного нажатия
-                    instance->doublePressTimer.start(doublePress);
-
-                    LOG_DEBUG() << "Hotkey down detected vk=" << vk << "; start longPressTimer and doublePress";
+                // Подавлять нативное действие нужно только если триггер — CapsLock или Alt
+                // (Если триггер — Shift/Ctrl/Win и т.д., нативное поведение оставляем)
+                if (configuredMain == VK_CAPITAL
+                    || configuredMain == VK_MENU
+                    || configuredMain == VK_LMENU
+                    || configuredMain == VK_RMENU
+                ) {
+                    // suppress keydown — чтобы CapsLock не переключался при коротком нажатии
+                    return 1;
                 }
-
-                // обновляем время последнего нажатия
-                instance->lastDownTime = now;
+                // для остальных клавиш разрешаем нативное поведение
+                return CallNextHookEx(nullptr, nCode, wParam, lParam);
             }
         }
+
         // обработка отпускания основной клавиши
-        else if (isUp && vk == configuredMain) {
+        if (isUp && vk == configuredMain) {
             // если down не был потенциальным триггером, ничего не делаем
-            if (!instance->keyPressed) {
-                LOG_DEBUG() << "Hotkey up normal";
-            } else {
-                // останавливаем таймер долгого нажатия
-                instance->longPressTimer.stop();
-
-                const DWORD pressDuration = now - instance->pressTime;
-
-                LOG_DEBUG() << "Hotkey up vk=" << vk
-                        << "; duration=" << pressDuration
-                        << "; longPressDetected=" << instance->longPressDetected
-                        << "; suppressedByRapidRepeat=" << instance->suppressedByRapidRepeat;
-
-                // если долгий тап -> стандартное поведение
-                if (instance->longPressDetected) {
-                    instance->keyPressed = false;
-                    instance->pendingSwitch = false;
-                    instance->suppressedByRapidRepeat = false;
-
-                    LOG_DEBUG() << "Long press - cancel special";
-                } else {
-                    // короткое нажатие -> потенциальное переключение, ждём окно doublePress
-                    if (!instance->doublePressTimer.isActive()) {
-                        // окно уже истекло => переключаем сразу
-                        if (!instance->suppressedByRapidRepeat) {
-                            switchKeyboardLayout();
-
-                            LOG_DEBUG() << "Immediate switch executed";
-                        } else {
-                            LOG_DEBUG() << "Suppressed - cancel special";
-                        }
-                        instance->keyPressed = false;
-                        instance->pendingSwitch = false;
-                        instance->suppressedByRapidRepeat = false;
-                    } else {
-                        // помечаем как ожидающее переключение
-                        instance->pendingSwitch = true;
-
-                        LOG_DEBUG() << "Short press pendingSwitch";
-                        // keyPressed будет очищен после обработки doublePressTimer
-                        instance->keyPressed = false;
-                    }
-                }
+            if (!instance->triggerKeyDown) {
+                LOG_DEBUG() << "Hotkey up: normal";
+                return CallNextHookEx(nullptr, nCode, wParam, lParam);
             }
+            // останавливаем таймер долгого нажатия
+            instance->longPressTimer.stop();
+
+            const DWORD pressDuration = now - instance->pressStartTime;
+
+            LOG_DEBUG() << "Hotkey up vk=" << vk
+                        << ": duration=" << pressDuration
+                        << "; isLongPress=" << (instance->isLongPress ? "true" : "false")
+                        << "; rapidRepeatSuppressed=" << (instance->rapidRepeatSuppressed ? "true" : "false")
+                        << "; switchPending=" << (instance->switchPending ? "true" : "false");
+
+            // если долгое нажатие -> стандартное поведение клавиши
+            if (instance->isLongPress) {
+                instance->triggerKeyDown = false;
+                instance->switchPending = false;
+                instance->rapidRepeatSuppressed = false;
+
+                LOG_DEBUG() << "Long press: cancel trigger";
+                return CallNextHookEx(nullptr, nCode, wParam, lParam);
+            }
+            // короткое нажатие -> потенциальное переключение, ждём окно doublePress
+            if (!instance->doublePressTimer.isActive()) {
+                // окно уже истекло => переключаем сразу
+                if (!instance->rapidRepeatSuppressed) {
+                    switchKeyboardLayout();
+
+                    LOG_DEBUG() << "Switch executed immediately";
+                } else {
+                    LOG_DEBUG() << "Switch suppressed: cancel trigger";
+                }
+                instance->triggerKeyDown = false;
+                instance->switchPending = false;
+                instance->rapidRepeatSuppressed = false;
+
+                // если триггер — CapsLock или Alt, подавляем keyup чтобы Caps не переключился,
+                // иначе разрешаем нативное поведение (Shift/Ctrl/Alt остаются изначально активными)
+                if (configuredMain == VK_CAPITAL
+                    || configuredMain == VK_MENU
+                    || configuredMain == VK_LMENU
+                    || configuredMain == VK_RMENU
+                ) {
+                    return 1;
+                }
+                return CallNextHookEx(nullptr, nCode, wParam, lParam);
+            }
+            // помечаем как ожидающее переключение
+            instance->switchPending = true;
+            LOG_DEBUG() << "Short press: pending switch";
+
+            // triggerKeyDown будет очищен после обработки doublePressTimer
+            instance->triggerKeyDown = false;
+
+            // suppress keyup только для CapsLock и Alt (иначе нативное поведение)
+            if (configuredMain == VK_CAPITAL
+                || configuredMain == VK_MENU
+                || configuredMain == VK_LMENU
+                || configuredMain == VK_RMENU
+            ) {
+                return 1;
+            }
+            return CallNextHookEx(nullptr, nCode, wParam, lParam);
         }
 
         // обрабатываем как комбо, если нажата другая клавиша при удержании триггера
-        else if (isDown && instance->keyPressed && vk != configuredMain) {
-            instance->keyPressed = false;
+        if (isDown && instance->triggerKeyDown && vk != configuredMain) {
+            // Комбо — отменяем сценарий триггера, но разрешаем нативное поведение
+            instance->triggerKeyDown = false;
             instance->longPressTimer.stop();
             instance->doublePressTimer.stop();
-            instance->pendingSwitch = false;
-            instance->longPressDetected = false;
-            instance->suppressedByRapidRepeat = false;
+            instance->switchPending = false;
+            instance->isLongPress = false;
+            instance->rapidRepeatSuppressed = false;
 
-            LOG_DEBUG() << "Combo detected - cancel special";
+            LOG_DEBUG() << "Combo: cancel trigger";
+
+            // нативное поведение для модификаторов/других клавиш должно срабатывать сразу,
+            // чтобы, например, Shift позволял получить заглавную букву без задержек.
+            return CallNextHookEx(nullptr, nCode, wParam, lParam);
         }
     }
     return CallNextHookEx(nullptr, nCode, wParam, lParam);

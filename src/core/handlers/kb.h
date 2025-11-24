@@ -20,32 +20,32 @@ public:
 
     void stop();
 
-    void setActive(const bool value) { active = value; }
+    void setActive(const bool value) { isActive = value; }
 
 private:
-    bool keyPressed = false; // обнаружено нажатие триггера
+    bool triggerKeyDown = false;
 
-    bool longPressDetected = false; // длинное удержание клавиши
+    bool isLongPress = false;
 
-    bool pendingSwitch = false; // ожидание переключения в окне double-window
+    bool switchPending = false;
 
-    bool suppressedByRapidRepeat = false; // подавление переключения при быстром повторе
+    bool rapidRepeatSuppressed = false;
 
-    DWORD pressTime = 0; // время последнего нажатия
+    DWORD pressStartTime = 0;
 
-    DWORD lastDownTime = 0; // время предыдущего нажатия
+    DWORD lastTriggerDownTime = 0;
 
-    static constexpr int fallbackCheckMs = 20; // интервал проверки fallback
+    static constexpr int fallbackCheckMs = 20;
 
-    QTimer longPressTimer; // определяет удержание > порога
+    QTimer longPressTimer;
 
-    QTimer doublePressTimer; // окно для проверки быстрого повторного нажатия
+    QTimer doublePressTimer;
 
-    HHOOK hook = nullptr;
+    HHOOK keyboardHook = nullptr;
 
-    bool active = true;
+    bool isActive = true;
 
-    bool altDown = false;
+    bool isAltDown = false;
 
     static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 
