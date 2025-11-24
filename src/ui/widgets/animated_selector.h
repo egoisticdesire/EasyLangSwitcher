@@ -1,6 +1,7 @@
 #pragma once
 #include <QButtonGroup>
 #include <QPropertyAnimation>
+#include <QGraphicsOpacityEffect>
 #include <QLineEdit>
 #include <QWidget>
 #include <QFrame>
@@ -28,10 +29,14 @@ private:
 
     QLineEdit *m_customEdit = nullptr;
 
+    QGraphicsOpacityEffect *m_opacity = nullptr;
+
 private slots:
     void animateToButton(const QAbstractButton *btn);
 
-    void onCustomEditChanged(const QString &text) const;
+    void animateToCustomEdit();
+
+    void onCustomEditChanged(const QString &text);
 
     void updateButtonColors() const;
 
