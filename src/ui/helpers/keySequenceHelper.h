@@ -1,7 +1,6 @@
 #pragma once
 #include "../../core/config/logger.h"
 #include "../helpers/vkMapper.h"
-#include <QEvent>
 #include <QObject>
 #include <QKeySequenceEdit>
 #include <QToolButton>
@@ -177,11 +176,21 @@ protected:
     bool eventFilter(QObject *w, QEvent *ev) override {
         if (w == m_edit || w == m_lineEdit) {
             if (ev->type() == QEvent::KeyPress) {
-                if (const auto *ke = static_cast<QKeyEvent *>(ev); ke->key() == Qt::Key_Escape) {
+                const auto *ke = static_cast<QKeyEvent *>(ev);
+
+                // ESC — снять фокус
+                if (ke->key() == Qt::Key_Escape) {
                     m_edit->clearFocus();
                     if (m_lineEdit) m_lineEdit->clearFocus();
                     if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+                    return true;
+                }
 
+                // BACKSPACE — очистка (симулируем нажатие кнопки очистки)
+                if (ke->key() == Qt::Key_Backspace) {
+                    if (m_btn && m_btn->isVisible()) {
+                        emit m_btn->clicked();
+                    }
                     return true;
                 }
             }
