@@ -267,50 +267,65 @@ void KeyboardHandler::switchKeyboardLayout() {
     const HWND hwnd = GetForegroundWindow();
     if (!hwnd) return;
 
-    const DWORD threadId = GetWindowThreadProcessId(hwnd, nullptr);
-    const HKL current = GetKeyboardLayout(threadId);
+    DWORD threadId = GetWindowThreadProcessId(hwnd, nullptr);
+    HKL current = GetKeyboardLayout(threadId);
 
     const int n = GetKeyboardLayoutList(0, nullptr);
     if (n <= 0) return;
-    std::vector<HKL> list(n);
-    GetKeyboardLayoutList(n, list.data());
+    std::vector<HKL> layouts(n);
+    GetKeyboardLayoutList(n, layouts.data());
 
     int idx = 0;
     for (int i = 0; i < n; ++i)
-        if (list[i] == current) {
+        if (layouts[i] == current) {
             idx = i;
             break;
         }
-    HKL next = list[(idx + 1) % n];
+    HKL next = layouts[(idx + 1) % n];
 
-    // 1. стандартная попытка переключения
-    PostMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(next));
+    // Проверка типа окна: UWP/Store apps и т.п.
+    wchar_t className[256] = {};
+    GetClassName(hwnd, className, sizeof(className) / sizeof(wchar_t));
 
-    // 2. проверка через короткую задержку, изменилась ли раскладка
-    QTimer::singleShot(fallbackCheckMs, [threadId, next]() {
-        if (const HKL now = GetKeyboardLayout(threadId); now != next) {
-            // fallback: эмулируем Win+Space
+    bool useDirectFallback = false;
+    if (const std::wstring cls(className);
+        cls.starts_with(L"ApplicationFrameWindow") // большинство UWP окон
+        || cls.starts_with(L"Windows.UI.Core.CoreWindow")
+        || cls.starts_with(L"Xaml")
+        // || cls.starts_with(L"Calculator") // конкретные "проблемные" окна
+    ) {
+        useDirectFallback = true;
+    }
+
+    if (!useDirectFallback) {
+        // 1. Пытаемся PostMessage
+        PostMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(next));
+    }
+
+    // 2. Проверка через короткий таймер, при необходимости fallback через Win+Space
+    QTimer::singleShot(fallbackCheckMs, [threadId, next, useDirectFallback]() {
+        if (const HKL now = GetKeyboardLayout(threadId); now != next || useDirectFallback) {
+            // fallback: эмуляция Win+Space
             INPUT inputs[4] = {};
-            // Win down
             inputs[0].type = INPUT_KEYBOARD;
             inputs[0].ki.wVk = VK_LWIN;
-            // Space down
             inputs[1].type = INPUT_KEYBOARD;
             inputs[1].ki.wVk = VK_SPACE;
-            // Space up
             inputs[2].type = INPUT_KEYBOARD;
             inputs[2].ki.wVk = VK_SPACE;
             inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
-            // Win up
             inputs[3].type = INPUT_KEYBOARD;
             inputs[3].ki.wVk = VK_LWIN;
             inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
             SendInput(4, inputs, sizeof(INPUT));
+
+            LOG_DEBUG() << "Switch layout: fallback win+space";
         }
     });
 
     LOG_DEBUG() << "Switch layout: old='" << hklToLangLabel(current)
-            << "' (" << QString::number(reinterpret_cast<qulonglong>(current), 16) << ")"
-            << "; new='" << hklToLangLabel(next)
-            << "' (" << QString::number(reinterpret_cast<qulonglong>(next), 16) << ")";
+                << "' (" << QString::number(reinterpret_cast<qulonglong>(current), 16) << ")"
+                << "; new='" << hklToLangLabel(next)
+                << "' (" << QString::number(reinterpret_cast<qulonglong>(next), 16) << ")"
+                << "; directFallback=" << useDirectFallback;
 }
