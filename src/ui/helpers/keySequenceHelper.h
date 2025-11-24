@@ -6,6 +6,7 @@
 #include <QKeySequenceEdit>
 #include <QToolButton>
 #include <QLineEdit>
+#include <QKeyEvent>
 
 /*
 KeySequenceHelper:
@@ -175,7 +176,16 @@ signals:
 protected:
     bool eventFilter(QObject *w, QEvent *ev) override {
         if (w == m_edit || w == m_lineEdit) {
-            // сохранять позицию при изменении размера/шрифта
+            if (ev->type() == QEvent::KeyPress) {
+                if (const auto *ke = static_cast<QKeyEvent *>(ev); ke->key() == Qt::Key_Escape) {
+                    m_edit->clearFocus();
+                    if (m_lineEdit) m_lineEdit->clearFocus();
+                    if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+
+                    return true;
+                }
+            }
+
             if (ev->type() == QEvent::Resize || ev->type() == QEvent::FontChange) {
                 updatePosition();
             }
@@ -191,6 +201,7 @@ protected:
                 if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
             }
         }
+
         return QObject::eventFilter(w, ev);
     }
 
