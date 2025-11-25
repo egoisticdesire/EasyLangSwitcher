@@ -14,13 +14,11 @@ public:
 
     void bindToFrame(QFrame *frame, const QString &extraStyle = QString());
 
-    void initPosition() const;
+    void initPosition();
 
     QFrame *indicator() const { return m_indicator; }
 
 private:
-    QWidget *m_parent = nullptr;
-
     QFrame *m_indicator = nullptr;
 
     QFrame *m_frame = nullptr;
@@ -29,10 +27,20 @@ private:
 
     QLineEdit *m_customEdit = nullptr;
 
+    QWidget *m_parent = nullptr;
+
+    QGraphicsDropShadowEffect *m_shadow = nullptr;
+
+    QRect m_indicatorGeometry;
+
+    QVariantAnimation *m_runningAnim = nullptr;
+
     QGraphicsOpacityEffect *m_opacity = nullptr;
 
+    QString m_extraStyle;
+
 private slots:
-    void animateToButton(const QAbstractButton *btn);
+    void animateToButton(QAbstractButton *btn);
 
     void animateToCustomEdit();
 

@@ -194,7 +194,7 @@ void SettingsWindow::showEvent(QShowEvent *event) {
         AcrylicHelper::updateRegion(this);
     });
     QTimer::singleShot(0, this, [this]() {
-        for (const AnimatedSelector *sel: selectors) if (sel) sel->initPosition();
+        for (AnimatedSelector *sel: selectors) if (sel) sel->initPosition();
     });
 }
 

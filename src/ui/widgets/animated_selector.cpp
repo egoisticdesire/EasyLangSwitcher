@@ -5,9 +5,13 @@
 #include <QParallelAnimationGroup>
 #include <QTimer>
 #include <QStyle>
+#include <QLineF>
+#include <QGraphicsDropShadowEffect>
+#include <QPointer>
+#include <cmath>
 
 AnimatedSelector::AnimatedSelector(QWidget *parent)
-    : QObject(parent) {
+    : QObject(parent), m_parent(parent) {
 }
 
 void AnimatedSelector::bindToFrame(QFrame *frame, const QString &extraStyle) {
@@ -16,9 +20,8 @@ void AnimatedSelector::bindToFrame(QFrame *frame, const QString &extraStyle) {
 
     LOG_DEBUG() << "Bound to frame: " << m_frame->objectName();
 
-    m_indicator = new QFrame(m_frame);
+    m_indicator = new QFrame(m_parent);
     m_indicator->setObjectName("animatedIndicator");
-
     const QString finalStyle =
             "margin: 1px;"
             "border-radius: 8px;"
@@ -27,12 +30,14 @@ void AnimatedSelector::bindToFrame(QFrame *frame, const QString &extraStyle) {
             + extraStyle;
     m_indicator->setStyleSheet(finalStyle);
     m_indicator->setAttribute(Qt::WA_TransparentForMouseEvents);
-    m_opacity = new QGraphicsOpacityEffect(m_indicator);
-    m_indicator->setGraphicsEffect(m_opacity);
-    m_opacity->setOpacity(1.0);
     m_indicator->hide();
 
-    // кнопки
+    m_shadow = new QGraphicsDropShadowEffect(m_indicator);
+    m_shadow->setBlurRadius(6);
+    m_shadow->setOffset(0, 4);
+    m_shadow->setColor(QColor(0, 0, 0, 0));
+    m_indicator->setGraphicsEffect(m_shadow);
+
     QList<QPushButton *> buttons = m_frame->findChildren<QPushButton *>();
     for (auto *b: buttons) b->setCheckable(true);
 
@@ -45,29 +50,27 @@ void AnimatedSelector::bindToFrame(QFrame *frame, const QString &extraStyle) {
             this, &AnimatedSelector::animateToButton);
 
     m_customEdit = m_frame->findChild<QLineEdit *>();
-
-    LOG_DEBUG() << "Found buttons: " << buttons.size() << "; found custom edit: " << (m_customEdit != nullptr);
-
-    if (m_customEdit) {
+    if (m_customEdit)
         connect(m_customEdit, &QLineEdit::textChanged,
                 this, &AnimatedSelector::onCustomEditChanged);
-    }
 }
 
-
-void AnimatedSelector::initPosition() const {
+void AnimatedSelector::initPosition() {
     if (!m_group || !m_indicator) return;
 
-    // Если кастомный текст есть — индикатор не нужен
+    // Если инпут с текстом — индикатор не показываем, но сохраняем геометрию фрейма
     if (m_customEdit && !m_customEdit->text().trimmed().isEmpty()) {
         m_indicator->hide();
+        const auto frameGeom = QRect(
+            m_frame->mapTo(m_parent, QPoint(0, 0)),
+            QSize(m_frame->size().width() - 18, m_frame->size().height() + 2)
+        );
+        m_indicatorGeometry = frameGeom; // <<< сохраняем геометрию
         updateButtonColors();
         return;
     }
 
     const QAbstractButton *btn = nullptr;
-
-    // ищем выбранную кнопку
     for (const auto *b: m_group->buttons()) {
         if (b->isChecked()) {
             btn = b;
@@ -75,139 +78,239 @@ void AnimatedSelector::initPosition() const {
         }
     }
     if (!btn && !m_group->buttons().isEmpty()) btn = m_group->buttons().first();
-
     if (!btn) return;
 
-    // вычисляем геометрию кнопки в координатах фрейма
     QRect g = btn->geometry();
-    const QPoint mapped = btn->mapTo(m_frame, QPoint(0, 0));
-    g.moveTopLeft(mapped);
-
+    g.moveTopLeft(btn->mapTo(m_parent, QPoint(0, 0)));
     m_indicator->setGeometry(g);
     m_indicator->show();
     m_indicator->raise();
 
+    m_indicatorGeometry = g;
     updateButtonColors();
 }
 
-void AnimatedSelector::animateToButton(const QAbstractButton *btn) {
-    if (!m_indicator || !btn || !m_frame) return;
+void AnimatedSelector::animateToButton(QAbstractButton *btn) {
+    if (!m_indicator || !btn || !m_parent || !m_frame) return;
 
-    if (m_customEdit && !m_customEdit->text().isEmpty()) {
+    if (m_customEdit && !m_customEdit->text().trimmed().isEmpty()) {
         m_customEdit->clear();
         updateEditStyle();
     }
 
-    // Целевая геометрия кнопки
     QRect endGeom = btn->geometry();
-    const QPoint mapped = btn->mapTo(m_frame, QPoint(0, 0));
-    endGeom.moveTopLeft(mapped);
+    endGeom.moveTopLeft(btn->mapTo(m_parent, QPoint(0, 0)));
 
-    LOG_DEBUG() << "Animating to button '" << btn->objectName()
-            << "' at position: " << QString("(%1, %2)").arg(endGeom.x()).arg(endGeom.y());
+    QRect startGeom;
+    if (m_indicator->isVisible() && m_indicator->geometry().isValid())
+        startGeom = m_indicator->geometry();
+    else if (m_indicatorGeometry.isValid())
+        startGeom = m_indicatorGeometry;
+    else
+        startGeom = endGeom;
 
-    QRect startGeom = m_indicator->geometry();
-
-    // Если индикатор был скрыт — начинаем с нулевой прозрачности и позиции кастома
     if (!m_indicator->isVisible()) {
-        if (m_customEdit) {
-            QRect from = m_customEdit->geometry();
-            const QPoint fromMapped = m_customEdit->mapTo(m_frame, QPoint(0, 0));
-            from.moveTopLeft(fromMapped);
-            startGeom = from;
-        }
         m_indicator->setGeometry(startGeom);
-        m_opacity->setOpacity(0.0);
         m_indicator->show();
         m_indicator->raise();
     }
 
-    auto *moveAnim = new QPropertyAnimation(m_indicator, "geometry");
-    moveAnim->setDuration(400);
-    moveAnim->setEasingCurve(QEasingCurve::InOutCubic);
-    moveAnim->setStartValue(startGeom);
-    moveAnim->setEndValue(endGeom);
+    const QPointF startCenter = startGeom.center();
+    const QPointF endCenter = endGeom.center();
+    const QPointF delta = endCenter - startCenter;
+    const double distance = QLineF(startCenter, endCenter).length();
+    const bool horizontal = std::abs(delta.x()) >= std::abs(delta.y());
 
-    // Плавное появление
-    auto *fadeAnim = new QPropertyAnimation(m_opacity, "opacity");
-    fadeAnim->setDuration(400);
-    fadeAnim->setStartValue(m_opacity->opacity());
-    fadeAnim->setEndValue(1.0);
+    if (m_runningAnim) {
+        m_runningAnim->stop();
+        m_runningAnim->deleteLater();
+        m_runningAnim = nullptr;
+    }
 
-    auto *group = new QParallelAnimationGroup;
-    group->addAnimation(moveAnim);
-    group->addAnimation(fadeAnim);
+    const QPointer indicatorPtr(m_indicator);
+    const QPointer shadowPtr(m_shadow);
 
-    connect(group, &QParallelAnimationGroup::finished, this, [this, btn]() {
-        const_cast<QAbstractButton *>(btn)->setChecked(true);
-        updateButtonColors();
-        m_indicator->raise();
+    auto *anim = new QVariantAnimation(this);
+    m_runningAnim = anim;
+    anim->setStartValue(0.0);
+    anim->setEndValue(1.0);
+    const int dur = static_cast<int>(qBound(300.0, 500.0 + distance * 0.5, 700.0));
+    anim->setDuration(dur);
+    anim->setEasingCurve(QEasingCurve::InOutCubic);
+
+    connect(anim, &QVariantAnimation::valueChanged, this, [=](const QVariant &v) {
+        if (!indicatorPtr) return;
+        const double t = v.toDouble();
+
+        const QPointF center = startCenter + delta * t;
+
+        constexpr double squashMid = 0.7;
+        const double squashFactor = 1.0 - (1.0 - squashMid) * std::sin(t * M_PI);
+        const double stretchFactor = 1.0 + (1.0 / squashMid - 1.0) * (1.0 - std::abs(2.0 * t - 1.0));
+
+        const double w = startGeom.width() + (endGeom.width() - startGeom.width()) * t;
+        const double h = startGeom.height() + (endGeom.height() - startGeom.height()) * t;
+
+        const double newW = horizontal ? w * squashFactor : w * stretchFactor;
+        const double newH = horizontal ? h * stretchFactor : h * squashFactor;
+
+        const QRectF r(center.x() - newW / 2.0, center.y() - newH / 2.0, newW, newH);
+        indicatorPtr->setGeometry(r.toAlignedRect());
+        indicatorPtr->raise();
+
+        // плавный радиус скругления
+        // радиус при перемещении между кнопками всегда 8
+        const auto style = QString(
+            "margin: 1px;"
+            "border-radius: 8px;"
+            "color: rgba(255,255,255,255);"
+            "background: rgba(255,255,255,15);"
+        );
+        indicatorPtr->setStyleSheet(style);
+
+        if (shadowPtr) {
+            const double sp = std::sin(t * M_PI);
+            shadowPtr->setBlurRadius(6 + 6 * sp);
+            shadowPtr->setOffset(0, 4 + 6 * sp);
+            shadowPtr->setColor(QColor(0, 0, 0, static_cast<int>(120 + 120 * sp)));
+        }
     });
 
-    group->start(QPropertyAnimation::DeleteWhenStopped);
+    connect(anim, &QVariantAnimation::finished, this, [this, indicatorPtr, shadowPtr, btn, endGeom, anim]() {
+        if (!indicatorPtr) return;
+        indicatorPtr->setGeometry(endGeom);
+        indicatorPtr->raise();
+        btn->setChecked(true);
+        updateButtonColors();
+        m_indicatorGeometry = endGeom;
+
+        if (shadowPtr) {
+            shadowPtr->setBlurRadius(6);
+            shadowPtr->setOffset(0, 4);
+            shadowPtr->setColor(QColor(0, 0, 0, 0));
+        }
+        if (m_runningAnim == anim) m_runningAnim = nullptr;
+        anim->deleteLater();
+    });
+
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 void AnimatedSelector::animateToCustomEdit() {
-    if (!m_indicator || !m_customEdit || !m_frame)
-        return;
+    if (!m_indicator || !m_customEdit || !m_frame || !m_parent) return;
 
-    QRect endGeom = m_customEdit->geometry();
-    const QPoint mapped = m_customEdit->mapTo(m_frame, QPoint(0, 0));
-    endGeom.moveTopLeft(mapped);
+    QRect startGeom;
+    if (m_indicator->isVisible() && m_indicator->geometry().isValid())
+        startGeom = m_indicator->geometry();
+    else if (m_indicatorGeometry.isValid())
+        startGeom = m_indicatorGeometry;
+    else {
+        if (const auto *b = m_group ? m_group->checkedButton() : nullptr) {
+            startGeom = b->geometry();
+            startGeom.moveTopLeft(b->mapTo(m_parent, QPoint(0, 0)));
+        } else {
+            startGeom = QRect(m_frame->mapTo(m_parent, QPoint(0, 0)),
+                              QSize(m_frame->size().width() - 18, m_frame->size().height() + 2));
+        }
+    }
 
-    const QRect startGeom = m_indicator->geometry();
-
-    auto *moveAnim = new QPropertyAnimation(m_indicator, "geometry");
-    moveAnim->setDuration(400);
-    moveAnim->setEasingCurve(QEasingCurve::InOutCubic);
-    moveAnim->setStartValue(startGeom);
-    moveAnim->setEndValue(endGeom);
-
-    auto *fadeAnim = new QPropertyAnimation(m_opacity, "opacity");
-    fadeAnim->setDuration(400);
-    fadeAnim->setStartValue(1.0);
-    fadeAnim->setEndValue(0.0);
-
-    // Группируем параллельно
-    auto *group = new QParallelAnimationGroup;
-    group->addAnimation(moveAnim);
-    group->addAnimation(fadeAnim);
-
-    connect(group, &QParallelAnimationGroup::finished, this, [this]() {
-        m_indicator->hide();
-        m_opacity->setOpacity(1.0);
-        updateButtonColors();
-    });
+    const auto frameGeom = QRect(m_frame->mapTo(m_parent, QPoint(0, 0)),
+                                 QSize(m_frame->size().width() - 18, m_frame->size().height() + 2));
 
     if (!m_indicator->isVisible()) {
         m_indicator->setGeometry(startGeom);
-        m_opacity->setOpacity(1.0);
         m_indicator->show();
+        m_indicator->raise();
     }
 
-    group->start(QPropertyAnimation::DeleteWhenStopped);
-}
+    if (m_runningAnim) {
+        m_runningAnim->stop();
+        m_runningAnim->deleteLater();
+        m_runningAnim = nullptr;
+    }
 
+    const QPointer indicatorPtr(m_indicator);
+    const QPointer shadowPtr(m_shadow);
 
-void AnimatedSelector::onCustomEditChanged(const QString &text) {
-    const bool hasCustom = !text.trimmed().isEmpty();
+    auto *anim = new QVariantAnimation(this);
+    m_runningAnim = anim;
+    anim->setStartValue(0.0);
+    anim->setEndValue(1.0);
+    anim->setDuration(500);
+    anim->setEasingCurve(QEasingCurve::InOutCubic);
 
-    updateEditStyle();
+    const QPointF cStart = startGeom.center();
+    const QPointF cEnd = frameGeom.center();
+    const QPointF delta = cEnd - cStart;
 
-    if (hasCustom) {
-        // Снять выделение со всех кнопок
-        for (auto *b: m_group->buttons()) b->setChecked(false);
+    connect(anim, &QVariantAnimation::valueChanged, this,
+            [this, indicatorPtr, shadowPtr, cStart, delta, startGeom, frameGeom](const QVariant &v) {
+                if (!indicatorPtr) return;
+                const double t = v.toDouble();
 
-        animateToCustomEdit();
+                const QPointF center = cStart + delta * t;
+                const double w = startGeom.width() + (frameGeom.width() - startGeom.width()) * t;
+                const double h = startGeom.height() + (frameGeom.height() - startGeom.height()) * t;
 
-        LOG_DEBUG() << "Indicator animated to input and hidden";
-    } else {
-        // Вернуть индикатор и состояние кнопок
-        if (const auto *btn = qobject_cast<QAbstractButton *>(m_group->checkedButton())) {
-            animateToButton(btn);
+                const double squashFactor = 1.0 - 0.22 * std::sin(t * M_PI);
+                const double stretchFactor = 1.0 + 0.22 * std::sin(t * M_PI);
+
+                const double newW = w * squashFactor;
+                const double newH = h * stretchFactor;
+
+                const QRectF r(center.x() - newW / 2.0, center.y() - newH / 2.0, newW, newH);
+                indicatorPtr->setGeometry(r.toAlignedRect());
+                indicatorPtr->raise();
+
+                // плавный радиус
+                const int radius = static_cast<int>(8 + (10 - 8) * t);
+                const QString style = QString(
+                    "margin: 1px;"
+                    "border-radius: %1px;"
+                    "color: rgba(255,255,255,255);"
+                    "background: rgba(255,255,255,15);"
+                ).arg(radius);
+                indicatorPtr->setStyleSheet(style);
+
+                if (m_opacity) m_opacity->setOpacity(1.0 - t);
+
+                if (shadowPtr) {
+                    const double sp = 1.0 - t;
+                    shadowPtr->setBlurRadius(6 + 6 * sp);
+                    shadowPtr->setOffset(0, 4 + 6 * sp);
+                    shadowPtr->setColor(QColor(0, 0, 0, static_cast<int>(120 + 120 * sp)));
+                }
+            });
+
+    connect(anim, &QVariantAnimation::finished, this, [this, indicatorPtr, shadowPtr, frameGeom, anim]() {
+        if (!indicatorPtr) return;
+        indicatorPtr->hide();
+        m_indicatorGeometry = frameGeom;
+
+        if (m_opacity) m_opacity->setOpacity(1.0);
+        if (shadowPtr) {
+            shadowPtr->setBlurRadius(6);
+            shadowPtr->setOffset(0, 4);
+            shadowPtr->setColor(QColor(0, 0, 0, 0));
         }
 
-        LOG_DEBUG() << "Indicator shown";
+        if (m_runningAnim == anim) m_runningAnim = nullptr;
+        anim->deleteLater();
+        updateButtonColors();
+    });
+
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void AnimatedSelector::onCustomEditChanged(const QString &text) {
+    updateEditStyle();
+    if (!m_group) return;
+
+    if (!text.trimmed().isEmpty()) {
+        for (auto *b: m_group->buttons()) b->setChecked(false);
+        animateToCustomEdit();
+    } else {
+        if (auto *btn = m_group->checkedButton()) animateToButton(btn);
     }
 
     updateButtonColors();
@@ -218,12 +321,7 @@ void AnimatedSelector::updateButtonColors() const {
 
     const bool hasCustom = m_customEdit && !m_customEdit->text().trimmed().isEmpty();
     for (auto *b: m_group->buttons()) {
-        if (hasCustom) {
-            b->setChecked(false); // снимаем выделение
-            b->setProperty("customActive", true);
-        } else {
-            b->setProperty("customActive", false);
-        }
+        b->setProperty("customActive", hasCustom);
         b->style()->unpolish(b);
         b->style()->polish(b);
     }
