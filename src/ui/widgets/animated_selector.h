@@ -39,6 +39,8 @@ private:
 
     QString m_extraStyle;
 
+    bool m_animating = false;
+
 private slots:
     void animateToButton(QAbstractButton *btn);
 

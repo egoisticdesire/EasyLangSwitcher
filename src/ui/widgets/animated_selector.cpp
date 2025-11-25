@@ -93,6 +93,9 @@ void AnimatedSelector::initPosition() {
 void AnimatedSelector::animateToButton(QAbstractButton *btn) {
     if (!m_indicator || !btn || !m_parent || !m_frame) return;
 
+    if (m_animating) return;
+    m_animating = true;
+
     if (m_customEdit && !m_customEdit->text().trimmed().isEmpty()) {
         m_customEdit->clear();
         updateEditStyle();
@@ -142,24 +145,45 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
         if (!indicatorPtr) return;
         const double t = v.toDouble();
 
-        const QPointF center = startCenter + delta * t;
+        QPointF center = startCenter + delta * t;
 
-        constexpr double squashMid = 0.7;
-        const double squashFactor = 1.0 - (1.0 - squashMid) * std::sin(t * M_PI);
-        const double stretchFactor = 1.0 + (1.0 / squashMid - 1.0) * (1.0 - std::abs(2.0 * t - 1.0));
+        constexpr double yOffsetFactor = 0.33;
+        center.setY(center.y() - delta.y() * yOffsetFactor * std::sin(t * M_PI));
 
-        const double w = startGeom.width() + (endGeom.width() - startGeom.width()) * t;
-        const double h = startGeom.height() + (endGeom.height() - startGeom.height()) * t;
+        // ----- Коэффициенты -----
+        constexpr double squashMidX = 0.6; // Сжатие по X
+        constexpr double squashMidY = 0.6; // Сжатие по Y
+        constexpr double stretchMidX = 0.8; // Растяжение по X
+        constexpr double stretchMidY = 0.6; // Растяжение по Y
+        // ------------------------------------
 
-        const double newW = horizontal ? w * squashFactor : w * stretchFactor;
-        const double newH = horizontal ? h * stretchFactor : h * squashFactor;
+        const double sinTerm = std::sin(t * M_PI);
+        const double arcTerm = (1.0 - std::abs(2.0 * t - 1.0));
 
-        const QRectF r(center.x() - newW / 2.0, center.y() - newH / 2.0, newW, newH);
+        // Независимые squash
+        const double squashX = 1.0 - (1.0 - squashMidX) * sinTerm;
+        const double squashY = 1.0 - (1.0 - squashMidY) * sinTerm;
+
+        // Независимые stretch
+        const double stretchX = 1.0 + (1.0 / stretchMidX - 1.0) * arcTerm;
+        const double stretchY = 1.0 + (1.0 / stretchMidY - 1.0) * arcTerm;
+
+        const double baseW = startGeom.width() + (endGeom.width() - startGeom.width()) * t;
+        const double baseH = startGeom.height() + (endGeom.height() - startGeom.height()) * t;
+
+        const double newW = horizontal ? baseW * squashX : baseW * stretchX;
+        const double newH = horizontal ? baseH * stretchY : baseH * squashY;
+
+        const QRectF r(
+            center.x() - newW / 2.0,
+            center.y() - newH / 2.0,
+            newW,
+            newH
+        );
+
         indicatorPtr->setGeometry(r.toAlignedRect());
         indicatorPtr->raise();
 
-        // плавный радиус скругления
-        // радиус при перемещении между кнопками всегда 8
         const auto style = QString(
             "margin: 1px;"
             "border-radius: 8px;"
@@ -169,7 +193,7 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
         indicatorPtr->setStyleSheet(style);
 
         if (shadowPtr) {
-            const double sp = std::sin(t * M_PI);
+            const double sp = sinTerm;
             shadowPtr->setBlurRadius(6 + 6 * sp);
             shadowPtr->setOffset(0, 4 + 6 * sp);
             shadowPtr->setColor(QColor(0, 0, 0, static_cast<int>(120 + 120 * sp)));
@@ -177,7 +201,10 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
     });
 
     connect(anim, &QVariantAnimation::finished, this, [this, indicatorPtr, shadowPtr, btn, endGeom, anim]() {
+        m_animating = false;
+
         if (!indicatorPtr) return;
+
         indicatorPtr->setGeometry(endGeom);
         indicatorPtr->raise();
         btn->setChecked(true);
