@@ -250,6 +250,10 @@ void AnimatedSelector::animateToCustomEdit() {
         m_indicator->raise();
     }
 
+    // запрет повторного запуска
+    if (m_animating) return;
+    m_animating = true;
+
     if (m_runningAnim) {
         m_runningAnim->stop();
         m_runningAnim->deleteLater();
@@ -263,7 +267,7 @@ void AnimatedSelector::animateToCustomEdit() {
     m_runningAnim = anim;
     anim->setStartValue(0.0);
     anim->setEndValue(1.0);
-    anim->setDuration(500);
+    anim->setDuration(1000);
     anim->setEasingCurve(QEasingCurve::InOutCubic);
 
     const QPointF cStart = startGeom.center();
@@ -275,42 +279,85 @@ void AnimatedSelector::animateToCustomEdit() {
                 if (!indicatorPtr) return;
                 const double t = v.toDouble();
 
-                const QPointF center = cStart + delta * t;
-                const double w = startGeom.width() + (frameGeom.width() - startGeom.width()) * t;
-                const double h = startGeom.height() + (frameGeom.height() - startGeom.height()) * t;
+                // Основные плавные термы
+                const double sinTerm = std::sin(t * M_PI); // пик в середине
+                const double arcTerm = (1.0 - std::abs(2.0 * t - 1.0)); // широкая дуга
+                const double smoothT = 0.5 - 0.5 * std::cos(t * M_PI); // ease-in-out
 
-                const double squashFactor = 1.0 - 0.22 * std::sin(t * M_PI);
-                const double stretchFactor = 1.0 + 0.22 * std::sin(t * M_PI);
+                // Центр (с лёгким y-смещением, как у кнопок)
+                QPointF center = cStart + delta * smoothT;
+                constexpr double yOffsetFactor = -0.33;
+                center.setY(center.y() - delta.y() * yOffsetFactor * sinTerm);
 
-                const double newW = w * squashFactor;
-                const double newH = h * stretchFactor;
+                // Базовая интерполяция размеров
+                const double baseW = startGeom.width() + (frameGeom.width() - startGeom.width()) * smoothT;
+                const double baseH = startGeom.height() + (frameGeom.height() - startGeom.height()) * smoothT;
 
-                const QRectF r(center.x() - newW / 2.0, center.y() - newH / 2.0, newW, newH);
+                // ----- Коэффициенты -----
+                constexpr double squashMidX = 0.125; // сжатие по X
+                constexpr double squashMidY = 0.15; // сжатие по Y
+                constexpr double stretchMidX = 0.275; // растяжение по X
+                constexpr double stretchMidY = 0.2; // растяжение по Y
+                // --------------------------------------------------
+
+                // Независимые squash
+                const double squashX = 1.0 - (1.0 - squashMidX) * sinTerm;
+                const double squashY = 1.0 - (1.0 - squashMidY) * sinTerm;
+
+                // Независимые stretch
+                const double stretchX = 1.0 + (1.0 / stretchMidX - 1.0) * arcTerm;
+                const double stretchY = 1.0 + (1.0 / stretchMidY - 1.0) * arcTerm;
+
+                // Вычисление итоговых размеров:
+                // при экспансии к фрейму хотим поведение, схожее с кнопочной анимацией,
+                // поэтому используем комбинацию squash/stretch (умножаем для выразительности).
+                const double newW = baseW * squashX * stretchX;
+                const double newH = baseH * squashY * stretchY;
+
+                const QRectF r(
+                    center.x() - newW / 2.0,
+                    center.y() - newH / 2.0,
+                    newW,
+                    newH
+                );
+
                 indicatorPtr->setGeometry(r.toAlignedRect());
                 indicatorPtr->raise();
 
-                // плавный радиус
-                const int radius = static_cast<int>(8 + (10 - 8) * t);
-                const QString style = QString(
+                // Радиус — arcsin-кривая (мягкий старт/финиш)
+                double p = 2.0 * t - 1.0;
+                if (p < -1.0) p = -1.0;
+                if (p > 1.0) p = 1.0;
+                const double crv = (std::asin(p) / (M_PI / 2.0) + 1.0) * 0.5; // [0..1]
+                const int radius = static_cast<int>(8 + (12 - 8) * crv);
+
+                // Небольшая коррекция прозрачности для мягкости (можно регулировать)
+                const double opacityFactor = 1.0 - std::pow(1.0 - smoothT, 1.6);
+
+                indicatorPtr->setStyleSheet(QString(
                     "margin: 1px;"
                     "border-radius: %1px;"
                     "color: rgba(255,255,255,255);"
                     "background: rgba(255,255,255,15);"
-                ).arg(radius);
-                indicatorPtr->setStyleSheet(style);
+                ).arg(radius));
 
-                if (m_opacity) m_opacity->setOpacity(1.0 - t);
+                if (m_opacity) m_opacity->setOpacity(1.0 - opacityFactor);
 
+                // Тень — более мягкая, сильнее в середине
                 if (shadowPtr) {
-                    const double sp = 1.0 - t;
-                    shadowPtr->setBlurRadius(6 + 6 * sp);
-                    shadowPtr->setOffset(0, 4 + 6 * sp);
-                    shadowPtr->setColor(QColor(0, 0, 0, static_cast<int>(120 + 120 * sp)));
+                    const double sh = std::sin(t * M_PI); // 0..1..0
+                    shadowPtr->setBlurRadius(6 + 6 * sh);
+                    shadowPtr->setOffset(0, 4 + 6 * sh);
+                    shadowPtr->setColor(QColor(0, 0, 0, static_cast<int>(160 * sh)));
                 }
             });
 
     connect(anim, &QVariantAnimation::finished, this, [this, indicatorPtr, shadowPtr, frameGeom, anim]() {
+        m_animating = false;
+
         if (!indicatorPtr) return;
+
+        // В финале скрываем индикатор, но сохраняем геометрию фрейма (как было)
         indicatorPtr->hide();
         m_indicatorGeometry = frameGeom;
 
