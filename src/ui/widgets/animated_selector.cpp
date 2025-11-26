@@ -183,20 +183,18 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
 
         indicatorPtr->setGeometry(r.toAlignedRect());
         indicatorPtr->raise();
-
-        const auto style = QString(
+        indicatorPtr->setStyleSheet(QString(
             "margin: 1px;"
             "border-radius: 8px;"
             "color: rgba(255,255,255,255);"
             "background: rgba(255,255,255,15);"
-        );
-        indicatorPtr->setStyleSheet(style);
+        ));
 
         if (shadowPtr) {
             const double sp = sinTerm;
             shadowPtr->setBlurRadius(6 + 6 * sp);
             shadowPtr->setOffset(0, 4 + 6 * sp);
-            shadowPtr->setColor(QColor(0, 0, 0, static_cast<int>(120 + 120 * sp)));
+            shadowPtr->setColor(QColor(0, 0, 0, static_cast<int>(160 * sp)));
         }
     });
 
@@ -329,7 +327,7 @@ void AnimatedSelector::animateToCustomEdit() {
                 if (p < -1.0) p = -1.0;
                 if (p > 1.0) p = 1.0;
                 const double crv = (std::asin(p) / (M_PI / 2.0) + 1.0) * 0.5; // [0..1]
-                const int radius = static_cast<int>(8 + (12 - 8) * crv);
+                const int radius = static_cast<int>(10 + (12 - 8) * crv);
 
                 // Небольшая коррекция прозрачности для мягкости (можно регулировать)
                 const double opacityFactor = 1.0 - std::pow(1.0 - smoothT, 1.6);
