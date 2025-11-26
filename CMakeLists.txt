@@ -19,7 +19,7 @@ if (NOT QT_DIR)
     message(FATAL_ERROR "Please set QT_DIR environment variable to Qt installation path")
 endif ()
 
-set(CMAKE_PREFIX_PATH  "${QT_DIR}/6.10.1/msvc2022_64")
+set(CMAKE_PREFIX_PATH "${QT_DIR}/6.10.1/msvc2022_64")
 set(QT_BIN_DIR "${CMAKE_PREFIX_PATH}/bin")
 set(WINDEPLOYQT "${QT_BIN_DIR}/windeployqt6.exe")
 set(AUTOGEN_INCLUDE "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}_autogen/include")
@@ -33,10 +33,10 @@ add_executable(${APP_NAME}
         src/app/main.cpp
 
         # core
-        src/core/config/app_settings.cpp
-        src/core/config/app_settings.h
+        src/core/config/appSettings.cpp
+        src/core/config/appSettings.h
         src/core/config/logger.h
-        src/core/config/logger_qt_bridge.h
+        src/core/config/loggerQtBridge.h
         src/core/handlers/kb.cpp
         src/core/handlers/kb.h
         src/core/i18n/lang.cpp
@@ -48,15 +48,15 @@ add_executable(${APP_NAME}
         src/ui/helpers/iconHelper.h
         src/ui/helpers/keySequenceHelper.h
         src/ui/helpers/vkMapper.h
-        src/ui/helpers/warning.h
+        src/ui/helpers/warningHelper.h
         src/ui/tray/tray.cpp
         src/ui/tray/tray.h
-        src/ui/widgets/animated_selector.cpp
-        src/ui/widgets/animated_selector.h
-        src/ui/widgets/settings.cpp
-        src/ui/widgets/settings.h
-        src/ui/widgets/window_dragger.cpp
-        src/ui/widgets/window_dragger.h
+        src/ui/widgets/animatedSelector.cpp
+        src/ui/widgets/animatedSelector.h
+        src/ui/widgets/settingsWindow.cpp
+        src/ui/widgets/settingsWindow.h
+        src/ui/widgets/windowDragger.cpp
+        src/ui/widgets/windowDragger.h
 
         # resources
         resources/resources.qrc
@@ -104,7 +104,7 @@ if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Widgets.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Svg.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Multimedia.dll" "${DIST_DIR}/"
-            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX}/plugins/platforms/qwindows.dll" "${DIST_DIR}/platforms/"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/platforms/qwindows.dll" "${DIST_DIR}/platforms/"
             COMMENT "Deploying minimal set to ${DIST_DIR}"
     )
 endif ()

@@ -1,6 +1,6 @@
-#include "settings.h"
+#include "settingsWindow.h"
 #include "../../core/config/logger.h"
-#include "../../core/config/app_settings.h"
+#include "../../core/config/appSettings.h"
 #include "../helpers/acrylicHelper.h"
 #include "../helpers/iconHelper.h"
 #include "../helpers/keySequenceHelper.h"
@@ -27,6 +27,8 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     ui.app_theme_label->hide();
     ui.app_lang_frame->hide();
     ui.app_lang_label->hide();
+
+    ui.key_select_label_img->hide();
     //-----------------------------
 
     addSelectorForFrame(ui.key_select_frame);
@@ -35,6 +37,10 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     // addSelectorForFrame(ui.app_lang_frame);
 
     const auto KEY_PLACEHOLDER = QStringLiteral("Key...");
+
+    // временно красим иконку
+    ui.btn_general_top_sider->setIcon(
+        IconHelper::loadIcon(":/icons/icons/SettingsFilled.svg", QColor(225, 225, 225), QSize(42, 42)));
 
     ui.key_select_label_img->setPixmap(
         IconHelper::loadIcon(":/icons/icons/InfoRegular.svg", QColor(175, 175, 175)).pixmap(16, 16));

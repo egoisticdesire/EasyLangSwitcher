@@ -1,4 +1,4 @@
-#include "animated_selector.h"
+#include "animatedSelector.h"
 #include "../../core/config/logger.h"
 #include <QPushButton>
 #include <QPropertyAnimation>

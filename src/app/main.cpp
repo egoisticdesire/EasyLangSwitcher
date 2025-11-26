@@ -1,10 +1,10 @@
 #include "../core/config/logger.h"
-#include "../core/config/logger_qt_bridge.h"
+#include "../core/config/loggerQtBridge.h"
 #include "../core/handlers/kb.h"
 #include "../ui/helpers/iconHelper.h"
-#include "../ui/helpers/warning.h"
+#include "../ui/helpers/warningHelper.h"
 #include "../ui/tray/tray.h"
-#include "../core/config/app_settings.h"
+#include "../core/config/appSettings.h"
 #include <QApplication>
 #include <Windows.h>
 #include <fcntl.h>

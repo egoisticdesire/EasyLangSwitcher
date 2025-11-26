@@ -15,8 +15,10 @@ protected:
 
 private:
     bool dragging = false;
+
     QPoint dragOffset;
 
     QWidget *win = nullptr;
+
     QSet<QWidget *> ignore;
 };

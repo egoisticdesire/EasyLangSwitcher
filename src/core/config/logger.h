@@ -145,7 +145,7 @@ public:
         QString formattedFuncName = QString("%1%2%3").arg(m_cyan, cleanFunction(function), m_reset);
         QString formattedName = QString("%1 %2→%3 %4").arg(formattedFileName, m_levelColor, m_reset, formattedFuncName);
 
-        qsizetype padRaw = 100 - visibleLength(formattedName);
+        qsizetype padRaw = 80 - visibleLength(formattedName);
         if (int pad = static_cast<int>(padRaw); pad > 0)
             formattedName = QString(pad, ' ') + formattedName;
 

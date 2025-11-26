@@ -1,6 +1,5 @@
-#include "window_dragger.h"
+#include "windowDragger.h"
 #include "../../core/config/logger.h"
-
 #include <QMouseEvent>
 
 WindowDragger::WindowDragger(QWidget *target)

@@ -1,7 +1,7 @@
 #pragma once
 #include "ui_EasyLangSwitcher_settings.h"
-#include "animated_selector.h"
-#include "window_dragger.h"
+#include "animatedSelector.h"
+#include "windowDragger.h"
 #include <QVector>
 #include <QTimer>
 

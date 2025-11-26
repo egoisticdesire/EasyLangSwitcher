@@ -1,6 +1,6 @@
 #include "tray.h"
 #include "../../core/config/logger.h"
-#include "../../core/config/app_settings.h"
+#include "../../core/config/appSettings.h"
 #include "../helpers/acrylicHelper.h"
 #include "../helpers/hoverHelper.h"
 #include "../helpers/iconHelper.h"

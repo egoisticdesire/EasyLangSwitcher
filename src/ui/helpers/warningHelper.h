@@ -2,7 +2,7 @@
 #include "ui_EasyLangSwitcher_warning.h"
 #include "iconHelper.h"
 #include "acrylicHelper.h"
-#include "../widgets/window_dragger.h"
+#include "../widgets/windowDragger.h"
 #include <QDialog>
 #include <QScreen>
 #include <QSoundEffect>
