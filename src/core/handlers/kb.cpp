@@ -161,9 +161,9 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
                 // Подавлять нативное действие нужно только если триггер — CapsLock или Alt
                 // (Если триггер — Shift/Ctrl/Win и т.д., нативное поведение оставляем)
                 if (configuredMain == VK_CAPITAL
-                    || configuredMain == VK_MENU
-                    || configuredMain == VK_LMENU
-                    || configuredMain == VK_RMENU
+                    // || configuredMain == VK_MENU
+                    // || configuredMain == VK_LMENU
+                    // || configuredMain == VK_RMENU
                 ) {
                     // suppress keydown — чтобы CapsLock не переключался при коротком нажатии
                     return 1;
@@ -217,9 +217,9 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
                 // если триггер — CapsLock или Alt, подавляем keyup чтобы Caps не переключился,
                 // иначе разрешаем нативное поведение (Shift/Ctrl/Alt остаются изначально активными)
                 if (configuredMain == VK_CAPITAL
-                    || configuredMain == VK_MENU
-                    || configuredMain == VK_LMENU
-                    || configuredMain == VK_RMENU
+                    // || configuredMain == VK_MENU
+                    // || configuredMain == VK_LMENU
+                    // || configuredMain == VK_RMENU
                 ) {
                     return 1;
                 }
@@ -234,9 +234,9 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
 
             // suppress keyup только для CapsLock и Alt (иначе нативное поведение)
             if (configuredMain == VK_CAPITAL
-                || configuredMain == VK_MENU
-                || configuredMain == VK_LMENU
-                || configuredMain == VK_RMENU
+                // || configuredMain == VK_MENU
+                // || configuredMain == VK_LMENU
+                // || configuredMain == VK_RMENU
             ) {
                 return 1;
             }
