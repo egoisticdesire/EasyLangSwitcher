@@ -36,7 +36,11 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     // addSelectorForFrame(ui.app_theme_frame);
     // addSelectorForFrame(ui.app_lang_frame);
 
-    const auto KEY_PLACEHOLDER = QStringLiteral("Key...");
+    m_shadow = new QGraphicsDropShadowEffect(ui.content_container);
+    m_shadow->setBlurRadius(12);
+    m_shadow->setOffset(-2, 0);
+    m_shadow->setColor(QColor(0, 0, 0, 140));
+    ui.content_container->setGraphicsEffect(m_shadow);
 
     // временно красим иконку
     ui.btn_general_top_sider->setIcon(
@@ -47,6 +51,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
 
     buildPresetMap();
 
+    const auto KEY_PLACEHOLDER = QStringLiteral("Key...");
     const auto *keyHelper = new KeySequenceHelper(
         this,
         "btn_sequence",
@@ -152,6 +157,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
             // Очищаем QKeySequenceEdit, чтобы плейсхолдер показывался
             if (auto *seqEdit = findChild<QKeySequenceEdit *>("btn_sequence")) {
                 seqEdit->setKeySequence(QKeySequence());
+                seqEdit->setStyleSheet("color: rgba(255, 255, 255, 225);");
                 seqEdit->clearFocus();
                 this->setFocus(Qt::OtherFocusReason);
                 if (auto *le = seqEdit->findChild<QLineEdit *>()) le->setPlaceholderText(QStringLiteral("Key..."));
@@ -381,6 +387,7 @@ void SettingsWindow::restoreDefaults_General() {
         if (AppSettings::hotkeyMainVk == AppSettings::defaultHotkeyMainVk &&
             presetMap.values().contains(AppSettings::defaultHotkeyMainVk)) {
             seq->setKeySequence(QKeySequence());
+            seq->setStyleSheet("color: rgba(255, 255, 255, 225);");
             if (auto *le = seq->findChild<QLineEdit *>())
                 le->setPlaceholderText("Key...");
         } else {

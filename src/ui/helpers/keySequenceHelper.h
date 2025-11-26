@@ -30,6 +30,7 @@ public:
         LOG_DEBUG() << "KeySequenceHelper initialized";
 
         m_edit = root->findChild<QKeySequenceEdit *>(objectName);
+        m_edit->setStyleSheet("color: rgba(255, 255, 255, 225);");
         if (!m_edit) return;
 
         m_edit->setClearButtonEnabled(false);

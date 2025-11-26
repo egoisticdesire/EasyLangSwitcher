@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
     _setmode(_fileno(stdout), _O_U16TEXT);
 
     const QApplication app(argc, argv);
+    QApplication::setStyle("Windows11");
 
     // Проверка на уже запущенный экземпляр
     const HANDLE hMutex = CreateMutex(nullptr, TRUE, L"MyUniqueFlashSparkleMutex");

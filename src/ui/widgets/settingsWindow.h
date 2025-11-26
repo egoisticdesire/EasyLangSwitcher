@@ -40,6 +40,8 @@ private:
 
     QTimer autosaveTimer;
 
+    QGraphicsDropShadowEffect *m_shadow;
+
     static constexpr int autosaveIntervalMs = 1000;
 
     bool hasPendingChanges = false;
