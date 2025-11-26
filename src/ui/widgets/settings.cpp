@@ -16,6 +16,24 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     : QWidget(parent) {
     ui.setupUi(this);
 
+    // временно скрываем кнопки
+    ui.btn_exclusions_top_sider->hide();
+    ui.btn_indicator_top_sider->hide();
+    ui.btn_info_top_sider->hide();
+
+    ui.app_startup_frame->hide();
+    ui.app_startup_label->hide();
+    ui.app_theme_frame->hide();
+    ui.app_theme_label->hide();
+    ui.app_lang_frame->hide();
+    ui.app_lang_label->hide();
+    //-----------------------------
+
+    addSelectorForFrame(ui.key_select_frame);
+    // addSelectorForFrame(ui.app_startup_frame);
+    // addSelectorForFrame(ui.app_theme_frame);
+    // addSelectorForFrame(ui.app_lang_frame);
+
     const auto KEY_PLACEHOLDER = QStringLiteral("Key...");
 
     ui.key_select_label_img->setPixmap(
@@ -53,10 +71,8 @@ SettingsWindow::SettingsWindow(QWidget *parent)
 
     connect(ui.btn_close_bot_sider, &QPushButton::clicked, closeAction, &QAction::trigger);
 
-    addSelectorForFrame(ui.key_select_frame);
-    addSelectorForFrame(ui.app_startup_frame);
-    addSelectorForFrame(ui.app_theme_frame);
-    addSelectorForFrame(ui.app_lang_frame);
+    connect(ui.btn_restore_default, &QToolButton::clicked,
+            this, &SettingsWindow::restoreDefaultsForCurrentPage);
 
     dragger = new WindowDragger(this);
     dragger->addIgnoredWidget(ui.btn_close_bot_sider);
@@ -325,4 +341,62 @@ void SettingsWindow::restorePreviousPresetIfNeeded() {
         emit settingsChanged();
         LOG_DEBUG() << "No previous preset to restore";
     }
+}
+
+void SettingsWindow::restoreDefaultsForCurrentPage() {
+    switch (const int page = ui.content_container->currentIndex()) {
+        case 0:
+            restoreDefaults_General();
+            break;
+
+        // case 1: restoreDefaults_Indicator(); break;
+        // case 2: restoreDefaults_Exclusions(); break;
+
+        default:
+            LOG_DEBUG() << "Unhandled page index " << page;
+            return;
+    }
+
+    markChanged();
+}
+
+void SettingsWindow::restoreDefaults_General() {
+    AppSettings::reset();
+
+    // обновление UI
+    for (auto *btn: ui.key_select_frame->findChildren<QPushButton *>()) {
+        const int vk = vkFromPresetObjectName(btn->objectName());
+        btn->blockSignals(true);
+        btn->setChecked(vk != 0 && vk == AppSettings::hotkeyMainVk);
+        btn->blockSignals(false);
+    }
+
+    if (auto *seq = findChild<QKeySequenceEdit *>("btn_sequence")) {
+        if (AppSettings::hotkeyMainVk == AppSettings::defaultHotkeyMainVk &&
+            presetMap.values().contains(AppSettings::defaultHotkeyMainVk)) {
+            seq->setKeySequence(QKeySequence());
+            if (auto *le = seq->findChild<QLineEdit *>())
+                le->setPlaceholderText("Key...");
+        } else {
+            seq->setKeySequence(QKeySequence(AppSettings::hotkeyName));
+        }
+        seq->clearFocus();
+    }
+
+    ui.key_delay_slider->setValue(AppSettings::defaultSwitchDelayMs);
+    ui.key_delay_spinbox->setValue(AppSettings::defaultSwitchDelayMs);
+
+    // запуск анимации индикатора: находим селектор, привязанный к ui.key_select_frame
+    for (auto *sel: selectors) {
+        if (!sel) continue;
+        if (sel->boundFrame() == ui.key_select_frame) {
+            // убедиться, что внутреннее состояние чисто
+            sel->stopAndResetAnimation();
+            // и запустить анимацию на следующем обороте цикла событий
+            QTimer::singleShot(0, sel, &AnimatedSelector::animateToCurrentState);
+            break;
+        }
+    }
+
+    markChanged();
 }

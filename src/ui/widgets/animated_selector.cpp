@@ -448,3 +448,44 @@ void AnimatedSelector::updateEditStyle() const {
     m_customEdit->style()->unpolish(m_customEdit);
     m_customEdit->style()->polish(m_customEdit);
 }
+
+QFrame *AnimatedSelector::boundFrame() const {
+    return m_frame;
+}
+
+void AnimatedSelector::stopAndResetAnimation() {
+    // остановить текущую анимацию безопасно
+    if (m_runningAnim) {
+        m_runningAnim->stop();
+        m_runningAnim->deleteLater();
+        m_runningAnim = nullptr;
+    }
+    // снять флаги блокировки, чтобы new animation могла стартовать
+    m_animating = false;
+    m_inTextHandler = false;
+    m_forceCustomStartFromFrame = false;
+}
+
+void AnimatedSelector::animateToCurrentState() {
+    if (!m_group) return;
+
+    // гарантируем сброс блокировок перед стартом
+    if (m_customEdit && !m_customEdit->text().trimmed().isEmpty()) {
+        stopAndResetAnimation();
+        animateToCustomEdit();
+        return;
+    }
+
+    // если есть выбранная кнопка — воспроизвести анимацию к ней
+    if (auto *btn = m_group->checkedButton()) {
+        stopAndResetAnimation();
+        animateToButton(btn);
+        return;
+    }
+
+    // fallback: первая кнопка
+    if (const auto all = m_group->buttons(); !all.isEmpty()) {
+        stopAndResetAnimation();
+        animateToButton(all.first());
+    }
+}

@@ -9,9 +9,13 @@ AppSettings
 
 class AppSettings {
 public:
+    static void logger(const QString &action);
+
     static void load();
 
     static void save();
+
+    static void reset();
 
     // runtime
     static int hotkeyMainVk;

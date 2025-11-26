@@ -63,4 +63,8 @@ private:
     void markChanged();
 
     void restorePreviousPresetIfNeeded();
+
+    void restoreDefaultsForCurrentPage();
+
+    void restoreDefaults_General();
 };

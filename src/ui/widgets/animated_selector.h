@@ -17,6 +17,12 @@ public:
 
     void initPosition();
 
+    void stopAndResetAnimation();
+
+    void animateToCurrentState();
+
+    QFrame *boundFrame() const;
+
     QFrame *indicator() const { return m_indicator; }
 
 private:

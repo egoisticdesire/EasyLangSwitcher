@@ -15,6 +15,16 @@ int AppSettings::switchDelayMs = defaultSwitchDelayMs;
 int AppSettings::previousHotkeyMainVk = 0;
 QString AppSettings::previousHotkeyName = "";
 
+void AppSettings::logger(const QString &action) {
+    LOG_DEBUG() << QString("%1 settings: vk=%2; name='%3'; delay=%4; prevVk=%5; prevName='%6'")
+                    .arg(action)
+                    .arg(hotkeyMainVk)
+                    .arg(hotkeyName)
+                    .arg(switchDelayMs)
+                    .arg(previousHotkeyMainVk)
+                    .arg(previousHotkeyName);
+}
+
 void AppSettings::load() {
     hotkeyMainVk = settings.value("hotkey/main_vk", defaultHotkeyMainVk).toInt();
     hotkeyModifiers = settings.value("hotkey/mods", defaultHotkeyModifiers).toInt();
@@ -23,9 +33,7 @@ void AppSettings::load() {
     previousHotkeyMainVk = settings.value("previous_hotkey/main_vk", previousHotkeyMainVk).toInt();
     previousHotkeyName = settings.value("previous_hotkey/name", previousHotkeyName).toString();
 
-    LOG_DEBUG() << "Loaded settings: vk=" << hotkeyMainVk
-    << "; name='" << hotkeyName << "'; delay=" << switchDelayMs << "; prevVk=" << previousHotkeyMainVk
-    << "; prevName='" << previousHotkeyName << "'";
+    logger("Loaded");
 }
 
 void AppSettings::save() {
@@ -36,7 +44,16 @@ void AppSettings::save() {
     settings.setValue("previous_hotkey/main_vk", previousHotkeyMainVk);
     settings.setValue("previous_hotkey/name", previousHotkeyName);
 
-    LOG_DEBUG() << "Saved settings: vk=" << hotkeyMainVk
-            << "; name='" << hotkeyName << "'; delay=" << switchDelayMs << "; prevVk=" << previousHotkeyMainVk
-            << "; prevName='" << previousHotkeyName << "'";
+    logger("Saved");
+}
+
+void AppSettings::reset() {
+    hotkeyMainVk = defaultHotkeyMainVk;
+    hotkeyModifiers = defaultHotkeyModifiers;
+    hotkeyName = defaultHotkeyName;
+    switchDelayMs = defaultSwitchDelayMs;
+    previousHotkeyMainVk = 0;
+    previousHotkeyName = "";
+
+    logger("Reset");
 }
