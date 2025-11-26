@@ -459,13 +459,13 @@ QToolButton#btn_restore_default:hover {
 color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
 }
-QFrame#key_select_frame QLineEdit:pressed,
+/*QFrame#key_select_frame QLineEdit:pressed,
 QFrame#key_select_frame QPushButton:pressed,
 QFrame#app_theme_frame QPushButton:pressed,
 QFrame#app_startup_frame QPushButton:pressed,
-QFrame#app_lang_frame QPushButton:pressed,
+QFrame#app_lang_frame QPushButton:pressed,*/
 QToolButton#btn_restore_default:pressed {
-/*background: rgba(255, 255, 255, 7);*/
+background: rgba(255, 255, 255, 7);
 }
 QFrame#key_select_frame QPushButton:checked,
 QFrame#app_theme_frame QPushButton:checked,
@@ -1581,15 +1581,17 @@ background: transparent;
 QFrame#add_exclusions_frame QPushButton:hover,
 QFrame#exclusions_rules_frame QPushButton:hover {
 color: rgba(255, 255, 255, 255);
-/*background: rgba(255, 255, 255, 15);*/
 background: transparent;
+}
+QFrame#add_exclusions_frame QPushButton:hover {
+background: rgba(255, 255, 255, 15);
 }
 QToolButton#btn_clear_all:hover {
 color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
 }
 QFrame#add_exclusions_frame QPushButton:pressed,
-QFrame#exclusions_rules_frame QPushButton:pressed,
+/*QFrame#exclusions_rules_frame QPushButton:pressed,*/
 QToolButton#btn_clear_all:pressed {
 background: rgba(255, 255, 255, 7);
 }
@@ -1688,12 +1690,12 @@ font-weight: 700;
 color: rgba(255, 255, 255, 255);
 }
 QFrame#exclusions_rules_table_frame QHeaderView::up-arrow {
-image: url(:/icons/icons/CaretUpFilled.svg);
+image: url(:/icons/icons/CaretUpFilledLight.svg);
 width: 13px;
 height: 13px;
 }
 QFrame#exclusions_rules_table_frame QHeaderView::down-arrow {
-image: url(:/icons/icons/CaretDownFilled.svg);
+image: url(:/icons/icons/CaretDownFilledLight.svg);
 width: 13px;
 height: 13px;
 }</string>
@@ -1967,7 +1969,8 @@ background: transparent;
 QFrame#indicator_manage_frame QPushButton:pressed,
 QFrame#indicator_langs_frame QPushButton:pressed,
 QFrame#indicator_color_frame QPushButton:pressed {
-background: rgba(255, 255, 255, 7);
+/*background: rgba(255, 255, 255, 7);*/
+background: transparent;
 }
 QFrame#indicator_manage_frame QPushButton:checked,
 QFrame#indicator_langs_frame QPushButton:checked,
@@ -2669,6 +2672,12 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgb(75, 75, 75), stop
                     <size>
                      <width>100</width>
                      <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>200</width>
+                     <height>16777215</height>
                     </size>
                    </property>
                    <layout class="QVBoxLayout" name="vlayout_indicator_langs_frame">
