@@ -86,7 +86,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
             btn->setChecked(true);
             matchedPreset = true;
 
-            LOG_DEBUG() << "Matched preset button '" << obj << "' for hotkey '" << AppSettings::hotkeyName << "'";
+            LOG_DEBUG() << QString("Matched preset button '%1' for hotkey '%2'").arg(obj).arg(AppSettings::hotkeyName);
         } else {
             btn->setChecked(false);
         }
@@ -121,7 +121,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
                         LOG_DEBUG() << "Current hotkey is custom - not saving previous preset";
                     }
 
-                    LOG_DEBUG() << "Custom hotkey selected: vk=" << mainVk << "; name='" << name << "'";
+                    LOG_DEBUG() << QString("Custom hotkey selected: vk=%1; name='%2'").arg(mainVk).arg(name);
                     applyHotkeyIfChanged(mainVk, name);
                 });
     }
@@ -134,7 +134,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
             if (vk == 0) return;
             const QString name = nameFromVk(vk);
 
-            LOG_DEBUG() << "Preset '" << obj << "' selected: vk=" << vk << "; name='" << name << "'";
+            LOG_DEBUG() << QString("Preset '%1' selected: vk=%2; name='%3'").arg(obj).arg(vk).arg(name);
 
             // Обновляем hotkey
             applyHotkeyIfChanged(vk, name);
@@ -241,8 +241,8 @@ void SettingsWindow::openCentered() {
     const int x = geom.center().x() - s.width() / 2;
     const int y = geom.center().y() - s.height() / 2;
 
-    LOG_DEBUG() << "Settings window size: " << QString("(%1, %2)").arg(s.width()).arg(s.height())
-                    << "; position: " << QString("(%1, %2)").arg(x).arg(y);
+    LOG_DEBUG() << QString("Settings window size: (%1, %2); position: (%3, %4)")
+                    .arg(s.width()).arg(s.height()).arg(x).arg(y);
 
     resize(s);
     move(x, y);
@@ -253,8 +253,8 @@ void SettingsWindow::openCentered() {
 
 void SettingsWindow::buildPresetMap() {
     presetMap.clear();
-    for (const QList<QPushButton *> presetButtons = ui.key_select_frame->findChildren<QPushButton *>(); const auto *btn:
-         presetButtons) {
+    for (const QList<QPushButton *>
+         presetButtons = ui.key_select_frame->findChildren<QPushButton *>(); const auto *btn: presetButtons) {
         const QString obj = btn->objectName().toLower();
         int vk = 0;
         if (obj.contains("lctrl")) vk = VK_LCONTROL;
@@ -323,8 +323,8 @@ void SettingsWindow::restorePreviousPresetIfNeeded() {
                 btn->setChecked(vk != 0 && vk == AppSettings::previousHotkeyMainVk);
             }
 
-            LOG_DEBUG() << "Previous preset restored: vk=" << AppSettings::previousHotkeyMainVk
-                        << "; name='" << AppSettings::previousHotkeyName << "'";
+            LOG_DEBUG() << QString("Previous preset restored: vk=%1; name='%2'")
+                            .arg(AppSettings::previousHotkeyMainVk).arg(AppSettings::previousHotkeyName);
 
             AppSettings::previousHotkeyMainVk = 0;
             AppSettings::previousHotkeyName.clear();

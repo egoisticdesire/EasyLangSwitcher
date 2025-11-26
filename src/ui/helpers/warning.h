@@ -39,7 +39,7 @@ public:
 
         effect = new QSoundEffect(this);
         effect->setSource(QUrl("qrc:/sounds/sounds/error.wav"));
-        effect->setVolume(0.25f);
+        effect->setVolume(0.5f);
     }
 
     void setText(const QString &text) const {

@@ -158,7 +158,7 @@ public:
                 m_lastEmittedName = name;
                 emit hotkeySelected(vk, 0, name);
 
-                LOG_DEBUG() << "Selected cleaned: vk=" << vk << "; name='" << name << "'";
+                LOG_DEBUG() << QString("Selected cleaned: vk=%1; name='%2'").arg(vk).arg(name);
             }
         });
 

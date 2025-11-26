@@ -43,8 +43,8 @@ inline bool isWindows11OrGreater() {
     const auto rtlGetVersion = reinterpret_cast<RtlGetVersionPtr>(
         GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "RtlGetVersion"));
     if (rtlGetVersion && rtlGetVersion(&rovi) == 0) {
-        LOG_DEBUG() << "Windows version: "
-                << rovi.dwMajorVersion << "." << rovi.dwMinorVersion << "." << rovi.dwBuildNumber;
+        LOG_DEBUG() << QString("Windows version: %1.%2.%3")
+                        .arg(rovi.dwMajorVersion).arg(rovi.dwMinorVersion).arg(rovi.dwBuildNumber);
         return (rovi.dwMajorVersion == 10 && rovi.dwBuildNumber >= 22000);
     }
     return false;
@@ -57,8 +57,8 @@ inline bool isWindows10OrGreater() {
     const auto rtlGetVersion = reinterpret_cast<RtlGetVersionPtr>(
         GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "RtlGetVersion"));
     if (rtlGetVersion && rtlGetVersion(&rovi) == 0) {
-        LOG_DEBUG() << "Windows version: "
-                << rovi.dwMajorVersion << "." << rovi.dwMinorVersion << "." << rovi.dwBuildNumber;
+        LOG_DEBUG() << QString("Windows version: %1.%2.%3")
+                        .arg(rovi.dwMajorVersion).arg(rovi.dwMinorVersion).arg(rovi.dwBuildNumber);
         return (rovi.dwMajorVersion == 10);
     }
     return false;

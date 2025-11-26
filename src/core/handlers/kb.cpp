@@ -31,10 +31,11 @@ KeyboardHandler::KeyboardHandler(QObject *parent)
     doublePressTimer.setSingleShot(true);
     connect(&doublePressTimer, &QTimer::timeout, this, [this]() {
         // окно истекло: если есть switchPending и не longPress и не подавлено => выполняем переключение
-        LOG_DEBUG() << "Double-press window expired"
-                << ": switchPending=" << (switchPending ? "true" : "false")
-                << "; isLongPress=" << (isLongPress ? "true" : "false")
-                << "; rapidRepeatSuppressed=" << (rapidRepeatSuppressed ? "true" : "false");
+        LOG_DEBUG() << QString("Double-press window expired: "
+                       "switchPending=%1; isLongPress=%2; rapidRepeatSuppressed=%3")
+                        .arg(switchPending ? "true" : "false")
+                        .arg(isLongPress ? "true" : "false")
+                        .arg(rapidRepeatSuppressed ? "true" : "false");
 
         // если было ожидающее переключение и оно не подавлено/не longPress -> переключаем
         if (switchPending && !isLongPress && !rapidRepeatSuppressed) {
@@ -185,11 +186,13 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
 
             const DWORD pressDuration = now - instance->pressStartTime;
 
-            LOG_DEBUG() << "Hotkey up vk=" << vk
-                        << ": duration=" << pressDuration
-                        << "; isLongPress=" << (instance->isLongPress ? "true" : "false")
-                        << "; rapidRepeatSuppressed=" << (instance->rapidRepeatSuppressed ? "true" : "false")
-                        << "; switchPending=" << (instance->switchPending ? "true" : "false");
+            LOG_DEBUG() << QString("Hotkey up "
+                           "vk=%1: duration=%2; isLongPress=%3; rapidRepeatSuppressed=%4; switchPending=%5")
+                            .arg(vk)
+                            .arg(pressDuration)
+                            .arg(instance->isLongPress ? "true" : "false")
+                            .arg(instance->rapidRepeatSuppressed ? "true" : "false")
+                            .arg(instance->switchPending ? "true" : "false");
 
             // если долгое нажатие -> стандартное поведение клавиши
             if (instance->isLongPress) {
@@ -323,9 +326,9 @@ void KeyboardHandler::switchKeyboardLayout() {
         }
     });
 
-    LOG_DEBUG() << "Switch layout: old='" << hklToLangLabel(current)
-                << "' (" << QString::number(reinterpret_cast<qulonglong>(current), 16) << ")"
-                << "; new='" << hklToLangLabel(next)
-                << "' (" << QString::number(reinterpret_cast<qulonglong>(next), 16) << ")"
-                << "; directFallback=" << useDirectFallback;
+    LOG_DEBUG() << QString("Switch layout: old='%1' (%2); new='%3' (%4)")
+                    .arg(hklToLangLabel(current))
+                    .arg(QString::number(reinterpret_cast<qulonglong>(current), 16))
+                    .arg(hklToLangLabel(next))
+                    .arg(QString::number(reinterpret_cast<qulonglong>(next), 16));
 }

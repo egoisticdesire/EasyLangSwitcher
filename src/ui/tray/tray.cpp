@@ -41,11 +41,11 @@ TrayManager::TrayManager(QWidget *parent)
 
     effectOn = new QSoundEffect(this);
     effectOn->setSource(QUrl("qrc:/sounds/sounds/on.wav"));
-    effectOn->setVolume(0.25f);
+    effectOn->setVolume(0.5f);
 
     effectOff = new QSoundEffect(this);
     effectOff->setSource(QUrl("qrc:/sounds/sounds/off.wav"));
-    effectOff->setVolume(0.25f);
+    effectOff->setVolume(0.5f);
 
     setupUiBehavior();
     setupTrayIcon();
@@ -176,10 +176,12 @@ void TrayManager::showAtCursor() {
     QTimer::singleShot(0, this, [this]() { AcrylicHelper::enableAcrylic(this); });
     fadeIn->start();
 
-    LOG_DEBUG() << "Tray menu shown at cursor position: " << QString("(%1, %2)").arg(pos.x()).arg(pos.y())
-            << "; size: " << QString("(%1, %2)").arg(width()).arg(height())
-            << "; screen: " << QString("(%1, %2)").arg(screen->geometry().width()).arg(screen->geometry().height())
-            << "; screen name: '" << screen->name() << "'";
+    LOG_DEBUG() << QString("Tray menu shown at cursor position: "
+                   "(%1, %2); size: (%3, %4); screen: (%5, %6); screen name: '%7'")
+                    .arg(pos.x()).arg(pos.y())
+                    .arg(width()).arg(height())
+                    .arg(screen->geometry().width()).arg(screen->geometry().height())
+                    .arg(screen->name());
 }
 
 void TrayManager::hideAnimated() const {
