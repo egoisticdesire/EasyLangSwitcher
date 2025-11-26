@@ -5,6 +5,7 @@
 #include <QLineEdit>
 #include <QWidget>
 #include <QFrame>
+#include <QPointer>
 
 class AnimatedSelector final : public QObject {
     Q_OBJECT
@@ -33,13 +34,17 @@ private:
 
     QRect m_indicatorGeometry;
 
-    QVariantAnimation *m_runningAnim = nullptr;
+    QPointer<QVariantAnimation> m_runningAnim;
 
     QGraphicsOpacityEffect *m_opacity = nullptr;
 
     QString m_extraStyle;
 
     bool m_animating = false;
+
+    bool m_inTextHandler = false;
+
+    bool m_forceCustomStartFromFrame = false;
 
 private slots:
     void animateToButton(QAbstractButton *btn);

@@ -227,11 +227,11 @@ void AnimatedSelector::animateToCustomEdit() {
     if (!m_indicator || !m_customEdit || !m_frame || !m_parent) return;
 
     QRect startGeom;
-    if (m_indicator->isVisible() && m_indicator->geometry().isValid())
+    if (m_indicator->isVisible() && m_indicator->geometry().isValid()) {
         startGeom = m_indicator->geometry();
-    else if (m_indicatorGeometry.isValid())
+    } else if (m_indicatorGeometry.isValid()) {
         startGeom = m_indicatorGeometry;
-    else {
+    } else {
         if (const auto *b = m_group ? m_group->checkedButton() : nullptr) {
             startGeom = b->geometry();
             startGeom.moveTopLeft(b->mapTo(m_parent, QPoint(0, 0)));
@@ -380,14 +380,55 @@ void AnimatedSelector::onCustomEditChanged(const QString &text) {
     updateEditStyle();
     if (!m_group) return;
 
-    if (!text.trimmed().isEmpty()) {
-        for (auto *b: m_group->buttons()) b->setChecked(false);
-        animateToCustomEdit();
-    } else {
-        if (auto *btn = m_group->checkedButton()) animateToButton(btn);
+    // Защита от реэнтрантных вызовов
+    if (m_inTextHandler) return;
+    m_inTextHandler = true;
+
+    const bool hasText = !text.trimmed().isEmpty();
+
+    // Остановим текущую анимацию, чтобы исключить гонки
+    if (m_runningAnim) {
+        m_runningAnim->stop();
+        m_runningAnim->deleteLater();
+        m_runningAnim = nullptr;
     }
 
-    updateButtonColors();
+    // Сбрасываем флаг animating — чтобы гарантировать старт новой анимации
+    m_animating = false;
+
+    if (hasText) {
+        // Программно снимаем чеки, блокируя сигнал каждой кнопки, чтобы избежать вызовов animateToButton
+        for (auto *b: m_group->buttons()) {
+            if (b->isChecked()) {
+                b->blockSignals(true);
+                b->setChecked(false);
+                b->blockSignals(false);
+            }
+        }
+
+        // Устанавливаем геометрию индикатора на геометрию фрейма и прячем индикатор,
+        // но сохраняем геометрию — это ключевой момент для повторного ввода.
+        if (m_indicator) {
+            m_indicator->hide();
+        }
+
+        // Установим флаг, чтобы animateToCustomEdit знала, что стартовая геометрия должна быть frameGeom
+        m_forceCustomStartFromFrame = true;
+
+        // Гарантированно запустить анимацию расширения по фрейму
+        animateToCustomEdit();
+    } else {
+        // Текст пустой -> вернуть индикатор на кнопку (если есть выбранная)
+        if (auto *btn = m_group->checkedButton()) {
+            // Если есть активный custom — уже пустой — безопасно вызвать
+            animateToButton(btn);
+        } else {
+            // Никаких действий, просто обновим цвета
+            updateButtonColors();
+        }
+    }
+
+    m_inTextHandler = false;
 }
 
 void AnimatedSelector::updateButtonColors() const {
