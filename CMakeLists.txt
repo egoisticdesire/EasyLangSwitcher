@@ -3,7 +3,10 @@ add_compile_options(/utf-8)
 
 set(APP_NAME "EasyLangSwitcher")
 
-project(${APP_NAME} VERSION 1.0.0)
+project(${APP_NAME} VERSION 1.1.0)
+
+set(APP_VERSION "${PROJECT_VERSION}")
+
 set(CMAKE_CXX_STANDARD 26)
 
 set(CMAKE_AUTOMOC ON)
@@ -23,9 +26,9 @@ set(CMAKE_PREFIX_PATH "${QT_DIR}/6.10.1/msvc2022_64")
 set(QT_BIN_DIR "${CMAKE_PREFIX_PATH}/bin")
 set(WINDEPLOYQT "${QT_BIN_DIR}/windeployqt6.exe")
 set(AUTOGEN_INCLUDE "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}_autogen/include")
-set(DIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dist/release")
+set(DIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dist/release/${APP_VERSION}")
 
-find_package(Qt6 COMPONENTS Core Gui Widgets Svg Multimedia REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets Svg Multimedia Network REQUIRED)
 
 file(GLOB_RECURSE UI_FILES "src/ui/forms/*.ui")
 
@@ -79,7 +82,7 @@ target_sources(${APP_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 
 target_include_directories(${APP_NAME} PRIVATE "${AUTOGEN_INCLUDE}")
 
-target_link_libraries(${APP_NAME} Qt::Core Qt::Gui Qt::Widgets Qt::Svg Qt::Multimedia)
+target_link_libraries(${APP_NAME} Qt::Core Qt::Gui Qt::Widgets Qt::Svg Qt::Multimedia Qt::Network)
 
 if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     add_custom_command(TARGET ${APP_NAME} POST_BUILD
@@ -98,13 +101,20 @@ if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
 
     add_custom_command(TARGET ${APP_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory "${DIST_DIR}/platforms"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DIST_DIR}/styles"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DIST_DIR}/imageformats"
+
             COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${APP_NAME}>" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Core.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Gui.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Widgets.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Svg.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Multimedia.dll" "${DIST_DIR}/"
+            COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Network.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/platforms/qwindows.dll" "${DIST_DIR}/platforms/"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/styles/qmodernwindowsstyle.dll" "${DIST_DIR}/styles/"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/imageformats/qsvg.dll" "${DIST_DIR}/imageformats/"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/imageformats/qjpeg.dll" "${DIST_DIR}/imageformats/"
             COMMENT "Deploying minimal set to ${DIST_DIR}"
     )
 endif ()
