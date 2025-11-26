@@ -1,23 +1,32 @@
 # <img src="resources/icons/FlashSparkleFilled2.png" width="32" height="32" style="margin-right:12px;"> EasyLangSwitcher
 
-**EasyLangSwitcher** is a simple and lightweight Windows application that allows you to switch keyboard layouts using
-**a single key**. Switching cycles through all languages added in the system:
+**EasyLangSwitcher** is a lightweight Windows application that lets you switch keyboard layouts using
+**a single key**.  
+The app cycles through all languages added in your system:
 
 - **Short press** — changes the current layout.
-- **Long press** or using **a combination** (for example, **Ctrl+C**) with the assigned key preserves the standard
+- **Long press** or using a **combination** with the assigned key (for example, **Ctrl+C**) preserves the standard
   behavior of that key.
 
-Currently, the application allows you to use the Left Ctrl key to switch layouts, without using the usual **Alt+Shift**
-or **Win+Space** combinations.
+Now with more flexible options:
 
-The application starts in the system tray and provides basic actions:
+- Choose your preferred key for switching layouts.
+- Adjust the layout switch interval.
+- Turn the app on or off via the system tray.
+- Access a simple settings window to change key parameters.
+- **Improved layout switching logic**:
+    - Any combination with the trigger key returns it to its normal behavior without switching layouts.
+    - Quick double presses of the trigger key no longer cause layout changes.
+    - Caps Lock behavior: short press switches layout, long or double press triggers standard Caps Lock on/off.
+
+### Using EasyLangSwitcher
+
+The application starts in the system tray and provides easy actions:
 
 - **Left Click** — toggle on/off (enabled by default)
-- **Right Click** — open the menu (includes information about current configuration)
+- **Right Click** — open the menu with current configuration details
 
-> _Please note that the application does not work in UAC windows.  
-Additionally, some modern Windows 11 applications (for example, the updated Settings app and Calculator) may not respond
-to layout switching. The reasons for this are currently unknown, and attempts to make it work have been unsuccessful._
+> _Please note that the application does not work in UAC windows._
 
 ---
 
@@ -27,8 +36,8 @@ To add the application to **Startup**, place a shortcut in:
 %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup
 ```
 
-**The idea behind the app** came from personal experience: a dedicated key on the **MacBook** and features of
-**BetterTouchTool** inspired the creation of this solution for **Windows**.
+**The idea behind the app** came from personal experience using a MacBook and features of **BetterTouchTool**, aiming to
+provide a similar solution for **Windows**.
 
 ## License
 
