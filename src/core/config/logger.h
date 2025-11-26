@@ -74,16 +74,32 @@ public:
         static const QRegularExpression reOpIndex(R"(::operator\[\])");
         static const QRegularExpression reColons(R"(:{2,})");
         static const QRegularExpression reTrailing(R"(::$)");
+        static const QRegularExpression reQtModifiers(R"(\b__\w+\b)"); // __cdecl, __stdcall
+        static const QRegularExpression reQtClass(R"(\b(const\s+)?class\b)");
+        static const QRegularExpression reExtraSpaces(R"(\s+)");
 
         QString f = func;
+
         f.replace(reCtor, "");
         f.replace(reLambda, "");
         f.replace(reOpCall, "");
         f.replace(reOpIndex, "");
         f.replace(reColons, "::");
         f.replace(reTrailing, "");
+
+        // очистка Qt-модификаторов и лишних ключевых слов
+        f.replace(reQtModifiers, "");
+        f.replace(reQtClass, "");
+        f.replace(reExtraSpaces, " ");
+
+        // упрощаем параметры функций до (...)
+        if (const int idx = f.indexOf('('); idx != -1) {
+            f = f.left(idx + 1) + "...)";
+        }
+
         return f.trimmed();
     }
+
 
     Logger(const char *file, const char *function, int line, Level level = Level::DEBUG)
         : m_level(level), m_file(file), m_function(function), m_line(line) {
@@ -129,7 +145,7 @@ public:
         QString formattedFuncName = QString("%1%2%3").arg(m_cyan, cleanFunction(function), m_reset);
         QString formattedName = QString("%1 %2→%3 %4").arg(formattedFileName, m_levelColor, m_reset, formattedFuncName);
 
-        qsizetype padRaw = 70 - visibleLength(formattedName);
+        qsizetype padRaw = 100 - visibleLength(formattedName);
         if (int pad = static_cast<int>(padRaw); pad > 0)
             formattedName = QString(pad, ' ') + formattedName;
 

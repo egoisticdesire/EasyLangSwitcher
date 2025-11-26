@@ -36,6 +36,7 @@ add_executable(${APP_NAME}
         src/core/config/app_settings.cpp
         src/core/config/app_settings.h
         src/core/config/logger.h
+        src/core/config/logger_qt_bridge.h
         src/core/handlers/kb.cpp
         src/core/handlers/kb.h
         src/core/i18n/lang.cpp

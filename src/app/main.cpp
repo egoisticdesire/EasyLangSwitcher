@@ -1,4 +1,5 @@
 #include "../core/config/logger.h"
+#include "../core/config/logger_qt_bridge.h"
 #include "../core/handlers/kb.h"
 #include "../ui/helpers/iconHelper.h"
 #include "../ui/helpers/warning.h"
@@ -26,6 +27,7 @@ int main(int argc, char *argv[]) {
     }
 
     Logger::_debug = true;
+    QtLoggerBridge::install();
     LOG_INFO() << "Logger initialized with level: "
             << (Logger::_debug ? "DEBUG" : "INFO");
 
