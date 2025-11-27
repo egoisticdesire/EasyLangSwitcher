@@ -1,4 +1,5 @@
 #include "settingsWindow.h"
+#include "saveNotification.h"
 #include "../../core/config/logger.h"
 #include "../../core/config/appSettings.h"
 #include "../helpers/acrylicHelper.h"
@@ -69,9 +70,10 @@ SettingsWindow::SettingsWindow(QWidget *parent)
         AppSettings::save();
         hasPendingChanges = false;
         LOG_DEBUG() << "Autosave successfully";
+        emit settingsSaved();
     });
 
-    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    setWindowFlags(Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setFocusPolicy(Qt::ClickFocus);
 
@@ -200,6 +202,9 @@ SettingsWindow::SettingsWindow(QWidget *parent)
                 }
             });
 
+    connect(this, &SettingsWindow::settingsSaved, this, [this]() {
+        SaveNotification::showFor(this, QStringLiteral("All changes saved automatically"));
+    });
 
     LOG_DEBUG() << "SettingsWindow initialized";
 }

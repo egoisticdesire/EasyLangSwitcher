@@ -12,6 +12,7 @@ SettingsWindow
 — восстановление предыдущего preset при очистке input-поля
 — единый маппинг preset кнопок
 */
+class SaveNotification;
 
 class SettingsWindow final : public QWidget {
     Q_OBJECT
@@ -26,6 +27,8 @@ public:
 signals:
     void settingsChanged();
 
+    void settingsSaved();
+
 protected:
     void showEvent(QShowEvent *event) override;
 
@@ -33,6 +36,8 @@ protected:
 
 private:
     Ui::settings_main_widget ui{};
+
+    SaveNotification *saveNotif = nullptr;
 
     QVector<AnimatedSelector *> selectors;
 
