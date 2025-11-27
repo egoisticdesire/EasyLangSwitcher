@@ -930,7 +930,7 @@ background: rgba(255, 255, 255, 10);
 }
 QFrame#key_delay_frame QSlider {
 border-radius: 8px;
-padding: 3px 5px;
+padding: 3px 10px;
 }
 QFrame#key_delay_frame QSlider#key_delay_slider::groove:horizontal {
 height: 4px;

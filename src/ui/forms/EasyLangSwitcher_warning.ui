@@ -45,11 +45,10 @@
     <widget class="QFrame" name="background_frame">
      <property name="styleSheet">
       <string notr="true">QFrame#background_frame {
-/*border-top-left-radius: 8px;
-border-bottom-left-radius: 8px;
-border: 1px solid rgba(255, 255, 255, 66);*/
-border: 1px solid transparent;
-border-right: 2px solid rgba(12, 12, 12, 100);
+/*border: 1px solid transparent;*/
+border: 1px solid rgba(255, 255, 255, 66);
+border-radius: 2px;
+color: rgba(255, 255, 255, 225);
 background: transparent;
 }
 QFrame#background_frame QPushButton {
@@ -72,6 +71,7 @@ QFrame#background_frame QPushButton#icon_label:pressed,
 QFrame#background_frame QPushButton#icon_label:checked,
 QFrame#background_frame QPushButton#icon_label:focus {
 padding: 0;
+color: rgba(255, 255, 255, 225);
 background: transparent;
 border: 1px solid transparent;
 }</string>
