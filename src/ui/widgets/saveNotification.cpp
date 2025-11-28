@@ -46,9 +46,13 @@ SaveNotification::SaveNotification(SettingsWindow *settings, const QString &text
     adjustSize();
 
     // флаги: оставляем фрейм без рамки, но это внутренний виджет родителя — не будет "выталкивать" фокус.
-    setWindowFlags(Qt::FramelessWindowHint | Qt::Tool);
+    setWindowFlags(Qt::FramelessWindowHint
+                   | Qt::Tool
+                   | Qt::WindowDoesNotAcceptFocus
+                   | Qt::BypassWindowManagerHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
+    setFocusPolicy(Qt::NoFocus);
 
     // удаляем ранее использовавшийся QGraphicsOpacityEffect на this и ставим на m_content
     if (m_content != this) {
