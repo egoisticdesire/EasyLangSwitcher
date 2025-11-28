@@ -34,10 +34,8 @@
      <property name="styleSheet">
       <string notr="true">QFrame#background_frame {
 padding: 4px 8px;
-border-radius: 2px;
-border: 1px solid rgba(255, 255, 255, 30);
+border: 1px solid rgb(50, 50, 50);
 background: transparent;
-/*background: rgba(42, 42, 42, 255);*/
 }
 QFrame#background_frame QLabel {
 color: rgba(255, 255, 255, 225);
