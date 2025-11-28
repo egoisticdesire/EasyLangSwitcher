@@ -66,73 +66,81 @@ inline bool isWindows10OrGreater() {
 
 class AcrylicHelper {
 public:
-    static void enableAcrylic(const QWidget *widget, const DWORD alpha = 0x40, const DWORD rgb = 0x202020) {
+    static void setAcrylicEnabled( // 0xCC (~80%) | 0xE0 (~88%) | 0xF0 (~94%)
+        const QWidget *widget,
+        const bool enabled,
+        const DWORD alphaActiveWin11 = 0x40,
+        const DWORD rgbActiveWin11 = 0x202020,
+        const DWORD alphaActiveWin10 = 0xE0,
+        const DWORD rgbActiveWin10 = 0x151515,
+        const DWORD alphaInactiveWin11 = 0xFF,
+        const DWORD rgbInactiveWin11 = 0x101010,
+        const DWORD alphaInactiveWin10 = 0xFF,
+        const DWORD rgbInactiveWin10 = 0x090909
+    ) {
+        if (!widget) return;
+
+        if (enabled)
+            enableAcrylic(widget, alphaActiveWin11, rgbActiveWin11, alphaActiveWin10, rgbActiveWin10);
+        else
+            enableAcrylic(widget, alphaInactiveWin11, rgbInactiveWin11, alphaInactiveWin10, rgbInactiveWin10);
+    }
+
+    static void enableAcrylic( // 0xCC (~80%) | 0xE0 (~88%) | 0xF0 (~94%)
+        const QWidget *widget,
+        const DWORD alphaWin11 = 0x40,
+        const DWORD rgbWin11 = 0x202020,
+        const DWORD alphaWin10 = 0xE0,
+        const DWORD rgbWin10 = 0x101010
+    ) {
         if (!widget) return;
 
         const auto hwnd = reinterpret_cast<HWND>(widget->winId());
         if (!hwnd) return;
 
-        LOG_DEBUG() << "Enabling acrylic for widget: "
-                << widget->metaObject()->className() << " (" << widget->objectName() << ")" << " with hwnd: " << hwnd;
-
         // Убираем WS_EX_LAYERED
-        if (const LONG ex = GetWindowLongW(hwnd, GWL_EXSTYLE); ex & WS_EX_LAYERED) {
+        if (const LONG ex = GetWindowLongW(hwnd, GWL_EXSTYLE); ex & WS_EX_LAYERED)
             SetWindowLongW(hwnd, GWL_EXSTYLE, ex & ~WS_EX_LAYERED);
-        }
 
         const auto setWindowCompositionAttribute =
                 reinterpret_cast<pSetWindowCompositionAttribute>(
                     GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetWindowCompositionAttribute"));
-        if (!setWindowCompositionAttribute) {
-            LOG_DEBUG() << "Failed to get SetWindowCompositionAttribute";
-            return;
-        }
+        if (!setWindowCompositionAttribute) return;
 
         ACCENT_POLICY policy{};
 
         if (isWindows11OrGreater()) {
-            LOG_DEBUG() << "Windows 11 acrylic mode enabled";
-
             // Win11: акрил с радиусом углов
             policy.AccentState = ACCENT_ENABLE_ACRYLICBLURBEHIND;
-            policy.GradientColor = (alpha << 24) | rgb;
+            policy.GradientColor = (alphaWin11 << 24) | rgbWin11;
             policy.AccentFlags = 2;
 
             // Скругление углов через DWM
             constexpr DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
             constexpr int DWMWCP_ROUND = 2;
-            const HRESULT hrCorner = DwmSetWindowAttribute(
-                hwnd,
-                DWMWA_WINDOW_CORNER_PREFERENCE,
-                &DWMWCP_ROUND,
-                sizeof(DWMWCP_ROUND)
-            );
-            if (FAILED(hrCorner)) {
-                LOG_DEBUG() << "DwmSetWindowAttribute corner failed: " << hrCorner;
-            }
+            (void) DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &DWMWCP_ROUND, sizeof(DWMWCP_ROUND));
 
             // Скругление региона
             if (const HRGN hrgn = CreateRoundRectRgn(
                 0, 0, widget->width() + 1, widget->height() + 1,
-                ACRYLIC_WINDOW_RADIUS, ACRYLIC_WINDOW_RADIUS
-            )) {
+                ACRYLIC_WINDOW_RADIUS, ACRYLIC_WINDOW_RADIUS))
                 SetWindowRgn(hwnd, hrgn, TRUE);
-            }
         } else if (isWindows10OrGreater()) {
-            LOG_DEBUG() << "Windows 10 blur mode enabled";
-
             // Win10: простой blur без скруглений
             policy.AccentState = ACCENT_ENABLE_BLURBEHIND;
-            policy.GradientColor = (0xE0 << 24) | rgb; // 0xCC (~80%) | 0xE0 (~88%) | 0xF0 (~94%)
+            policy.GradientColor = (alphaWin10 << 24) | rgbWin10;
             policy.AccentFlags = 2;
 
-            // Прямоугольная область
-            if (const HRGN hrgn = CreateRectRgn(0, 0, widget->width() + 1, widget->height() + 1)) {
+            // Win10: простой blur без скруглений
+            if (const HRGN hrgn = CreateRectRgn(0, 0, widget->width() + 1, widget->height() + 1))
                 SetWindowRgn(hwnd, hrgn, TRUE);
-            }
+
+            // Добавляем шум поверх окна
+            addNoiseForWin10(widget);
         } else {
-            LOG_DEBUG() << "Windows version is less than 10, acrylic and blur not supported";
-            return; // ниже Win10 не поддерживаем
+            policy.AccentState = ACCENT_DISABLED;
+            policy.GradientColor = 0;
+            policy.AccentFlags = 0;
         }
 
         WINDOWCOMPOSITIONATTRIBDATA data{};
@@ -141,7 +149,6 @@ public:
         data.SizeOfData = sizeof(policy);
 
         setWindowCompositionAttribute(hwnd, &data);
-        LOG_DEBUG() << "Acrylic applied: alpha=" << alpha << ", rgb=" << rgb;
     }
 
     static void updateRegion(const QWidget *widget) {
@@ -152,14 +159,11 @@ public:
         if (isWindows11OrGreater()) {
             if (const HRGN hrgn = CreateRoundRectRgn(
                 0, 0, widget->width() + 1, widget->height() + 1,
-                ACRYLIC_WINDOW_RADIUS, ACRYLIC_WINDOW_RADIUS
-            )) {
+                ACRYLIC_WINDOW_RADIUS, ACRYLIC_WINDOW_RADIUS))
                 SetWindowRgn(hwnd, hrgn, TRUE);
-            }
         } else if (isWindows10OrGreater()) {
-            if (const HRGN hrgn = CreateRectRgn(0, 0, widget->width() + 1, widget->height() + 1)) {
+            if (const HRGN hrgn = CreateRectRgn(0, 0, widget->width() + 1, widget->height() + 1))
                 SetWindowRgn(hwnd, hrgn, TRUE);
-            }
         }
     }
 
@@ -168,46 +172,52 @@ public:
         const auto hwnd = reinterpret_cast<HWND>(widget->winId());
         if (!hwnd) return;
 
-        LOG_DEBUG() << "Disabling acrylic for widget: "
-                << widget->metaObject()->className() << " (" << widget->objectName() << ")" << " with hwnd: " << hwnd;
-
         const auto setWindowCompositionAttribute =
                 reinterpret_cast<pSetWindowCompositionAttribute>(
                     GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetWindowCompositionAttribute"));
-        if (!setWindowCompositionAttribute) {
-            LOG_DEBUG() << "Failed to get SetWindowCompositionAttribute";
-            return;
-        }
+        if (!setWindowCompositionAttribute) return;
 
         ACCENT_POLICY policy{};
         policy.AccentState = ACCENT_DISABLED;
         policy.AccentFlags = 0;
         policy.GradientColor = 0;
+
         WINDOWCOMPOSITIONATTRIBDATA data{};
         data.Attribute = WCA_ACCENT_POLICY;
         data.Data = &policy;
         data.SizeOfData = sizeof(policy);
-        setWindowCompositionAttribute(hwnd, &data);
 
-        LOG_DEBUG() << "Acrylic disabled";
+        setWindowCompositionAttribute(hwnd, &data);
     }
 
-    static void setAcrylicEnabled(
-        const QWidget *widget,
-        const bool enabled,
-        const DWORD activeAlpha = 0x40,
-        const DWORD activeRgb = 0x202020,
-        const DWORD inactiveAlpha = 0xFF,
-        const DWORD inactiveRgb = 0x101010
-    ) {
-        if (!widget) return;
+    static void addNoiseForWin10(const QWidget *widget, const BYTE intensity = 15) {
+        if (!widget || !isWindows10OrGreater() || isWindows11OrGreater()) return;
 
-        if (enabled) {
-            // акрил — окно активно
-            enableAcrylic(widget, activeAlpha, activeRgb);
-        } else {
-            // статичный фон — окно не активно
-            enableAcrylic(widget, inactiveAlpha, inactiveRgb);
+        static QWidget *noiseOverlay = nullptr;
+        if (!noiseOverlay) {
+            noiseOverlay = new QWidget(const_cast<QWidget *>(widget));
+            noiseOverlay->setAttribute(Qt::WA_TransparentForMouseEvents);
+            noiseOverlay->setAttribute(Qt::WA_NoSystemBackground);
+            noiseOverlay->setGeometry(widget->rect());
+            noiseOverlay->show();
+
+            std::srand(static_cast<unsigned int>(std::time(nullptr))); // инициализация генератора
         }
+
+        QImage img(widget->size(), QImage::Format_ARGB32);
+        img.fill(Qt::transparent);
+
+        for (int y = 0; y < img.height(); ++y) {
+            const auto line = reinterpret_cast<QRgb *>(img.scanLine(y));
+            for (int x = 0; x < img.width(); ++x) {
+                const int val = std::rand() % intensity;
+                line[x] = qRgba(val, val, val, val);
+            }
+        }
+
+        QPalette palette;
+        palette.setBrush(noiseOverlay->backgroundRole(), QBrush(img));
+        noiseOverlay->setPalette(palette);
+        noiseOverlay->setAutoFillBackground(true);
     }
 };
