@@ -1,11 +1,26 @@
 #pragma once
 #include <../../../src/core/config/logger.h>
 #include <QtWidgets/QWidget>
+#include <QtGui/QPixmap>
+#include <QtGui/QPainter>
+#include <QtGui/QPainterPath>
+#include <QtGui/QWindow>
 #include <Windows.h>
 #include <dwmapi.h>
+
 #pragma comment(lib, "dwmapi.lib")
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "gdi32.lib")
 
 constexpr int ACRYLIC_WINDOW_RADIUS = 8;
+
+// --- DWM константы для Iconic Bitmap ---
+#ifndef WM_DWMSENDICONICTHUMBNAIL
+#define WM_DWMSENDICONICTHUMBNAIL 0x0323
+#endif
+#ifndef WM_DWMSENDICONICLIVEPREVIEWBITMAP
+#define WM_DWMSENDICONICLIVEPREVIEWBITMAP 0x0326
+#endif
 
 // Типы WinAPI для акрила
 enum ACCENT_STATE {
@@ -43,8 +58,6 @@ inline bool isWindows11OrGreater() {
     const auto rtlGetVersion = reinterpret_cast<RtlGetVersionPtr>(
         GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "RtlGetVersion"));
     if (rtlGetVersion && rtlGetVersion(&rovi) == 0) {
-        LOG_DEBUG() << QString("Windows version: %1.%2.%3")
-                        .arg(rovi.dwMajorVersion).arg(rovi.dwMinorVersion).arg(rovi.dwBuildNumber);
         return (rovi.dwMajorVersion == 10 && rovi.dwBuildNumber >= 22000);
     }
     return false;
@@ -57,8 +70,6 @@ inline bool isWindows10OrGreater() {
     const auto rtlGetVersion = reinterpret_cast<RtlGetVersionPtr>(
         GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "RtlGetVersion"));
     if (rtlGetVersion && rtlGetVersion(&rovi) == 0) {
-        LOG_DEBUG() << QString("Windows version: %1.%2.%3")
-                        .arg(rovi.dwMajorVersion).arg(rovi.dwMinorVersion).arg(rovi.dwBuildNumber);
         return (rovi.dwMajorVersion == 10);
     }
     return false;
@@ -80,10 +91,146 @@ public:
     ) {
         if (!widget) return;
 
-        if (enabled)
+        if (enabled) {
             enableAcrylic(widget, alphaActiveWin11, rgbActiveWin11, alphaActiveWin10, rgbActiveWin10);
-        else
+            enableCustomPreview(widget);
+        } else {
             enableAcrylic(widget, alphaInactiveWin11, rgbInactiveWin11, alphaInactiveWin10, rgbInactiveWin10);
+        }
+    }
+
+    static void enableCustomPreview(const QWidget *widget) {
+        if (!widget) return;
+        const auto hwnd = reinterpret_cast<HWND>(widget->winId());
+
+        constexpr BOOL fForceIconic = TRUE;
+        constexpr BOOL fHasIconicBitmap = TRUE;
+
+        // DWMWA_FORCE_ICONIC_REPRESENTATION = 7
+        (void) DwmSetWindowAttribute(hwnd, 7, &fForceIconic, sizeof(fForceIconic));
+        // DWMWA_HAS_ICONIC_BITMAP = 10
+        (void) DwmSetWindowAttribute(hwnd, 10, &fHasIconicBitmap, sizeof(fHasIconicBitmap));
+    }
+
+private:
+    static HBITMAP qtPixmapToHBitmap(const QPixmap &pix) {
+        if (pix.isNull()) return nullptr;
+
+        QImage img = pix.toImage();
+        if (img.format() != QImage::Format_ARGB32_Premultiplied) {
+            img = img.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+        }
+
+        const int w = img.width();
+        const int h = img.height();
+
+        BITMAPINFO bmi;
+        ZeroMemory(&bmi, sizeof(bmi));
+        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bmi.bmiHeader.biWidth = w;
+        bmi.bmiHeader.biHeight = -h;
+        bmi.bmiHeader.biPlanes = 1;
+        bmi.bmiHeader.biBitCount = 32;
+        bmi.bmiHeader.biCompression = BI_RGB;
+
+        void *bits = nullptr;
+        const HBITMAP hBitmap = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+
+        if (hBitmap && bits) {
+            const int bytesPerLine = w * 4;
+            for (int y = 0; y < h; ++y) {
+                memcpy(
+                    static_cast<unsigned char *>(bits) + (y * bytesPerLine),
+                    img.scanLine(y),
+                    bytesPerLine
+                );
+            }
+        }
+        return hBitmap;
+    }
+
+    static QPixmap generateOpaqueScreenshot(QWidget *widget, const QSize &targetSize, const QColor &bgColor) {
+        // Рендерим исходный виджет (он будет с острыми углами из-за QSS)
+        QPixmap rawContent(widget->size());
+        rawContent.fill(Qt::transparent);
+        widget->render(&rawContent, QPoint(), QRegion(), QWidget::DrawChildren);
+
+        // Готовим холст
+        QPixmap finalPix(widget->size());
+        finalPix.fill(Qt::transparent);
+
+        QPainter painter(&finalPix);
+        painter.setRenderHint(QPainter::Antialiasing);
+
+        if (isWindows11OrGreater()) {
+            // Win11: Эмулируем скругление DWM
+            QPainterPath path;
+            path.addRoundedRect(finalPix.rect(), ACRYLIC_WINDOW_RADIUS, ACRYLIC_WINDOW_RADIUS);
+
+            // Заливаем фон ("акрил") внутри скругления
+            painter.fillPath(path, bgColor);
+
+            // Обрезаем контент виджета по скруглению
+            painter.setClipPath(path);
+            painter.drawPixmap(0, 0, rawContent);
+
+            painter.setClipping(false);
+
+            const QPen borderPen(QColor(0x42, 0x42, 0x42), 1.0); // Серый бордер, 1px
+            painter.setPen(borderPen);
+
+            // Преобразуем QRect в QRectF для использования дробных смещений
+            const QRectF borderRect = finalPix.rect().toRectF().adjusted(0.5, 0.5, -0.5, -0.5);
+
+            QPainterPath borderPath;
+            borderPath.addRoundedRect(borderRect, ACRYLIC_WINDOW_RADIUS, ACRYLIC_WINDOW_RADIUS);
+
+            painter.drawPath(borderPath);
+        } else {
+            // Win10: Оставляем квадратом
+            painter.fillRect(finalPix.rect(), bgColor);
+            painter.drawPixmap(0, 0, rawContent);
+        }
+
+        painter.end();
+
+        // Масштабируем
+        if (finalPix.size() != targetSize) {
+            return finalPix.scaled(targetSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        }
+        return finalPix;
+    }
+
+public:
+    static bool handleIconicMessages(QWidget *widget, void *message,
+                                     const QColor &bgFallbackColor = QColor(32, 32, 32)) {
+        const MSG *msg = static_cast<MSG *>(message);
+        const HWND hwnd = msg->hwnd;
+
+        if (msg->message == WM_DWMSENDICONICTHUMBNAIL) {
+            int width = HIWORD(msg->lParam);
+            int height = LOWORD(msg->lParam);
+
+            if (width == 0 || height == 0) {
+                width = widget->width() / 4;
+                height = widget->height() / 4;
+            }
+
+            const QPixmap resultPix = generateOpaqueScreenshot(widget, QSize(width, height), bgFallbackColor);
+            const HBITMAP hbm = qtPixmapToHBitmap(resultPix);
+            (void) DwmSetIconicThumbnail(hwnd, hbm, 0);
+            DeleteObject(hbm);
+            return true;
+        }
+        if (msg->message == WM_DWMSENDICONICLIVEPREVIEWBITMAP) {
+            const QPixmap resultPix = generateOpaqueScreenshot(widget, widget->size(), bgFallbackColor);
+            const HBITMAP hbm = qtPixmapToHBitmap(resultPix);
+            (void) DwmSetIconicLivePreviewBitmap(hwnd, hbm, nullptr, 0);
+            DeleteObject(hbm);
+            return true;
+        }
+
+        return false;
     }
 
     static void enableAcrylic( // 0xCC (~80%) | 0xE0 (~88%) | 0xF0 (~94%)
@@ -131,7 +278,6 @@ public:
             policy.GradientColor = (alphaWin10 << 24) | rgbWin10;
             policy.AccentFlags = 2;
 
-            // Win10: простой blur без скруглений
             if (const HRGN hrgn = CreateRectRgn(0, 0, widget->width() + 1, widget->height() + 1))
                 SetWindowRgn(hwnd, hrgn, TRUE);
 
@@ -201,7 +347,7 @@ public:
             noiseOverlay->setGeometry(widget->rect());
             noiseOverlay->show();
 
-            std::srand(static_cast<unsigned int>(std::time(nullptr))); // инициализация генератора
+            std::srand(static_cast<unsigned int>(std::time(nullptr)));
         }
 
         QImage img(widget->size(), QImage::Format_ARGB32);

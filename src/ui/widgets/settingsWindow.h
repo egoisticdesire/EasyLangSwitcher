@@ -34,6 +34,8 @@ protected:
 
     bool event(QEvent *ev) override;
 
+    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override;
+
 private:
     Ui::settings_main_widget ui{};
 

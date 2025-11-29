@@ -229,7 +229,7 @@ void SaveNotification::startHideAnimation(bool removeFromStack) {
             return;
         }
 
-        const int removedIndex = stack.indexOf(this);
+        const qsizetype removedIndex = stack.indexOf(this);
         if (removedIndex >= 0) {
             stack.removeAt(removedIndex);
         }

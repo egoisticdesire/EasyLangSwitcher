@@ -99,7 +99,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
             btn->setChecked(true);
             matchedPreset = true;
 
-            LOG_DEBUG() << QString("Matched preset button '%1' for hotkey '%2'").arg(obj).arg(AppSettings::hotkeyName);
+            LOG_DEBUG() << QString("Matched preset button '%1' for hotkey '%2'").arg(obj, AppSettings::hotkeyName);
         } else {
             btn->setChecked(false);
         }
@@ -246,6 +246,17 @@ bool SettingsWindow::event(QEvent *ev) {
         LOG_DEBUG() << "Settings window is inactive";
     }
     return QWidget::event(ev);
+}
+
+bool SettingsWindow::nativeEvent(const QByteArray &eventType, void *message, qintptr *result) {
+    if (eventType == "windows_generic_MSG") {
+        // Третий параметр - цвет фона, который будет на превью вместо прозрачности.
+        if (AcrylicHelper::handleIconicMessages(this, message, QColor(32, 32, 32))) {
+            *result = 0;
+            return true;
+        }
+    }
+    return QWidget::nativeEvent(eventType, message, result);
 }
 
 void SettingsWindow::openCentered() {
