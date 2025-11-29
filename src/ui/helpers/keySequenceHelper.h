@@ -6,6 +6,7 @@
 #include <QToolButton>
 #include <QLineEdit>
 #include <QKeyEvent>
+#include <utility>
 
 /*
 KeySequenceHelper:
@@ -24,9 +25,9 @@ public:
         const QWidget *root,
         const QString &objectName,
         const QIcon &icon,
-        const QString &placeholder = "Key...",
+        QString placeholder = "Key...",
         QObject *parent = nullptr
-    ) : QObject(parent), m_placeholder(placeholder) {
+    ) : QObject(parent), m_placeholder(std::move(placeholder)) {
         LOG_DEBUG() << "KeySequenceHelper initialized";
 
         m_edit = root->findChild<QKeySequenceEdit *>(objectName);
@@ -177,9 +178,30 @@ protected:
     bool eventFilter(QObject *w, QEvent *ev) override {
         if (w == m_edit || w == m_lineEdit) {
             if (ev->type() == QEvent::KeyPress) {
-                const auto *ke = static_cast<QKeyEvent *>(ev);
+                const auto *ke = dynamic_cast<QKeyEvent *>(ev);
 
-                // ESC — снять фокус
+#ifdef _WIN32
+                const int sc = (ke->nativeScanCode() & 0xFF);
+
+                if (const int qtLatin = VkMapper::scanCodeToQtKey(sc); qtLatin != 0) {
+                    m_internalUpdate = true;
+                    m_edit->setKeySequence(QKeySequence(qtLatin));
+                    if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+                    m_btn->setVisible(true);
+                    m_internalUpdate = false;
+
+                    const int vk = VkMapper::sequenceToVk(QKeySequence(qtLatin));
+
+                    if (const QString name = VkMapper::vkToName(vk);
+                        vk != m_lastEmittedVk || name != m_lastEmittedName) {
+                        m_lastEmittedVk = vk;
+                        m_lastEmittedName = name;
+                        emit hotkeySelected(vk, 0, name);
+                    }
+                    return true;
+                }
+#endif
+
                 if (ke->key() == Qt::Key_Escape) {
                     m_edit->clearFocus();
                     if (m_lineEdit) m_lineEdit->clearFocus();
@@ -187,26 +209,21 @@ protected:
                     return true;
                 }
 
-                // BACKSPACE — очистка (симулируем нажатие кнопки очистки)
                 if (ke->key() == Qt::Key_Backspace) {
-                    if (m_btn && m_btn->isVisible()) {
+                    if (m_btn && m_btn->isVisible())
                         emit m_btn->clicked();
-                    }
                     return true;
                 }
             }
 
-            if (ev->type() == QEvent::Resize || ev->type() == QEvent::FontChange) {
+            if (ev->type() == QEvent::Resize || ev->type() == QEvent::FontChange)
                 updatePosition();
-            }
 
-            // переопределение плейсхолдера "Press shortcut"
             if (ev->type() == QEvent::FocusIn) {
-                if (m_lineEdit) {
+                if (m_lineEdit)
                     QTimer::singleShot(0, [this]() {
                         if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
                     });
-                }
             } else if (ev->type() == QEvent::FocusOut) {
                 if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
             }

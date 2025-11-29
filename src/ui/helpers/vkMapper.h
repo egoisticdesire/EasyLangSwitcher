@@ -7,117 +7,105 @@
 */
 
 namespace VkMapper {
-    // =============================
-    // 1. Основные VK значения
-    // =============================
-#ifndef VK_LBUTTON
-#define VK_LBUTTON        0x01
-#define VK_RBUTTON        0x02
-#define VK_CANCEL         0x03
-#define VK_MBUTTON        0x04
-#define VK_XBUTTON1       0x05
-#define VK_XBUTTON2       0x06
-#define VK_BACK           0x08
-#define VK_TAB            0x09
-#define VK_CLEAR          0x0C
-#define VK_RETURN         0x0D
-#define VK_SHIFT          0x10
-#define VK_CONTROL        0x11
-#define VK_MENU           0x12
-#define VK_PAUSE          0x13
-#define VK_CAPITAL        0x14
-#define VK_ESCAPE         0x1B
-#define VK_SPACE          0x20
-#define VK_PRIOR          0x21
-#define VK_NEXT           0x22
-#define VK_END            0x23
-#define VK_HOME           0x24
-#define VK_LEFT           0x25
-#define VK_UP             0x26
-#define VK_RIGHT          0x27
-#define VK_DOWN           0x28
-#define VK_SELECT         0x29
-#define VK_PRINT          0x2A
-#define VK_EXECUTE        0x2B
-#define VK_SNAPSHOT       0x2C
-#define VK_INSERT         0x2D
-#define VK_DELETE         0x2E
-#define VK_HELP           0x2F
+    inline int scanCodeToLatinVk(const int sc) {
+        switch (sc) {
+            // Цифровой ряд
+            case 0x02: return '1';
+            case 0x03: return '2';
+            case 0x04: return '3';
+            case 0x05: return '4';
+            case 0x06: return '5';
+            case 0x07: return '6';
+            case 0x08: return '7';
+            case 0x09: return '8';
+            case 0x0A: return '9';
+            case 0x0B: return '0';
 
-#define VK_LWIN           0x5B
-#define VK_RWIN           0x5C
-#define VK_APPS           0x5D
-#define VK_SLEEP          0x5F
+            // Символы верхнего ряда
+            case 0x29: return '`'; // `
+            case 0x0C: return '-'; // -
+            case 0x0D: return '='; // =
 
-#define VK_NUMPAD0        0x60
-#define VK_NUMPAD1        0x61
-#define VK_NUMPAD2        0x62
-#define VK_NUMPAD3        0x63
-#define VK_NUMPAD4        0x64
-#define VK_NUMPAD5        0x65
-#define VK_NUMPAD6        0x66
-#define VK_NUMPAD7        0x67
-#define VK_NUMPAD8        0x68
-#define VK_NUMPAD9        0x69
+            // QWERTY
+            case 0x10: return 'Q';
+            case 0x11: return 'W';
+            case 0x12: return 'E';
+            case 0x13: return 'R';
+            case 0x14: return 'T';
+            case 0x15: return 'Y';
+            case 0x16: return 'U';
+            case 0x17: return 'I';
+            case 0x18: return 'O';
+            case 0x19: return 'P';
 
-#define VK_MULTIPLY       0x6A
-#define VK_ADD            0x6B
-#define VK_SEPARATOR      0x6C
-#define VK_SUBTRACT       0x6D
-#define VK_DECIMAL        0x6E
-#define VK_DIVIDE         0x6F
+            // Блок справа от P
+            case 0x1A: return '[';
+            case 0x1B: return ']';
+            case 0x2B: return '\\';
 
-#define VK_F1             0x70
-#define VK_F2             0x71
-#define VK_F3             0x72
-#define VK_F4             0x73
-#define VK_F5             0x74
-#define VK_F6             0x75
-#define VK_F7             0x76
-#define VK_F8             0x77
-#define VK_F9             0x78
-#define VK_F10            0x79
-#define VK_F11            0x7A
-#define VK_F12            0x7B
-#define VK_F13            0x7C
-#define VK_F14            0x7D
-#define VK_F15            0x7E
-#define VK_F16            0x7F
-#define VK_F17            0x80
-#define VK_F18            0x81
-#define VK_F19            0x82
-#define VK_F20            0x83
-#define VK_F21            0x84
-#define VK_F22            0x85
-#define VK_F23            0x86
-#define VK_F24            0x87
+            // Home row
+            case 0x1E: return 'A';
+            case 0x1F: return 'S';
+            case 0x20: return 'D';
+            case 0x21: return 'F';
+            case 0x22: return 'G';
+            case 0x23: return 'H';
+            case 0x24: return 'J';
+            case 0x25: return 'K';
+            case 0x26: return 'L';
 
-#define VK_NUMLOCK        0x90
-#define VK_SCROLL         0x91
+            // Символы справа от L
+            case 0x27: return ';';
+            case 0x28: return '\'';
 
-#define VK_LSHIFT         0xA0
-#define VK_RSHIFT         0xA1
-#define VK_LCONTROL       0xA2
-#define VK_RCONTROL       0xA3
-#define VK_LMENU          0xA4
-#define VK_RMENU          0xA5
+            // Нижний ряд
+            case 0x2C: return 'Z';
+            case 0x2D: return 'X';
+            case 0x2E: return 'C';
+            case 0x2F: return 'V';
+            case 0x30: return 'B';
+            case 0x31: return 'N';
+            case 0x32: return 'M';
 
-#define VK_BROWSER_BACK        0xA6
-#define VK_BROWSER_FORWARD     0xA7
-#define VK_BROWSER_REFRESH     0xA8
-#define VK_BROWSER_STOP        0xA9
-#define VK_BROWSER_SEARCH      0xAA
-#define VK_BROWSER_FAVORITES   0xAB
-#define VK_BROWSER_HOME        0xAC
+            // Символы справа от M
+            case 0x33: return ',';
+            case 0x34: return '.';
+            case 0x35: return '/';
 
-#define VK_VOLUME_MUTE         0xAD
-#define VK_VOLUME_DOWN         0xAE
-#define VK_VOLUME_UP           0xAF
-#endif
+            case 0x39: return ' ';
+            default: break;
+        }
+        return 0;
+    }
 
-    // =======================================
-    // 2. Таблица статических текстовых имен
-    // =======================================
+    // scan → Qt::Key_A…Z, Qt::Key_0…9
+    inline int scanCodeToQtKey(const int sc) {
+        const int vk = scanCodeToLatinVk(sc);
+
+        if (vk >= 'A' && vk <= 'Z')
+            return Qt::Key_A + (vk - 'A');
+        if (vk >= '0' && vk <= '9')
+            return Qt::Key_0 + (vk - '0');
+
+        switch (vk) {
+            case '`': return Qt::Key_QuoteLeft;
+            case '-': return Qt::Key_Minus;
+            case '=': return Qt::Key_Equal;
+            case '[': return Qt::Key_BracketLeft;
+            case ']': return Qt::Key_BracketRight;
+            case '\\': return Qt::Key_Backslash;
+            case ';': return Qt::Key_Semicolon;
+            case '\'': return Qt::Key_Apostrophe;
+            case ',': return Qt::Key_Comma;
+            case '.': return Qt::Key_Period;
+            case '/': return Qt::Key_Slash;
+            case ' ': return Qt::Key_Space;
+            default: break;
+        }
+
+        return 0;
+    }
+
     inline const QHash<int, QString> &vkToNameMap() {
         static const QHash<int, QString> map = {
 
@@ -196,9 +184,6 @@ namespace VkMapper {
         return map;
     }
 
-    // ====================================================
-    // 3. Преобразование VK → читаемое имя
-    // ====================================================
     inline QString vkToName(const int vk) {
         if (const auto &map = vkToNameMap(); map.contains(vk))
             return map[vk];
@@ -219,9 +204,6 @@ namespace VkMapper {
         return QString("VK_%1").arg(vk);
     }
 
-    // ====================================================
-    // 4. Обратная таблица: имя → VK
-    // ====================================================
     inline const QHash<QString, int> &nameToVkMap() {
         static QHash<QString, int> reverse;
 
@@ -245,9 +227,6 @@ namespace VkMapper {
         return m.value(name, 0);
     }
 
-    // ====================================================
-    // 5. QKeySequence → VK
-    // ====================================================
     inline int sequenceToVk(const QKeySequence &seq) {
         if (seq.isEmpty())
             return 0;
