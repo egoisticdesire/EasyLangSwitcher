@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>main_widget</class>
- <widget class="QWidget" name="main_widget">
+ <class>settings_main_widget</class>
+ <widget class="QWidget" name="settings_main_widget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -25,7 +25,7 @@
   <property name="windowTitle">
    <string/>
   </property>
-  <layout class="QHBoxLayout" name="hlayout_main_widget">
+  <layout class="QHBoxLayout" name="hlayout_settings_main_widget">
    <property name="spacing">
     <number>0</number>
    </property>
@@ -50,8 +50,7 @@
      </property>
      <property name="styleSheet">
       <string notr="true">QWidget#background_widget {
-/*border-radius: 8px;*/
-background: rgba(32, 32, 32, 50);
+background: rgba(32, 32, 32, 10);
 }</string>
      </property>
      <layout class="QHBoxLayout" name="hlayout_background_widget">
@@ -85,11 +84,10 @@ background: rgba(32, 32, 32, 50);
         </property>
         <property name="styleSheet">
          <string notr="true">QFrame#sider_container {
-/*border-top-left-radius: 8px;
-border-bottom-left-radius: 8px;
-border: 1px solid rgba(255, 255, 255, 66);*/
-border: 1px solid transparent;
-border-right: 2px solid rgba(12, 12, 12, 100);
+/*border-top-left-radius: 1px;
+border-bottom-left-radius: 1px;*/
+border: 1px solid rgb(50, 50, 50);
+border-right: 1px solid transparent;
 background: transparent;
 }
 QFrame#sider_container QToolButton:focus,
@@ -101,6 +99,7 @@ QFrame#bot_sider_container QPushButton {
 margin: 3px;
 padding: 4px 10px 5px 10px;
 border-radius: 5px;
+color: rgba(255, 255, 255, 225);
 }
 QFrame#top_sider_container QToolButton:checked,
 QFrame#bot_sider_container QPushButton {
@@ -379,12 +378,16 @@ background: rgba(255, 255, 255, 7);
         </property>
         <property name="styleSheet">
          <string notr="true">QStackedWidget#content_container {
-/*border-top-right-radius: 8px;
-border-bottom-right-radius: 8px;
-border: 1px solid rgba(255, 255, 255, 66);*/
-border: 1px solid transparent;
+/*border-top-right-radius: 1px;
+border-bottom-right-radius: 1px;*/
+border: 1px solid rgb(50, 50, 50);
 border-left: 1px solid rgba(255, 255, 255, 30);
-background: rgba(32, 32, 32, 175);
+background: rgba(32, 32, 32, 200);
+}
+
+
+QStackedWidget#content_container QLabel {
+color: rgba(255, 255, 255, 225);
 }</string>
         </property>
         <property name="currentIndex">
@@ -407,14 +410,21 @@ margin-right: 20px;
 QFrame#key_select_frame QLineEdit {
 height: 100%;
 margin: 1px;
-padding: 2px 13px 2px 17px;
+padding: 2px;
 border-radius: 8px;
-border-bottom: 1px solid transparent;
-background: transparent;
+background: rgba(26, 26, 26, 175);
 }
+QFrame#key_select_frame QLineEdit[hasText=&quot;true&quot;] {
+padding: 2px 25px 2px 5px;
+background: rgba(26, 26, 26, 175);
+}
+QFrame#key_select_frame QLineEdit[hasText=&quot;true&quot;]:hover,
+QFrame#key_select_frame QLineEdit:hover {
+background: rgba(22, 22, 22, 175);
+}
+QFrame#key_select_frame QLineEdit[hasText=&quot;true&quot;]:focus,
 QFrame#key_select_frame QLineEdit:focus {
-border-bottom: 1px solid rgba(50, 125, 255, 150);
-background: rgba(255, 255, 255, 10);
+background: rgba(16, 16, 16, 175);
 }
 QToolButton#btn_restore_default {
 margin-right: 6px;
@@ -433,20 +443,30 @@ border-radius: 8px;
 color: rgba(255, 255, 255, 150);
 background: transparent;
 }
-QFrame#key_select_frame QLineEdit:hover,
+QFrame#key_select_frame QPushButton[customActive=&quot;true&quot;],
+QFrame#key_select_frame QPushButton:checked[customActive=&quot;true&quot;] {
+color: rgba(255,255,255,150);
+}
+QFrame#key_select_frame QPushButton:hover[customActive=&quot;true&quot;] {
+color: rgba(255, 255, 255, 255);
+}
 QFrame#key_select_frame QPushButton:hover,
 QFrame#app_theme_frame QPushButton:hover,
 QFrame#app_startup_frame QPushButton:hover,
-QFrame#app_lang_frame QPushButton:hover,
+QFrame#app_lang_frame QPushButton:hover {
+color: rgba(255, 255, 255, 255);
+background: transparent;
+}
+QFrame#key_select_frame QLineEdit:hove,
 QToolButton#btn_restore_default:hover {
 color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
 }
-QFrame#key_select_frame QLineEdit:pressed,
+/*QFrame#key_select_frame QLineEdit:pressed,
 QFrame#key_select_frame QPushButton:pressed,
 QFrame#app_theme_frame QPushButton:pressed,
 QFrame#app_startup_frame QPushButton:pressed,
-QFrame#app_lang_frame QPushButton:pressed,
+QFrame#app_lang_frame QPushButton:pressed,*/
 QToolButton#btn_restore_default:pressed {
 background: rgba(255, 255, 255, 7);
 }
@@ -507,351 +527,6 @@ outline: none;
               <property name="text">
                <string>Launch at Windows startup</string>
               </property>
-             </widget>
-            </item>
-            <item row="0" column="1" colspan="2">
-             <widget class="QFrame" name="key_select_frame">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <layout class="QGridLayout" name="grid_select_key_value">
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <property name="spacing">
-                <number>0</number>
-               </property>
-               <item row="1" column="2">
-                <widget class="QPushButton" name="btn_rshift_select">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>R Shift</string>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                 <property name="autoExclusive">
-                  <bool>true</bool>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QPushButton" name="btn_lalt_select">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>L Alt</string>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                 <property name="autoExclusive">
-                  <bool>true</bool>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QPushButton" name="btn_rctrl_select">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>R Ctrl</string>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                 <property name="checked">
-                  <bool>false</bool>
-                 </property>
-                 <property name="autoExclusive">
-                  <bool>true</bool>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QPushButton" name="btn_ralt_select">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>R Alt</string>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                 <property name="autoExclusive">
-                  <bool>true</bool>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="2">
-                <widget class="QPushButton" name="btn_lshift_select">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>L Shift</string>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                 <property name="autoExclusive">
-                  <bool>true</bool>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="3">
-                <widget class="QPushButton" name="btn_caps_select">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Caps Lock</string>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                 <property name="autoExclusive">
-                  <bool>true</bool>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="0">
-                <widget class="QPushButton" name="btn_lctrl_select">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>L Ctrl</string>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
-                 <property name="autoExclusive">
-                  <bool>true</bool>
-                 </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="3">
-                <widget class="QKeySequenceEdit" name="btn_sequence">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>100</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::FocusPolicy::ClickFocus</enum>
-                 </property>
-                 <property name="locale">
-                  <locale language="Russian" country="Russia"/>
-                 </property>
-                 <property name="clearButtonEnabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="maximumSequenceLength">
-                  <longLong>1</longLong>
-                 </property>
-                </widget>
-               </item>
-              </layout>
              </widget>
             </item>
             <item row="3" column="1">
@@ -1246,10 +921,13 @@ outline: none;
               <property name="styleSheet">
                <string notr="true">QFrame#key_delay_frame {
 margin-right: 20px;
+border-radius: 10px;
+border: 1px solid rgba(255, 255, 255, 30);
+background: rgba(255, 255, 255, 10);
 }
 QFrame#key_delay_frame QSlider {
 border-radius: 8px;
-padding: 3px 5px;
+padding: 3px 10px;
 }
 QFrame#key_delay_frame QSlider#key_delay_slider::groove:horizontal {
 height: 4px;
@@ -1283,28 +961,83 @@ background: rgba(255, 255, 255, 10);
 QFrame#key_delay_frame QSlider#key_delay_slider:focus {
 outline: none;
 }
+/*
 QFrame#key_delay_frame QLabel#key_delay_msg {
 padding: 2px 3px 3px 3px;
 border-radius: 6px;
 color: rgba(255, 255, 255, 150);
 background: rgba(255, 255, 255, 10);
+}
+*/
+QFrame#key_delay_frame QSpinBox{
+width: 0;
+border-radius: 8px;
+padding: 3px 15px 3px 3px;
+color: rgba(255, 255, 255, 225);
+background: rgba(26, 26, 26, 175);
+}
+QFrame#key_delay_frame QSpinBox:hover {
+background: rgba(22, 22, 22, 175);
+}
+QFrame#key_delay_frame QSpinBox:focus {
+background: rgba(16, 16, 16, 175);
+}
+QFrame#key_delay_frame QSpinBox::up-button {
+background: rgba(255, 255, 255, 10);
+border-top-left-radius: 5px;
+border-bottom-left-radius: 5px;
+margin: 2px 0 3px 2px;
+}
+QFrame#key_delay_frame QSpinBox::down-button {
+background: rgba(255, 255, 255, 10);
+border-top-right-radius: 5px;
+border-bottom-right-radius: 5px;
+margin: 2px 2px 3px 0;
+}
+QFrame#key_delay_frame QSpinBox::up-button:hover {
+background: rgba(255, 255, 255, 25);
+}
+QFrame#key_delay_frame QSpinBox::down-button:hover {
+background: rgba(255, 255, 255, 25);
+}
+QFrame#key_delay_frame QSpinBox::up-button:pressed {
+background: rgba(255, 255, 255, 7);
+}
+QFrame#key_delay_frame QSpinBox::down-button:pressed {
+background: rgba(255, 255, 255, 7);
+}
+QFrame#key_delay_frame QSpinBox::up-arrow {
+image: url(:/icons/icons/CaretUpFilledLight.svg);
+width: 10px;
+height: 10px;
+}
+QFrame#key_delay_frame QSpinBox::down-arrow {
+image: url(:/icons/icons/CaretDownFilledLight.svg);
+width: 10px;
+height: 10px;
+}
+QFrame#key_delay_frame QSpinBox::up-arrow:pressed {
+background: transparent;
+}
+QFrame#key_delay_frame QSpinBox::down-arrow:pressed {
+background: transparent;
 }</string>
               </property>
-              <layout class="QHBoxLayout" name="hlayout_delay_value_frame" stretch="8,1">
+              <layout class="QHBoxLayout" name="hlayout_delay_value_frame" stretch="4,1">
                <property name="spacing">
                 <number>20</number>
                </property>
                <property name="leftMargin">
-                <number>3</number>
+                <number>2</number>
                </property>
                <property name="topMargin">
-                <number>3</number>
+                <number>2</number>
                </property>
                <property name="rightMargin">
-                <number>6</number>
+                <number>2</number>
                </property>
                <property name="bottomMargin">
-                <number>0</number>
+                <number>2</number>
                </property>
                <item>
                 <widget class="QSlider" name="key_delay_slider">
@@ -1332,28 +1065,32 @@ background: rgba(255, 255, 255, 10);
                   <number>100</number>
                  </property>
                  <property name="value">
-                  <number>300</number>
+                  <number>250</number>
                  </property>
                  <property name="sliderPosition">
-                  <number>300</number>
+                  <number>250</number>
                  </property>
                  <property name="orientation">
                   <enum>Qt::Orientation::Horizontal</enum>
                  </property>
                 </widget>
                </item>
-               <item alignment="Qt::AlignmentFlag::AlignVCenter">
-                <widget class="QLabel" name="key_delay_msg">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>300</string>
-                 </property>
+               <item>
+                <widget class="QSpinBox" name="key_delay_spinbox">
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                 </property>
+                 <property name="accelerated">
+                  <bool>true</bool>
+                 </property>
+                 <property name="minimum">
+                  <number>50</number>
+                 </property>
+                 <property name="maximum">
+                  <number>1000</number>
+                 </property>
+                 <property name="value">
+                  <number>250</number>
                  </property>
                 </widget>
                </item>
@@ -1468,6 +1205,348 @@ background: rgba(255, 255, 255, 10);
               </property>
              </spacer>
             </item>
+            <item row="0" column="1" colspan="2">
+             <widget class="QFrame" name="key_select_frame">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <layout class="QGridLayout" name="grid_select_key_value">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <item row="1" column="2">
+                <widget class="QPushButton" name="btn_rshift_select">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>R Shift</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QPushButton" name="btn_lalt_select">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>L Alt</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QPushButton" name="btn_rctrl_select">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>R Ctrl</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="checked">
+                  <bool>false</bool>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QPushButton" name="btn_ralt_select">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>R Alt</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
+                <widget class="QPushButton" name="btn_lshift_select">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>L Shift</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="3">
+                <widget class="QPushButton" name="btn_caps_select">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Caps Lock</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QPushButton" name="btn_lctrl_select">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>L Ctrl</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="3">
+                <widget class="QKeySequenceEdit" name="btn_sequence">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>100</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::FocusPolicy::ClickFocus</enum>
+                 </property>
+                 <property name="locale">
+                  <locale language="Russian" country="Russia"/>
+                 </property>
+                 <property name="maximumSequenceLength">
+                  <longLong>1</longLong>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
@@ -1503,13 +1582,19 @@ color: rgba(255, 255, 255, 150);
 background: transparent;
 }
 QFrame#add_exclusions_frame QPushButton:hover,
-QFrame#exclusions_rules_frame QPushButton:hover,
+QFrame#exclusions_rules_frame QPushButton:hover {
+color: rgba(255, 255, 255, 255);
+background: transparent;
+}
+QFrame#add_exclusions_frame QPushButton:hover {
+background: rgba(255, 255, 255, 15);
+}
 QToolButton#btn_clear_all:hover {
 color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
 }
 QFrame#add_exclusions_frame QPushButton:pressed,
-QFrame#exclusions_rules_frame QPushButton:pressed,
+/*QFrame#exclusions_rules_frame QPushButton:pressed,*/
 QToolButton#btn_clear_all:pressed {
 background: rgba(255, 255, 255, 7);
 }
@@ -1608,12 +1693,12 @@ font-weight: 700;
 color: rgba(255, 255, 255, 255);
 }
 QFrame#exclusions_rules_table_frame QHeaderView::up-arrow {
-image: url(:/icons/icons/CaretUpFilled.svg);
+image: url(:/icons/icons/CaretUpFilledLight.svg);
 width: 13px;
 height: 13px;
 }
 QFrame#exclusions_rules_table_frame QHeaderView::down-arrow {
-image: url(:/icons/icons/CaretDownFilled.svg);
+image: url(:/icons/icons/CaretDownFilledLight.svg);
 width: 13px;
 height: 13px;
 }</string>
@@ -1882,12 +1967,13 @@ QFrame#indicator_manage_frame QPushButton:hover,
 QFrame#indicator_langs_frame QPushButton:hover,
 QFrame#indicator_color_frame QPushButton:hover {
 color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 15);
+background: transparent;
 }
 QFrame#indicator_manage_frame QPushButton:pressed,
 QFrame#indicator_langs_frame QPushButton:pressed,
 QFrame#indicator_color_frame QPushButton:pressed {
-background: rgba(255, 255, 255, 7);
+/*background: rgba(255, 255, 255, 7);*/
+background: transparent;
 }
 QFrame#indicator_manage_frame QPushButton:checked,
 QFrame#indicator_langs_frame QPushButton:checked,
@@ -1910,13 +1996,11 @@ border-radius: 6px;
 QFrame#preview_background {
 padding: 1px;
 background: rgba(55, 125, 255, 200);
-/*background: rgba(255, 185, 0, 200);*/
 border-radius: 7px;
 }
 QLabel#preview_label {
 padding: 0 4px 1px 4px;
 color: rgba(55, 125, 255, 200);
-/*color: rgba(255, 185, 0, 200);*/
 background: rgba(32, 32, 32, 225);
 border-radius: 5px;
 }</string>
@@ -1979,18 +2063,18 @@ border-radius: 5px;
 background: rgba(255, 255, 255, 10);
 border-radius: 10px;
 }
-/*
-QFrame#color_sliders_inner_frame {
-background: rgba(26, 26, 26, 175);
-border-radius: 6px;
-}
-*/
 QFrame#color_sliders_frame QSpinBox{
 width: 0;
 border-radius: 8px;
 padding: 3px 15px 3px 3px;
 color: rgba(255, 255, 255, 225);
 background: rgba(26, 26, 26, 175);
+}
+QFrame#color_sliders_frame QSpinBox:hover {
+background: rgba(22, 22, 22, 175);
+}
+QFrame#color_sliders_frame QSpinBox:focus {
+background: rgba(16, 16, 16, 175);
 }
 QFrame#color_sliders_frame QSpinBox::up-button {
 background: rgba(255, 255, 255, 10);
@@ -2005,10 +2089,10 @@ border-bottom-right-radius: 5px;
 margin: 2px 2px 3px 0;
 }
 QFrame#color_sliders_frame QSpinBox::up-button:hover {
-background: rgba(255, 255, 255, 15);
+background: rgba(255, 255, 255, 25);
 }
 QFrame#color_sliders_frame QSpinBox::down-button:hover {
-background: rgba(255, 255, 255, 15);
+background: rgba(255, 255, 255, 25);
 }
 QFrame#color_sliders_frame QSpinBox::up-button:pressed {
 background: rgba(255, 255, 255, 7);
@@ -2017,14 +2101,14 @@ QFrame#color_sliders_frame QSpinBox::down-button:pressed {
 background: rgba(255, 255, 255, 7);
 }
 QFrame#color_sliders_frame QSpinBox::up-arrow {
-image: url(:/icons/icons/CaretUpFilled.svg);
-width: 12px;
-height: 12px;
+image: url(:/icons/icons/CaretUpFilledLight.svg);
+width: 10px;
+height: 10px;
 }
 QFrame#color_sliders_frame QSpinBox::down-arrow {
-image: url(:/icons/icons/CaretDownFilled.svg);
-width: 12px;
-height: 12px;
+image: url(:/icons/icons/CaretDownFilledLight.svg);
+width: 10px;
+height: 10px;
 }
 QFrame#color_sliders_frame QSpinBox::up-arrow:pressed {
 background: transparent;
@@ -2593,6 +2677,12 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgb(75, 75, 75), stop
                      <height>0</height>
                     </size>
                    </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>200</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
                    <layout class="QVBoxLayout" name="vlayout_indicator_langs_frame">
                     <property name="spacing">
                      <number>0</number>
@@ -3068,6 +3158,7 @@ See the current layout thanks to convenient visual indication.
   <tabstop>btn_rshift_select</tabstop>
   <tabstop>btn_caps_select</tabstop>
   <tabstop>key_delay_slider</tabstop>
+  <tabstop>key_delay_spinbox</tabstop>
   <tabstop>btn_enable_startup</tabstop>
   <tabstop>btn_disable_startup</tabstop>
   <tabstop>btn_system_theme</tabstop>
@@ -3098,26 +3189,8 @@ See the current layout thanks to convenient visual indication.
  </tabstops>
  <resources>
   <include location="../../../resources/resources.qrc"/>
-  <include location="../../../resources/resources.qrc"/>
-  <include location="C:/Users/resources/resources.qrc"/>
  </resources>
  <connections>
-  <connection>
-   <sender>key_delay_slider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>key_delay_msg</receiver>
-   <slot>setNum(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>757</x>
-     <y>129</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>822</x>
-     <y>132</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>hslider_red</sender>
    <signal>valueChanged(int)</signal>
@@ -3125,12 +3198,12 @@ See the current layout thanks to convenient visual indication.
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>29</y>
+     <x>598</x>
+     <y>132</y>
     </hint>
     <hint type="destinationlabel">
-     <x>249</x>
-     <y>29</y>
+     <x>686</x>
+     <y>137</y>
     </hint>
    </hints>
   </connection>
@@ -3141,12 +3214,12 @@ See the current layout thanks to convenient visual indication.
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>29</y>
+     <x>686</x>
+     <y>137</y>
     </hint>
     <hint type="destinationlabel">
-     <x>249</x>
-     <y>29</y>
+     <x>598</x>
+     <y>132</y>
     </hint>
    </hints>
   </connection>
@@ -3157,12 +3230,12 @@ See the current layout thanks to convenient visual indication.
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>29</y>
+     <x>598</x>
+     <y>194</y>
     </hint>
     <hint type="destinationlabel">
-     <x>249</x>
-     <y>29</y>
+     <x>686</x>
+     <y>199</y>
     </hint>
    </hints>
   </connection>
@@ -3173,12 +3246,12 @@ See the current layout thanks to convenient visual indication.
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>29</y>
+     <x>686</x>
+     <y>199</y>
     </hint>
     <hint type="destinationlabel">
-     <x>249</x>
-     <y>29</y>
+     <x>598</x>
+     <y>194</y>
     </hint>
    </hints>
   </connection>
@@ -3189,12 +3262,12 @@ See the current layout thanks to convenient visual indication.
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>29</y>
+     <x>598</x>
+     <y>257</y>
     </hint>
     <hint type="destinationlabel">
-     <x>249</x>
-     <y>29</y>
+     <x>686</x>
+     <y>262</y>
     </hint>
    </hints>
   </connection>
@@ -3205,12 +3278,12 @@ See the current layout thanks to convenient visual indication.
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>29</y>
+     <x>686</x>
+     <y>262</y>
     </hint>
     <hint type="destinationlabel">
-     <x>249</x>
-     <y>29</y>
+     <x>598</x>
+     <y>257</y>
     </hint>
    </hints>
   </connection>
@@ -3221,12 +3294,12 @@ See the current layout thanks to convenient visual indication.
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>29</y>
+     <x>598</x>
+     <y>319</y>
     </hint>
     <hint type="destinationlabel">
-     <x>249</x>
-     <y>29</y>
+     <x>686</x>
+     <y>324</y>
     </hint>
    </hints>
   </connection>
@@ -3237,12 +3310,44 @@ See the current layout thanks to convenient visual indication.
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>249</x>
-     <y>29</y>
+     <x>686</x>
+     <y>324</y>
     </hint>
     <hint type="destinationlabel">
-     <x>249</x>
-     <y>29</y>
+     <x>598</x>
+     <y>319</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>key_delay_slider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>key_delay_spinbox</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>724</x>
+     <y>126</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>758</x>
+     <y>131</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>key_delay_spinbox</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>key_delay_slider</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>758</x>
+     <y>116</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>722</x>
+     <y>117</y>
     </hint>
    </hints>
   </connection>

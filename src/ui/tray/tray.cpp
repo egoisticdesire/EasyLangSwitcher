@@ -1,13 +1,16 @@
 #include "tray.h"
-#include "../../core/helpers/iconHelper.h"
-#include "../../core/helpers/acrylicHelper.h"
-#include "../../core/helpers/hoverHelper.h"
-#include "../../core/config/app_config.h"
+#include "../../core/config/logger.h"
+#include "../../core/config/appSettings.h"
+#include "../helpers/acrylicHelper.h"
+#include "../helpers/hoverHelper.h"
+#include "../helpers/iconHelper.h"
 #include <QApplication>
 #include <QCursor>
 #include <QTimer>
 #include <QGraphicsOpacityEffect>
 #include <QMouseEvent>
+#include <QPushButton>
+#include <QSoundEffect>
 
 TrayManager::TrayManager(QWidget *parent)
     : QWidget(parent) {
@@ -16,6 +19,9 @@ TrayManager::TrayManager(QWidget *parent)
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setFocusPolicy(Qt::StrongFocus);
+
+    settingsWindow = new SettingsWindow(nullptr);
+    settingsWindow->setAttribute(Qt::WA_DeleteOnClose, false);
 
     ui.info_frame->installEventFilter(this);
     qApp->installEventFilter(this);
@@ -33,11 +39,23 @@ TrayManager::TrayManager(QWidget *parent)
     fadeOut->setEasingCurve(QEasingCurve::InCubic);
     connect(fadeOut, &QPropertyAnimation::finished, this, &QWidget::hide);
 
+    effectOn = new QSoundEffect(this);
+    effectOn->setSource(QUrl("qrc:/sounds/sounds/on.wav"));
+    effectOn->setVolume(0.5f);
+
+    effectOff = new QSoundEffect(this);
+    effectOff->setSource(QUrl("qrc:/sounds/sounds/off.wav"));
+    effectOff->setVolume(0.5f);
+
     setupUiBehavior();
     setupTrayIcon();
 
     setWindowOpacity(0.0);
     hide();
+
+    updateInfo();
+
+    LOG_DEBUG() << "TrayManager initialized";
 }
 
 void TrayManager::setupTrayIcon() {
@@ -51,13 +69,21 @@ void TrayManager::setupTrayIcon() {
                     case QSystemTrayIcon::Trigger:
                         // ЛКМ — быстрый вкл/выкл
                         enabled = !enabled;
+
+                        if (enabled) effectOn->play();
+                        else effectOff->play();
+
                         emit keyboardToggled(enabled);
+
+                        LOG_INFO() << "Keyboard toggled via tray: " << (enabled ? "'enabled'" : "'disabled'");
                         updateTrayIcon();
                         break;
                     case QSystemTrayIcon::Context:
                         // ПКМ — показать меню
                         if (isVisible()) hideAnimated();
                         else showAtCursor();
+
+                        LOG_DEBUG() << "Tray menu triggered via context menu";
                         break;
                     default:
                         break;
@@ -66,17 +92,36 @@ void TrayManager::setupTrayIcon() {
 }
 
 void TrayManager::setupUiBehavior() {
-    // временно скрываем кнопку настроек
-    ui.settings_btn->hide();
+    connect(ui.settings_btn, &QPushButton::clicked, this, [this]() {
+        if (!settingsWindow) {
+            settingsWindow = new SettingsWindow(nullptr);
+            settingsWindow->setAttribute(Qt::WA_DeleteOnClose, false);
+        }
+        settingsWindow->openCentered();
+    });
+
+    // отслеживание изменений настроек, чтобы информация в меню обновлялась
+    if (settingsWindow) {
+        connect(settingsWindow, &SettingsWindow::settingsChanged, this, [this]() {
+            LOG_DEBUG() << "Received settings changed - updating info";
+            updateInfo();
+        });
+    }
 
     connect(ui.exit_btn, &QToolButton::clicked, this, [this]() {
         emit exitRequested();
+        LOG_INFO() << "Exit requested via tray button";
     });
     connect(ui.toggle_btn, &QToolButton::clicked, this, [this]() {
         enabled = !enabled;
+
+        if (enabled) effectOn->play();
+        else effectOff->play();
+
         emit keyboardToggled(enabled);
         animateToggleButton();
         updateTrayIcon();
+        LOG_INFO() << "Keyboard toggled via tray menu button: " << (enabled ? "'enabled'" : "'disabled'");
     });
 
     updateInfo();
@@ -85,8 +130,8 @@ void TrayManager::setupUiBehavior() {
 
 void TrayManager::updateInfo() const {
     ui.status_value->setText(enabled ? tr("Enabled") : tr("Disabled"));
-    ui.hotkey_value->setText(AppConfig::hotkeyName);
-    ui.delay_value->setText(QString::number(AppConfig::switchDelayMs));
+    ui.hotkey_value->setText(AppSettings::hotkeyName);
+    ui.delay_value->setText(QString::number(AppSettings::switchDelayMs));
     ui.toggle_btn->setText(enabled ? tr("  Disable") : tr("  Enable"));
 
     ui.toggle_btn->setIcon(
@@ -94,8 +139,7 @@ void TrayManager::updateInfo() const {
             ? IconHelper::loadIcon(":/icons/icons/FlashSparkleRegular.svg")
             : IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled.svg")
     );
-    // до тех пор, пока нет кнопки Settings
-    // ui.settings_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FlashSettingsRegular.svg"));
+    ui.settings_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FlashSettingsRegular.svg"));
     ui.exit_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FlashOffRegular.svg"));
 }
 
@@ -104,8 +148,6 @@ void TrayManager::showAtCursor() {
 
     // размер окна
     resize(sizeHint());
-    // до тех пор, пока нет кнопки Settings
-    setFixedHeight(sizeHint().height() - 5);
 
     // получаем текущий экран под курсором
     const QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
@@ -117,17 +159,11 @@ void TrayManager::showAtCursor() {
     QPoint pos = cursorPos;
 
     // горизонтальная ориентация
-    if (pos.x() + width() > workArea.right())
-        pos.rx() -= width() + 3;
-    else
-        pos.rx() += 3;
-
+    if (pos.x() + width() > workArea.right()) pos.rx() -= width() + 3;
+    else pos.rx() += 3;
     // вертикальная ориентация
-    if (pos.y() + height() > workArea.bottom())
-        pos.ry() -= height() + 3;
-    else
-        pos.ry() += 3;
-
+    if (pos.y() + height() > workArea.bottom()) pos.ry() -= height() + 3;
+    else pos.ry() += 3;
     // применяем скорректированную позицию
     move(pos);
 
@@ -139,9 +175,19 @@ void TrayManager::showAtCursor() {
 
     QTimer::singleShot(0, this, [this]() { AcrylicHelper::enableAcrylic(this); });
     fadeIn->start();
+
+    LOG_DEBUG() << QString("Tray menu shown at cursor position: "
+                   "(%1, %2); size: (%3, %4); screen: (%5, %6); screen name: '%7'")
+                    .arg(pos.x()).arg(pos.y())
+                    .arg(width()).arg(height())
+                    .arg(screen->geometry().width()).arg(screen->geometry().height())
+                    .arg(screen->name());
 }
 
-void TrayManager::hideAnimated() const { if (isVisible()) fadeOut->start(); }
+void TrayManager::hideAnimated() const {
+    if (isVisible()) fadeOut->start();
+    LOG_DEBUG() << "Tray menu animation hidden";
+}
 
 bool TrayManager::eventFilter(QObject *obj, QEvent *event) {
     if (obj == ui.info_frame) {
@@ -149,9 +195,12 @@ bool TrayManager::eventFilter(QObject *obj, QEvent *event) {
         else if (event->type() == QEvent::Leave) HoverEffectHelper::animateHover(ui.info_frame, false);
     }
     if (isVisible() && event->type() == QEvent::MouseButtonPress) {
-        if (const auto *me = static_cast<QMouseEvent *>(event);
-            !geometry().contains(me->globalPosition().toPoint()))
+        const auto *me = static_cast<QMouseEvent *>(event);
+
+        if (const QPoint global = me->globalPosition().toPoint(); !geometry().contains(global)) {
             hideAnimated();
+            return true;
+        }
     }
     return QWidget::eventFilter(obj, event);
 }
@@ -183,6 +232,9 @@ void TrayManager::animateToggleButton() {
 
     connect(fadeOutBtn, &QPropertyAnimation::finished, [this, fadeInBtn]() {
         updateInfo();
+
+        LOG_DEBUG() << "Toggle button animation finished, info updated";
+
         fadeInBtn->start(QAbstractAnimation::DeleteWhenStopped);
     });
     connect(fadeInBtn, &QPropertyAnimation::finished, [effect]() { effect->deleteLater(); });

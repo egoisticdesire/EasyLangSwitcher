@@ -3,6 +3,11 @@
 #include <QTimer>
 #include <Windows.h>
 
+/*
+KeyboardHandler
+— обработчик нажатий клавиш
+*/
+
 class KeyboardHandler final : public QObject {
     Q_OBJECT
 
@@ -15,15 +20,32 @@ public:
 
     void stop();
 
-    void setActive(const bool value) { active = value; }
+    void setActive(const bool value) { isActive = value; }
 
 private:
-    bool keyPressed = false;
-    bool longPressDetected = false;
-    DWORD pressTime = 0;
-    QTimer timer;
-    HHOOK hook = nullptr;
-    bool active = true;
+    bool triggerKeyDown = false;
+
+    bool isLongPress = false;
+
+    bool switchPending = false;
+
+    bool rapidRepeatSuppressed = false;
+
+    DWORD pressStartTime = 0;
+
+    DWORD lastTriggerDownTime = 0;
+
+    static constexpr int fallbackCheckMs = 20;
+
+    QTimer longPressTimer;
+
+    QTimer doublePressTimer;
+
+    HHOOK keyboardHook = nullptr;
+
+    bool isActive = true;
+
+    bool isAltDown = false;
 
     static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 

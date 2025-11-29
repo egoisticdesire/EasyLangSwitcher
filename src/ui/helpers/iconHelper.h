@@ -1,5 +1,5 @@
 #pragma once
-
+#include "../../core/config/logger.h"
 #include <QIcon>
 #include <QPixmap>
 #include <QPainter>
@@ -17,8 +17,10 @@ public:
     ) {
         if (path.endsWith(".svg", Qt::CaseInsensitive)) {
             QFile file(path);
-            if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                LOG_DEBUG() << "Failed to open SVG file: " << path;
                 return QIcon();
+            }
 
             QString svgData = file.readAll();
             file.close();
@@ -29,8 +31,10 @@ public:
             }
 
             QSvgRenderer renderer(svgData.toUtf8());
-            if (!renderer.isValid())
+            if (!renderer.isValid()) {
+                LOG_DEBUG() << "Invalid SVG renderer for path: " << path;
                 return QIcon();
+            }
 
             const QSize finalSize = size.isEmpty() ? renderer.defaultSize() : size;
             if (finalSize.isEmpty())

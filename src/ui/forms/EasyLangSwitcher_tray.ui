@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>main_frame</class>
- <widget class="QWidget" name="main_frame">
+ <class>tray_main_widget</class>
+ <widget class="QWidget" name="tray_main_widget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -39,7 +39,7 @@
     <pointsize>10</pointsize>
    </font>
   </property>
-  <layout class="QVBoxLayout" name="v_layout_main_frame">
+  <layout class="QVBoxLayout" name="v_layout_tray_main_widget">
    <property name="spacing">
     <number>0</number>
    </property>
@@ -64,9 +64,7 @@
      </property>
      <property name="styleSheet">
       <string notr="true">QFrame#background_frame {
-/*border-radius: 8px;
-border: 1px solid rgba(255, 255, 255, 66);*/
-border: 1px solid transparent;
+border: 1px solid rgb(50, 50, 50);
 background: transparent;
 }</string>
      </property>
@@ -118,7 +116,7 @@ QLabel#status_value {
 margin: 2px;
 padding: 3px 0;
 border-radius: 5px;
-color: rgba(255, 255, 255, 100);
+color: rgba(255, 255, 255, 150);
 background: transparent;
 }
 </string>

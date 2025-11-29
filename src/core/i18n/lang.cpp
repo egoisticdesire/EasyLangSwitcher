@@ -205,6 +205,10 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                      QStringLiteral("Нет"),
                      QStringLiteral("No")
                  });
+        t.insert(QStringLiteral("KEY_SEQUENCE"), {
+                     QStringLiteral("Клавиша..."),
+                     QStringLiteral("Key...")
+                 });
 
         // WARNINGS_POPUP / INFO_TEXT / INFO_FOOTER — многострочные HTML; используем fromUtf8 + raw string literals
         t.insert(QStringLiteral("WARNINGS_POPUP"), {

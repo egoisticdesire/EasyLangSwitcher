@@ -1,7 +1,14 @@
 #pragma once
+#include "ui_EasyLangSwitcher_tray.h"
+#include "../widgets/settingsWindow.h"
 #include <QSystemTrayIcon>
 #include <QPropertyAnimation>
-#include "ui_EasyLangSwitcher_tray.h"
+#include <QSoundEffect>
+
+/*
+TrayManager
+— менеджер трея
+*/
 
 class TrayManager final : public QWidget {
     Q_OBJECT
@@ -24,10 +31,16 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
-    Ui::main_frame ui{};
+    Ui::tray_main_widget ui{};
+
     QSystemTrayIcon trayIcon;
+
+    SettingsWindow *settingsWindow = nullptr;
+
     bool enabled = true;
+
     QPropertyAnimation *fadeIn = nullptr;
+
     QPropertyAnimation *fadeOut = nullptr;
 
     void updateTrayIcon();
@@ -41,4 +54,8 @@ private:
     void animateToggleButton();
 
     void hideAnimated() const;
+
+    QSoundEffect *effectOn = nullptr;
+
+    QSoundEffect *effectOff = nullptr;
 };

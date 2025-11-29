@@ -1,12 +1,18 @@
 <RCC>
   <qresource prefix="icons">
+    <file>icons/checked.svg</file>
+    <file>icons/CaretDownFilledDark.svg</file>
+    <file>icons/CaretDownFilledLight.svg</file>
+    <file>icons/CaretUpFilledDark.svg</file>
+    <file>icons/CaretUpFilledLight.svg</file>
+    <file>icons/WarningSolid.svg</file>
     <file>icons/ExternalLink.svg</file>
+    <file>icons/ClearFilled.svg</file>
+    <file>icons/ClearFilled2.svg</file>
     <file>icons/CopyFilled.svg</file>
     <file>icons/Boosty.svg</file>
     <file>icons/TokenTon.svg</file>
     <file>icons/TokenTrx.svg</file>
-    <file>icons/CaretDownFilled.svg</file>
-    <file>icons/CaretUpFilled.svg</file>
     <file>icons/InfoRegular.svg</file>
     <file>icons/CursorClickFilled.svg</file>
     <file>icons/CursorClickRegular.svg</file>
@@ -50,5 +56,13 @@
     <file>icons/SettingsRegular.svg</file>
     <file>icons/TableSimpleExcludeFilled.svg</file>
     <file>icons/TableSimpleExcludeRegular.svg</file>
+  </qresource>
+  <qresource prefix="sounds">
+    <file>sounds/off.wav</file>
+    <file>sounds/on.wav</file>
+    <file>sounds/click.wav</file>
+    <file>sounds/error.wav</file>
+    <file>sounds/notification.wav</file>
+    <file>sounds/notification_disable.wav</file>
   </qresource>
 </RCC>
