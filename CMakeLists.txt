@@ -56,6 +56,8 @@ add_executable(${APP_NAME}
         src/ui/tray/tray.h
         src/ui/widgets/animatedSelector.cpp
         src/ui/widgets/animatedSelector.h
+        src/ui/widgets/autoStartup.cpp
+        src/ui/widgets/autoStartup.h
         src/ui/widgets/saveNotification.cpp
         src/ui/widgets/saveNotification.h
         src/ui/widgets/settingsWindow.cpp

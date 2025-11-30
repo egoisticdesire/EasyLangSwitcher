@@ -578,7 +578,7 @@ outline: none;
                   <bool>true</bool>
                  </property>
                  <property name="checked">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                  <property name="autoExclusive">
                   <bool>true</bool>
@@ -611,6 +611,9 @@ outline: none;
                   <string>Disable</string>
                  </property>
                  <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="checked">
                   <bool>true</bool>
                  </property>
                  <property name="autoExclusive">

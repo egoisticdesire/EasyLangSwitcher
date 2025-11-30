@@ -1,5 +1,6 @@
 #include "settingsWindow.h"
 #include "saveNotification.h"
+#include "autoStartup.h"
 #include "../../core/config/logger.h"
 #include "../../core/config/appSettings.h"
 #include "../helpers/acrylicHelper.h"
@@ -22,8 +23,6 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     ui.btn_indicator_top_sider->hide();
     ui.btn_info_top_sider->hide();
 
-    ui.app_startup_frame->hide();
-    ui.app_startup_label->hide();
     ui.app_theme_frame->hide();
     ui.app_theme_label->hide();
     ui.app_lang_frame->hide();
@@ -33,7 +32,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     //-----------------------------
 
     addSelectorForFrame(ui.key_select_frame);
-    // addSelectorForFrame(ui.app_startup_frame);
+    addSelectorForFrame(ui.app_startup_frame);
     // addSelectorForFrame(ui.app_theme_frame);
     // addSelectorForFrame(ui.app_lang_frame);
 
@@ -86,6 +85,21 @@ SettingsWindow::SettingsWindow(QWidget *parent)
 
     connect(ui.btn_restore_default, &QToolButton::clicked,
             this, &SettingsWindow::restoreDefaultsForCurrentPage);
+
+    ui.btn_enable_startup->setChecked(AutoStartupManager::isAutoStartupEnabled());
+    ui.btn_disable_startup->setChecked(!AutoStartupManager::isAutoStartupEnabled());
+
+    connect(ui.btn_enable_startup, &QPushButton::clicked, [this]() {
+        AutoStartupManager::setAutoStartup(true);
+        AppSettings::autoStartup = true;
+        markChanged();
+    });
+
+    connect(ui.btn_disable_startup, &QPushButton::clicked, [this]() {
+        AutoStartupManager::setAutoStartup(false);
+        AppSettings::autoStartup = false;
+        markChanged();
+    });
 
     dragger = new WindowDragger(this);
     dragger->addIgnoredWidget(ui.btn_close_bot_sider);

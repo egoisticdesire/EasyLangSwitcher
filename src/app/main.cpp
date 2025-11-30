@@ -18,10 +18,11 @@ int main(int argc, char *argv[]) {
     QApplication::setStyle("Windows11");
 
     // Проверка на уже запущенный экземпляр
-    const HANDLE hMutex = CreateMutex(nullptr, TRUE, L"MyUniqueFlashSparkleMutex");
+    const QString mutexName = QString("MyUnique%1Mutex").arg(AppSettings::APP_NAME);
+    const HANDLE hMutex = CreateMutex(nullptr, TRUE, mutexName.toStdWString().c_str());
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         WarningDialog dlg;
-        dlg.setText("EasyLangSwitcher is already running!");
+        dlg.setText(QString("%1 is already running!").arg(AppSettings::APP_NAME));
         dlg.openCentered();
         dlg.exec();
         return 0;

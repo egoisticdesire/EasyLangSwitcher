@@ -60,7 +60,7 @@ TrayManager::TrayManager(QWidget *parent)
 
 void TrayManager::setupTrayIcon() {
     trayIcon.setIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
-    trayIcon.setToolTip("EasyLangSwitcher");
+    trayIcon.setToolTip(AppSettings::APP_NAME);
     trayIcon.setVisible(true);
 
     connect(&trayIcon, &QSystemTrayIcon::activated, this,
