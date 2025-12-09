@@ -25,6 +25,9 @@
   <property name="windowTitle">
    <string/>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <layout class="QHBoxLayout" name="hlayout_settings_main_widget">
    <property name="spacing">
     <number>0</number>
@@ -50,7 +53,7 @@
      </property>
      <property name="styleSheet">
       <string notr="true">QWidget#background_widget {
-background: rgba(32, 32, 32, 10);
+background: rgba(225, 225, 225, 10);
 }</string>
      </property>
      <layout class="QHBoxLayout" name="hlayout_background_widget">
@@ -99,19 +102,19 @@ QFrame#bot_sider_container QPushButton {
 margin: 3px;
 padding: 4px 10px 5px 10px;
 border-radius: 5px;
-color: rgba(255, 255, 255, 225);
+color: rgba(32, 32, 32, 225);
 }
 QFrame#top_sider_container QToolButton:checked,
 QFrame#bot_sider_container QPushButton {
-background: rgba(255, 255, 255, 10);
+background: rgba(32, 32, 32, 10);
 }
 QFrame#top_sider_container QToolButton:hover,
 QFrame#bot_sider_container QPushButton:hover {
-background: rgba(255, 255, 255, 15);
+background: rgba(32, 32, 32, 15);
 }
 QFrame#top_sider_container QToolButton:pressed,
 QFrame#bot_sider_container QPushButton:pressed {
-background: rgba(255, 255, 255, 7);
+background: rgba(32, 32, 32, 7);
 }</string>
         </property>
         <layout class="QVBoxLayout" name="vlayout_sider_frame">
@@ -380,10 +383,12 @@ background: rgba(255, 255, 255, 7);
          <string notr="true">QStackedWidget#content_container {
 border: 1px solid rgb(50, 50, 50);
 border-left: 1px solid rgba(255, 255, 255, 30);
-background: rgba(32, 32, 32, 200);
+background: rgba(235, 235, 235, 200);
 }
+
+
 QStackedWidget#content_container QLabel {
-color: rgba(255, 255, 255, 225);
+color: rgba(32, 32, 32, 225);
 }</string>
         </property>
         <property name="currentIndex">
@@ -397,8 +402,8 @@ QFrame#app_startup_frame,
 QFrame#app_lang_frame {
 padding: 1px;
 border-radius: 10px;
-border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(255, 255, 255, 10);
+border: 1px solid rgba(32, 32, 32, 30);
+background: rgba(32, 32, 32, 10);
 }
 QFrame#key_select_frame {
 margin-right: 20px;
@@ -408,26 +413,26 @@ height: 100%;
 margin: 1px;
 padding: 2px;
 border-radius: 8px;
-background: rgba(26, 26, 26, 175);
+background: rgba(239, 239, 239, 175);
 }
 QFrame#key_select_frame QLineEdit[hasText=&quot;true&quot;] {
 padding: 2px 25px 2px 5px;
-background: rgba(26, 26, 26, 175);
+background: rgba(239, 239, 239, 175);
 }
 QFrame#key_select_frame QLineEdit[hasText=&quot;true&quot;]:hover,
 QFrame#key_select_frame QLineEdit:hover {
-background: rgba(22, 22, 22, 175);
+background: rgba(248, 248, 248, 175);
 }
 QFrame#key_select_frame QLineEdit[hasText=&quot;true&quot;]:focus,
 QFrame#key_select_frame QLineEdit:focus {
-background: rgba(16, 16, 16, 175);
+background: rgba(255, 255, 255, 175);
 }
 QToolButton#btn_restore_default {
 margin-right: 6px;
 margin-bottom: 6px;
 padding: 3px 9px 4px 10px;
 border-radius: 5px;
-color: rgba(255, 255, 255, 150);
+color: rgba(32, 32, 32, 150);
 background: transparent;
 }
 QFrame#key_select_frame QPushButton,
@@ -436,35 +441,41 @@ QFrame#app_startup_frame QPushButton,
 QFrame#app_lang_frame QPushButton {
 margin: 1px;
 border-radius: 8px;
-color: rgba(255, 255, 255, 150);
+color: rgba(32, 32, 32, 150);
 background: transparent;
 }
 QFrame#key_select_frame QPushButton[customActive=&quot;true&quot;],
 QFrame#key_select_frame QPushButton:checked[customActive=&quot;true&quot;] {
-color: rgba(255,255,255,150);
+color: rgba(32, 32, 32, 150);
 }
 QFrame#key_select_frame QPushButton:hover[customActive=&quot;true&quot;] {
-color: rgba(255, 255, 255, 255);
+color: rgba(32, 32, 32, 255);
 }
 QFrame#key_select_frame QPushButton:hover,
 QFrame#app_theme_frame QPushButton:hover,
 QFrame#app_startup_frame QPushButton:hover,
 QFrame#app_lang_frame QPushButton:hover {
-color: rgba(255, 255, 255, 255);
+color: rgba(32, 32, 32, 255);
 background: transparent;
 }
+QFrame#key_select_frame QLineEdit:hove,
 QToolButton#btn_restore_default:hover {
-color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 15);
+color: rgba(32, 32, 32, 255);
+background: rgba(32, 32, 32, 15);
 }
+/*QFrame#key_select_frame QLineEdit:pressed,
+QFrame#key_select_frame QPushButton:pressed,
+QFrame#app_theme_frame QPushButton:pressed,
+QFrame#app_startup_frame QPushButton:pressed,
+QFrame#app_lang_frame QPushButton:pressed,*/
 QToolButton#btn_restore_default:pressed {
-background: rgba(255, 255, 255, 7);
+background: rgba(32, 32, 32, 7);
 }
 QFrame#key_select_frame QPushButton:checked,
 QFrame#app_theme_frame QPushButton:checked,
 QFrame#app_startup_frame QPushButton:checked,
 QFrame#app_lang_frame QPushButton:checked {
-color: rgba(255, 255, 255, 255);
+color: rgba(32, 32, 32, 255);
 }
 QFrame#key_select_frame QPushButton:focus,
 QFrame#app_theme_frame QPushButton:focus,
@@ -915,8 +926,8 @@ outline: none;
                <string notr="true">QFrame#key_delay_frame {
 margin-right: 20px;
 border-radius: 10px;
-border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(255, 255, 255, 10);
+border: 1px solid rgba(32, 32, 32, 30);
+background: rgba(32, 32, 32, 10);
 }
 QFrame#key_delay_frame QSlider {
 border-radius: 8px;
@@ -925,10 +936,10 @@ padding: 3px 10px;
 QFrame#key_delay_frame QSlider#key_delay_slider::groove:horizontal {
 height: 4px;
 border-radius: 2px;
-background: rgba(255, 255, 255, 10);
+background: rgba(32, 32, 32, 10);
 }
 QFrame#key_delay_frame QSlider#key_delay_slider::groove:horizontal:hover {
-background: rgba(255, 255, 255, 25);
+background: rgba(32, 32, 32, 25);
 }
 QFrame#key_delay_frame QSlider#key_delay_slider::handle:horizontal {
 width: 18px;
@@ -949,55 +960,47 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgb(75, 75, 75), stop
 }
 QFrame#key_delay_frame QSlider#key_delay_slider::add-page:horizontal {
 border-radius: 2px;
-background: rgba(255, 255, 255, 10);
+background: rgba(32, 32, 32, 10);
 }
 QFrame#key_delay_frame QSlider#key_delay_slider:focus {
 outline: none;
 }
-/*
-QFrame#key_delay_frame QLabel#key_delay_msg {
-padding: 2px 3px 3px 3px;
-border-radius: 6px;
-color: rgba(255, 255, 255, 150);
-background: rgba(255, 255, 255, 10);
-}
-*/
 QFrame#key_delay_frame QSpinBox{
 width: 0;
 border-radius: 8px;
 padding: 3px 15px 3px 3px;
-color: rgba(255, 255, 255, 225);
-background: rgba(26, 26, 26, 175);
+color: rgba(32, 32, 32, 225);
+background: rgba(239, 239, 239, 175);
 }
 QFrame#key_delay_frame QSpinBox:hover {
-background: rgba(22, 22, 22, 175);
+background: rgba(248, 248, 248, 175);
 }
 QFrame#key_delay_frame QSpinBox:focus {
-background: rgba(16, 16, 16, 175);
+background: rgba(255, 255, 255, 175);
 }
 QFrame#key_delay_frame QSpinBox::up-button {
-background: rgba(255, 255, 255, 10);
+background: rgba(32, 32, 32, 10);
 border-top-left-radius: 5px;
 border-bottom-left-radius: 5px;
 margin: 2px 0 3px 2px;
 }
 QFrame#key_delay_frame QSpinBox::down-button {
-background: rgba(255, 255, 255, 10);
+background: rgba(32, 32, 32, 10);
 border-top-right-radius: 5px;
 border-bottom-right-radius: 5px;
 margin: 2px 2px 3px 0;
 }
 QFrame#key_delay_frame QSpinBox::up-button:hover {
-background: rgba(255, 255, 255, 25);
+background: rgba(32, 32, 32, 25);
 }
 QFrame#key_delay_frame QSpinBox::down-button:hover {
-background: rgba(255, 255, 255, 25);
+background: rgba(32, 32, 32, 25);
 }
 QFrame#key_delay_frame QSpinBox::up-button:pressed {
-background: rgba(255, 255, 255, 7);
+background: rgba(32, 32, 32, 7);
 }
 QFrame#key_delay_frame QSpinBox::down-button:pressed {
-background: rgba(255, 255, 255, 7);
+background: rgba(32, 32, 32, 7);
 }
 QFrame#key_delay_frame QSpinBox::up-arrow {
 image: url(:/icons/icons/CaretUpFilledLight.svg);
@@ -1550,21 +1553,21 @@ background: transparent;
 margin-right: 20px;
 padding: 7px 10px 8px 10px;
 border-radius: 10px;
-color: rgba(255, 255, 255, 225);
-background: rgba(255, 255, 255, 10);
+color: rgba(32, 32, 32, 225);
+background: rgba(32, 32, 32, 10);
 }
 QFrame#exclusions_rules_frame {
 margin-bottom: 20px;
 padding: 1px;
 border-radius: 10px;
-border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(255, 255, 255, 10);
+border: 1px solid rgba(32, 32, 32, 30);
+background: rgba(32, 32, 32, 10);
 }
 QFrame#exclusions_rules_frame QPushButton {
 margin: 1px;
 padding: 3px 5px 4px 5px;
 border-radius: 8px;
-color: rgba(255, 255, 255, 150);
+color: rgba(32, 32, 32, 150);
 background: transparent;
 }
 QToolButton#btn_clear_all {
@@ -1572,27 +1575,28 @@ margin-right: 6px;
 margin-bottom: 6px;
 padding: 3px 9px 4px 10px;
 border-radius: 5px;
-color: rgba(255, 255, 255, 150);
+color: rgba(32, 32, 32, 150);
 background: transparent;
 }
 QFrame#add_exclusions_frame QPushButton:hover,
 QFrame#exclusions_rules_frame QPushButton:hover {
-color: rgba(255, 255, 255, 255);
+color: rgba(32, 32, 32, 255);
 background: transparent;
 }
 QFrame#add_exclusions_frame QPushButton:hover {
-background: rgba(255, 255, 255, 15);
+background: rgba(32, 32, 32, 15);
 }
 QToolButton#btn_clear_all:hover {
-color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 15);
+color: rgba(32, 32, 32, 255);
+background: rgba(32, 32, 32, 15);
 }
 QFrame#add_exclusions_frame QPushButton:pressed,
+/*QFrame#exclusions_rules_frame QPushButton:pressed,*/
 QToolButton#btn_clear_all:pressed {
-background: rgba(255, 255, 255, 7);
+background: rgba(32, 32, 32, 7);
 }
 QFrame#exclusions_rules_frame QPushButton:checked {
-color: rgba(255, 255, 255, 255);
+color: rgba(32, 32, 32, 255);
 }
 QFrame#add_exclusions_frame QPushButton:focus,
 QFrame#exclusions_rules_frame QPushButton:focus,
@@ -1661,7 +1665,7 @@ outline: none;
               <property name="styleSheet">
                <string notr="true">QFrame#exclusions_rules_table_frame {
 margin-right: 20px;
-background: rgba(255, 255, 255, 10);
+background: rgba(32, 32, 32, 10);
 border-radius: 10px;
 }
 QFrame#exclusions_rules_table_frame QTableWidget {
@@ -1671,19 +1675,19 @@ background: transparent;
 QFrame#exclusions_rules_table_frame QHeaderView {
 border-top-left-radius: 10px;
 border-top-right-radius: 10px;
-border-bottom: 2px solid rgba(32, 32, 32, 175);
+border-bottom: 2px solid rgba(235, 235, 235, 175);
 background: transparent;
 }
 QFrame#exclusions_rules_table_frame QHeaderView::section {
 padding: 5px 10px;
 border-radius: 10px;
-color: rgba(255, 255, 255, 200);
+color: rgba(32, 32, 32, 200);
 background: transparent;
 }
 QFrame#exclusions_rules_table_frame QHeaderView::section:hover {
 text-decoration: underline;
 font-weight: 700;
-color: rgba(255, 255, 255, 255);
+color: rgba(32, 32, 32, 255);
 }
 QFrame#exclusions_rules_table_frame QHeaderView::up-arrow {
 image: url(:/icons/icons/CaretUpFilledLight.svg);
@@ -1938,15 +1942,15 @@ QFrame#indicator_langs_frame,
 QFrame#indicator_color_frame {
 padding: 1px;
 border-radius: 10px;
-border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(255, 255, 255, 10);
+border: 1px solid rgba(32, 32, 32, 30);
+background: rgba(32, 32, 32, 10);
 }
 QFrame#indicator_manage_frame QPushButton,
 QFrame#indicator_langs_frame QPushButton,
 QFrame#indicator_color_frame QPushButton {
 margin: 1px;
 border-radius: 8px;
-color: rgba(255, 255, 255, 150);
+color: rgba(32, 32, 32, 150);
 background: transparent;
 }
 QFrame#indicator_manage_frame QPushButton,
@@ -1959,7 +1963,7 @@ padding: 9px 10px 10px 10px;
 QFrame#indicator_manage_frame QPushButton:hover,
 QFrame#indicator_langs_frame QPushButton:hover,
 QFrame#indicator_color_frame QPushButton:hover {
-color: rgba(255, 255, 255, 255);
+color: rgba(32, 32, 32, 255);
 background: transparent;
 }
 QFrame#indicator_manage_frame QPushButton:pressed,
@@ -1970,7 +1974,7 @@ background: transparent;
 QFrame#indicator_manage_frame QPushButton:checked,
 QFrame#indicator_langs_frame QPushButton:checked,
 QFrame#indicator_color_frame QPushButton:checked {
-color: rgba(255, 255, 255, 255);
+color: rgba(32, 32, 32, 255);
 }
 QFrame#indicator_manage_frame QPushButton:focus,
 QFrame#indicator_langs_frame QPushButton:focus,
@@ -1978,11 +1982,11 @@ QFrame#indicator_color_frame QPushButton:focus {
 outline: none;
 }
 QFrame#indicator_preview_frame {
-background: rgba(255, 255, 255, 10);
+background: rgba(32, 32, 32, 10);
 border-radius: 10px;
 }
 QFrame#preview_inner_frame {
-background: rgba(26, 26, 26, 175);
+background: rgba(239, 239, 239, 175);
 border-radius: 6px;
 }
 QFrame#preview_background {
@@ -1993,7 +1997,7 @@ border-radius: 7px;
 QLabel#preview_label {
 padding: 0 4px 1px 4px;
 color: rgba(55, 125, 255, 200);
-background: rgba(32, 32, 32, 225);
+background: rgba(239, 239, 239, 225);
 border-radius: 5px;
 }</string>
          </property>
@@ -2052,45 +2056,45 @@ border-radius: 5px;
                 <widget class="QFrame" name="color_sliders_frame">
                  <property name="styleSheet">
                   <string notr="true">QFrame#color_sliders_frame {
-background: rgba(255, 255, 255, 10);
+background: rgba(32, 32, 32, 10);
 border-radius: 10px;
 }
 QFrame#color_sliders_frame QSpinBox{
 width: 0;
 border-radius: 8px;
 padding: 3px 15px 3px 3px;
-color: rgba(255, 255, 255, 225);
-background: rgba(26, 26, 26, 175);
+color: rgba(32, 32, 32, 225);
+background: rgba(239, 239, 239, 175);
 }
 QFrame#color_sliders_frame QSpinBox:hover {
-background: rgba(22, 22, 22, 175);
+background: rgba(248, 248, 248, 175);
 }
 QFrame#color_sliders_frame QSpinBox:focus {
-background: rgba(16, 16, 16, 175);
+background: rgba(255, 255, 255, 175);
 }
 QFrame#color_sliders_frame QSpinBox::up-button {
-background: rgba(255, 255, 255, 10);
+background: rgba(32, 32, 32, 10);
 border-top-left-radius: 5px;
 border-bottom-left-radius: 5px;
 margin: 2px 0 3px 2px;
 }
 QFrame#color_sliders_frame QSpinBox::down-button {
-background: rgba(255, 255, 255, 10);
+background: rgba(32, 32, 32, 10);
 border-top-right-radius: 5px;
 border-bottom-right-radius: 5px;
 margin: 2px 2px 3px 0;
 }
 QFrame#color_sliders_frame QSpinBox::up-button:hover {
-background: rgba(255, 255, 255, 25);
+background: rgba(32, 32, 32, 25);
 }
 QFrame#color_sliders_frame QSpinBox::down-button:hover {
-background: rgba(255, 255, 255, 25);
+background: rgba(32, 32, 32, 25);
 }
 QFrame#color_sliders_frame QSpinBox::up-button:pressed {
-background: rgba(255, 255, 255, 7);
+background: rgba(32, 32, 32, 7);
 }
 QFrame#color_sliders_frame QSpinBox::down-button:pressed {
-background: rgba(255, 255, 255, 7);
+background: rgba(32, 32, 32, 7);
 }
 QFrame#color_sliders_frame QSpinBox::up-arrow {
 image: url(:/icons/icons/CaretUpFilledLight.svg);
@@ -2119,15 +2123,15 @@ background: rgba(255, 50, 50, 15);
 }
 QFrame#color_sliders_frame QLabel#label_green {
 color: rgba(55, 205, 55, 225);
-background: rgba(50, 255, 50, 7);
+background: rgba(50, 255, 50, 30);
 }
 QFrame#color_sliders_frame QLabel#label_blue {
 color: rgba(35, 125, 235, 225);
-background: rgba(50, 50, 255, 30);
+background: rgba(50, 50, 255, 15);
 }
 QFrame#color_sliders_frame QLabel#label_alpha {
-color: rgba(255, 255, 255, 150);
-background: rgba(255, 255, 255, 7);
+color: rgba(32, 32, 32, 150);
+background: rgba(32, 32, 32, 15);
 }
 QFrame#color_sliders_frame QSlider:focus {
 outline: none;
@@ -2135,10 +2139,10 @@ outline: none;
 QFrame#color_sliders_frame QSlider::groove:horizontal {
 height: 4px;
 border-radius: 2px;
-background: rgba(255, 255, 255, 10);
+background: rgba(32, 32, 32, 10);
 }
 QFrame#color_sliders_frame QSlider::groove:horizontal:hover {
-background: rgba(255, 255, 255, 25);
+background: rgba(32, 32, 32, 25);
 }
 QFrame#color_sliders_frame QSlider::handle:horizontal {
 width: 18px;
@@ -2152,7 +2156,7 @@ background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgb(255, 255, 255), s
 }
 QFrame#color_sliders_frame QSlider::add-page:horizontal {
 border-radius: 2px;
-background: rgba(255, 255, 255, 10);
+background: rgba(32, 32, 32, 10);
 }
 QFrame#color_sliders_frame QSlider::sub-page:horizontal {
 border-radius: 2px;
@@ -2846,13 +2850,13 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgb(75, 75, 75), stop
         <widget class="QWidget" name="main_container_page_4">
          <property name="styleSheet">
           <string notr="true">QFrame#app_help_info_label {
-color: rgba(255, 255, 255, 235);
-background: rgba(255, 255, 255, 10);
+color: rgba(32, 32, 32, 235);
+background: rgba(32, 32, 32, 10);
 border-radius: 10px;
 padding: 10px;
 }
 QLabel#app_help_license_label {
-color: rgba(255, 255, 255, 175);
+color: rgba(32, 32, 32, 175);
 }
 QFrame#help_frame QPushButton {
 border-radius: 8px;
