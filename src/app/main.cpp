@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    Logger::_debug = true;
+    Logger::_debug = false;
     QtLoggerBridge::install();
     LOG_INFO() << "Logger initialized with level: "
             << (Logger::_debug ? "DEBUG" : "INFO");
