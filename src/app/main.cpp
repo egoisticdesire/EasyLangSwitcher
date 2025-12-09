@@ -5,6 +5,7 @@
 #include "../ui/helpers/warningHelper.h"
 #include "../ui/tray/tray.h"
 #include "../core/config/appSettings.h"
+#include "../core/i18n/lang.h"
 #include <QApplication>
 #include <Windows.h>
 #include <fcntl.h>
@@ -22,7 +23,7 @@ int main(int argc, char *argv[]) {
     const HANDLE hMutex = CreateMutex(nullptr, TRUE, mutexName.toStdWString().c_str());
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         WarningDialog dlg;
-        dlg.setText(QString("%1 is already running!").arg(AppSettings::APP_NAME));
+        dlg.setText(Lang::tr("SECOND_INSTANCE_ERROR").arg(AppSettings::APP_NAME));
         dlg.openCentered();
         dlg.exec();
         return 0;

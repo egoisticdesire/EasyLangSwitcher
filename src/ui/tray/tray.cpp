@@ -12,6 +12,8 @@
 #include <QPushButton>
 #include <QSoundEffect>
 
+#include "../../core/i18n/lang.h"
+
 TrayManager::TrayManager(QWidget *parent)
     : QWidget(parent) {
     ui.setupUi(this);
@@ -39,13 +41,17 @@ TrayManager::TrayManager(QWidget *parent)
     fadeOut->setEasingCurve(QEasingCurve::InCubic);
     connect(fadeOut, &QPropertyAnimation::finished, this, &QWidget::hide);
 
-    effectOn = new QSoundEffect(this);
-    effectOn->setSource(QUrl("qrc:/sounds/sounds/on.wav"));
-    effectOn->setVolume(0.5f);
+    audioOn = new QAudioOutput(this);
+    playerOn = new QMediaPlayer(this);
+    playerOn->setAudioOutput(audioOn);
+    playerOn->setSource(QUrl("qrc:/sounds/sounds/on.wav"));
+    audioOn->setVolume(0.5f);
 
-    effectOff = new QSoundEffect(this);
-    effectOff->setSource(QUrl("qrc:/sounds/sounds/off.wav"));
-    effectOff->setVolume(0.5f);
+    audioOff = new QAudioOutput(this);
+    playerOff = new QMediaPlayer(this);
+    playerOff->setAudioOutput(audioOff);
+    playerOff->setSource(QUrl("qrc:/sounds/sounds/off.wav"));
+    audioOff->setVolume(0.5f);
 
     setupUiBehavior();
     setupTrayIcon();
@@ -70,8 +76,8 @@ void TrayManager::setupTrayIcon() {
                         // ЛКМ — быстрый вкл/выкл
                         enabled = !enabled;
 
-                        if (enabled) effectOn->play();
-                        else effectOff->play();
+                        if (enabled) playerOn->play();
+                        else playerOff->play();
 
                         emit keyboardToggled(enabled);
 
@@ -115,8 +121,8 @@ void TrayManager::setupUiBehavior() {
     connect(ui.toggle_btn, &QToolButton::clicked, this, [this]() {
         enabled = !enabled;
 
-        if (enabled) effectOn->play();
-        else effectOff->play();
+        if (enabled) playerOn->play();
+        else playerOff->play();
 
         emit keyboardToggled(enabled);
         animateToggleButton();
@@ -129,10 +135,17 @@ void TrayManager::setupUiBehavior() {
 }
 
 void TrayManager::updateInfo() const {
-    ui.status_value->setText(enabled ? tr("Enabled") : tr("Disabled"));
+    ui.status_value->setText(enabled ? Lang::tr("TRAY_TOGGLE_ENABLED") : Lang::tr("TRAY_TOGGLE_DISABLED"));
     ui.hotkey_value->setText(AppSettings::hotkeyName);
     ui.delay_value->setText(QString::number(AppSettings::switchDelayMs));
-    ui.toggle_btn->setText(enabled ? tr("  Disable") : tr("  Enable"));
+    ui.toggle_btn->setText(enabled ? Lang::tr("TRAY_TOGGLE_SUSPEND") : Lang::tr("TRAY_TOGGLE_RESTORE"));
+
+    ui.settings_btn->setText(Lang::tr("TRAY_SETTINGS"));
+    ui.exit_btn->setText(Lang::tr("TRAY_EXIT"));
+
+    ui.status_key->setText(Lang::tr("TRAY_LABEL_STATUS"));
+    ui.hotkey_key->setText(Lang::tr("TRAY_LABEL_HOTKEY"));
+    ui.delay_key->setText(Lang::tr("TRAY_LABEL_DELAY"));
 
     ui.toggle_btn->setIcon(
         enabled

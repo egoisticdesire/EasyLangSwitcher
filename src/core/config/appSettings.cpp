@@ -6,11 +6,13 @@ int AppSettings::defaultHotkeyMainVk = VK_LCONTROL;
 int AppSettings::defaultHotkeyModifiers = 0;
 QString AppSettings::defaultHotkeyName = "Left Ctrl";
 int AppSettings::defaultSwitchDelayMs = 250;
+QString AppSettings::defaultAppLang = "en";
 
 int AppSettings::hotkeyMainVk = defaultHotkeyMainVk;
 int AppSettings::hotkeyModifiers = defaultHotkeyModifiers;
 QString AppSettings::hotkeyName = defaultHotkeyName;
 int AppSettings::switchDelayMs = defaultSwitchDelayMs;
+QString AppSettings::appLang = defaultAppLang;
 
 int AppSettings::previousHotkeyMainVk = 0;
 QString AppSettings::previousHotkeyName = "";
@@ -18,14 +20,16 @@ QString AppSettings::previousHotkeyName = "";
 bool AppSettings::autoStartup = false;
 
 void AppSettings::logger(const QString &action) {
-    LOG_DEBUG() << QString("%1 settings: vk=%2; name='%3'; delay=%4; prevVk=%5; prevName='%6'; autoStartup=%7")
+    LOG_DEBUG() << QString(
+                   "%1 settings: vk=%2; name='%3'; delay=%4; prevVk=%5; prevName='%6'; autoStartup=%7; lang='%8'")
                     .arg(action)
                     .arg(hotkeyMainVk)
                     .arg(hotkeyName)
                     .arg(switchDelayMs)
                     .arg(previousHotkeyMainVk)
                     .arg(previousHotkeyName)
-                    .arg(autoStartup ? "true" : "false");
+                    .arg(autoStartup ? "true" : "false")
+                    .arg(appLang);
 }
 
 void AppSettings::load() {
@@ -36,6 +40,7 @@ void AppSettings::load() {
     previousHotkeyMainVk = settings.value("previous_hotkey/main_vk", previousHotkeyMainVk).toInt();
     previousHotkeyName = settings.value("previous_hotkey/name", previousHotkeyName).toString();
     autoStartup = settings.value("auto_startup", autoStartup).toBool();
+    appLang = settings.value("app/lang", defaultAppLang).toString();
 
     logger("Loaded");
 }
@@ -48,6 +53,7 @@ void AppSettings::save() {
     settings.setValue("previous_hotkey/main_vk", previousHotkeyMainVk);
     settings.setValue("previous_hotkey/name", previousHotkeyName);
     settings.setValue("auto_startup", autoStartup);
+    settings.setValue("app/lang", appLang);
 
     logger("Saved");
 }
@@ -59,7 +65,6 @@ void AppSettings::reset() {
     switchDelayMs = defaultSwitchDelayMs;
     previousHotkeyMainVk = 0;
     previousHotkeyName = "";
-    autoStartup = false;
 
     logger("Reset");
 }

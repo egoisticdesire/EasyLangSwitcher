@@ -41,6 +41,10 @@ public:
 
     static int defaultHotkeyMainVk;
 
+    static QString appLang;
+
+    static QString defaultAppLang;
+
 private:
     static inline QSettings settings{APP_NAME, APP_NAME};
 };

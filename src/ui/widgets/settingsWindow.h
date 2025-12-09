@@ -12,6 +12,7 @@ SettingsWindow
 — восстановление предыдущего preset при очистке input-поля
 — единый маппинг preset кнопок
 */
+class KeySequenceHelper;
 class SaveNotification;
 
 class SettingsWindow final : public QWidget {
@@ -38,6 +39,8 @@ protected:
 
 private:
     Ui::settings_main_widget ui{};
+
+    KeySequenceHelper *m_keyHelper = nullptr;
 
     SaveNotification *saveNotif = nullptr;
 
@@ -76,4 +79,6 @@ private:
     void restoreDefaultsForCurrentPage();
 
     void restoreDefaults_General();
+
+    void refreshTranslations() const;
 };

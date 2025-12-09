@@ -171,6 +171,16 @@ public:
         updatePosition();
     }
 
+    void setPlaceholder(const QString &text) {
+        // 1. Обновляем внутреннюю переменную, чтобы eventFilter использовал новый текст
+        m_placeholder = text;
+
+        // 2. Сразу применяем к виджету, чтобы результат был виден мгновенно
+        if (m_lineEdit) {
+            m_lineEdit->setPlaceholderText(m_placeholder);
+        }
+    }
+
 signals:
     void hotkeySelected(int mainVk, int modifiersMask, const QString &name);
 

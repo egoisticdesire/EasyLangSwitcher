@@ -1,31 +1,34 @@
 #pragma once
 
 #include <QString>
+#include <QHash>
 
 class TranslationEntry {
 public:
-    QString ru;
     QString en;
+    QString ru;
 };
 
 class Lang {
 public:
     enum class Locale {
+        EN,
         RU,
-        EN
     };
 
-    // Вернуть перевод по ключу; если ключ не найден — вернуть сам ключ.
-    static QString tr(const QString &key, Locale locale = Locale::RU);
+    // Использовать язык из настроек (основной способ)
+    static QString tr(const QString &key);
 
-    // Удобные перегрузки
-    static QString tr(const char *key, const Locale locale = Locale::RU) {
-        return tr(QString::fromUtf8(key), locale);
-    }
+    // Прямой вариант с enum
+    static QString tr(const QString &key, Locale locale);
 
-    // localeCode: "ru" / "en" (нечувствительно к регистру)
+    // "ru" / "en"
     static QString tr(const QString &key, const QString &localeCode);
 
-    // Полезно для дебага / перечисления ключей (const ref, не изменяемый)
+    // Алиас под const char*
+    static QString tr(const char *key) {
+        return tr(QString::fromUtf8(key));
+    }
+
     static const QHash<QString, TranslationEntry> &allTranslations();
 };
