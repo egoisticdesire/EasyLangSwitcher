@@ -10,8 +10,8 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
 
 
         t.insert(QStringLiteral("SECOND_INSTANCE_ERROR"), {
-                     QStringLiteral("%1 уже запущен!"),
                      QStringLiteral("%1 is already running!"),
+                     QStringLiteral("%1 уже запущен!"),
                  });
 
 

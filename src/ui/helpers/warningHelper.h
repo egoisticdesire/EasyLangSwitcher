@@ -68,6 +68,10 @@ public:
         if (audioEffect) audioEffect->play();
     }
 
+    void setTranslations(const QString &text) const {
+        ui.btn_close->setText(text);
+    }
+
 private:
     Ui::warning_main_widget ui{};
 

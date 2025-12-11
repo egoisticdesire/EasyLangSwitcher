@@ -18,11 +18,14 @@ int main(int argc, char *argv[]) {
     const QApplication app(argc, argv);
     QApplication::setStyle("Windows11");
 
+    AppSettings::load();
+
     // Проверка на уже запущенный экземпляр
     const QString mutexName = QString("MyUnique%1Mutex").arg(AppSettings::APP_NAME);
     const HANDLE hMutex = CreateMutex(nullptr, TRUE, mutexName.toStdWString().c_str());
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         WarningDialog dlg;
+        dlg.setTranslations(Lang::tr("SETTINGS_SIDER_MENU_CLOSE"));
         dlg.setText(Lang::tr("SECOND_INSTANCE_ERROR").arg(AppSettings::APP_NAME));
         dlg.openCentered();
         dlg.exec();
@@ -36,8 +39,6 @@ int main(int argc, char *argv[]) {
 
     QApplication::setQuitOnLastWindowClosed(false);
     QApplication::setWindowIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
-
-    AppSettings::load();
 
     TrayManager tray;
     tray.show();

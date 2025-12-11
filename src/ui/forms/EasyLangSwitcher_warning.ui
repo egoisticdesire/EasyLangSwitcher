@@ -52,9 +52,11 @@ background: transparent;
 QFrame#background_frame QPushButton {
 padding: 4px 10px 5px 10px;
 border-radius: 8px;
+color: rgba(255, 255, 255, 200);
 background: rgba(255, 255, 255, 10);
 }
 QFrame#background_frame QPushButton:hover {
+color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
 }
 QFrame#background_frame QPushButton:pressed {
