@@ -62,6 +62,8 @@ add_executable(${APP_NAME}
         src/ui/widgets/saveNotification.h
         src/ui/widgets/settingsWindow.cpp
         src/ui/widgets/settingsWindow.h
+        src/ui/widgets/soundManager.cpp
+        src/ui/widgets/soundManager.h
         src/ui/widgets/windowDragger.cpp
         src/ui/widgets/windowDragger.h
 
@@ -101,6 +103,7 @@ endif ()
 if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
     file(REMOVE_RECURSE "${DIST_DIR}")
 
+    # Скрываем консоль
     set_target_properties(${APP_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
 
     add_custom_command(TARGET ${APP_NAME} POST_BUILD
@@ -111,14 +114,15 @@ if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
             COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${APP_NAME}>" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Core.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Gui.dll" "${DIST_DIR}/"
-            COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Widgets.dll" "${DIST_DIR}/"
-            COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Svg.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Multimedia.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Network.dll" "${DIST_DIR}/"
+            COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Svg.dll" "${DIST_DIR}/"
+            COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Widgets.dll" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/platforms/qwindows.dll" "${DIST_DIR}/platforms/"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/styles/qmodernwindowsstyle.dll" "${DIST_DIR}/styles/"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/imageformats/qsvg.dll" "${DIST_DIR}/imageformats/"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/imageformats/qjpeg.dll" "${DIST_DIR}/imageformats/"
+
             COMMENT "Deploying minimal set to ${DIST_DIR}"
     )
 endif ()

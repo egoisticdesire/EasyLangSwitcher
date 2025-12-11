@@ -1,8 +1,9 @@
 #pragma once
 #include "ui_EasyLangSwitcher_warning.h"
+#include "../widgets/soundManager.h"
+#include "../widgets/windowDragger.h"
 #include "iconHelper.h"
 #include "acrylicHelper.h"
-#include "../widgets/windowDragger.h"
 #include <QDialog>
 #include <QScreen>
 #include <QSoundEffect>
@@ -37,9 +38,11 @@ public:
         dragger = new WindowDragger(this);
         dragger->addIgnoredWidget(ui.btn_close);
 
-        effect = new QSoundEffect(this);
-        effect->setSource(QUrl("qrc:/sounds/sounds/error.wav"));
-        effect->setVolume(0.5f);
+        audioEffect = new QSoundEffect(this);
+        audioEffect->setSource(QUrl("qrc:/sounds/sounds/error.wav"));
+        audioEffect->setVolume(0.5f);
+
+        soundManager::instance().registerEffect(audioEffect);
     }
 
     void setText(const QString &text) const {
@@ -62,7 +65,7 @@ public:
         raise();
         activateWindow();
 
-        if (effect) effect->play();
+        if (audioEffect) audioEffect->play();
     }
 
 private:
@@ -70,5 +73,5 @@ private:
 
     WindowDragger *dragger = nullptr;
 
-    QSoundEffect *effect = nullptr;
+    QSoundEffect *audioEffect = nullptr;
 };

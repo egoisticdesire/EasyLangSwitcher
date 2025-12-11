@@ -37,11 +37,11 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                      QStringLiteral("Disabled"),
                      QStringLiteral("Выключено"),
                  });
-        t.insert(QStringLiteral("TRAY_TOGGLE_RESTORE"), {
+        t.insert(QStringLiteral("TRAY_TOGGLE_RESUME"), {
                      QStringLiteral("  Enable"),
-                     QStringLiteral("  Восстановить"),
+                     QStringLiteral("  Возобновить"),
                  });
-        t.insert(QStringLiteral("TRAY_TOGGLE_SUSPEND"), {
+        t.insert(QStringLiteral("TRAY_TOGGLE_PAUSE"), {
                      QStringLiteral("  Disable"),
                      QStringLiteral("  Приостановить"),
                  });
@@ -98,6 +98,14 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
         t.insert(QStringLiteral("SETTINGS_SIDER_MENU_CLOSE"), {
                      QStringLiteral("Close"),
                      QStringLiteral("Закрыть"),
+                 });
+        t.insert(QStringLiteral("SETTINGS_ENABLE_STARTUP_LABEL"), {
+                     QStringLiteral("Enable"),
+                     QStringLiteral("Включить"),
+                 });
+        t.insert(QStringLiteral("SETTINGS_DISABLE_STARTUP_LABEL"), {
+                     QStringLiteral("Disable"),
+                     QStringLiteral("Выключить"),
                  });
 
 

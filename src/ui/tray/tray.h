@@ -3,8 +3,7 @@
 #include "../widgets/settingsWindow.h"
 #include <QSystemTrayIcon>
 #include <QPropertyAnimation>
-#include <QMediaPlayer>
-#include <QAudioOutput>
+#include <QSoundEffect>
 
 /*
 TrayManager
@@ -43,11 +42,8 @@ private:
     QPropertyAnimation *fadeIn = nullptr;
     QPropertyAnimation *fadeOut = nullptr;
 
-    QMediaPlayer *playerOn = nullptr;
-    QAudioOutput *audioOn = nullptr;
-
-    QMediaPlayer *playerOff = nullptr;
-    QAudioOutput *audioOff = nullptr;
+    QSoundEffect *audioEffectOn = nullptr;
+    QSoundEffect *audioEffectOff = nullptr;
 
     void updateTrayIcon();
 

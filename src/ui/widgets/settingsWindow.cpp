@@ -462,6 +462,20 @@ void SettingsWindow::restoreDefaults_General() {
         }
     }
 
+    // AppSettings::appLang = AppSettings::defaultAppLang;
+    // ui.btn_en_lang->setChecked(true);
+    // ui.btn_ru_lang->setChecked(false);
+    //
+    // // запуск анимации индикатора: app_lang_frame
+    // for (auto *sel: selectors) {
+    //     if (!sel) continue;
+    //     if (sel->boundFrame() == ui.app_lang_frame) {
+    //         sel->stopAndResetAnimation();
+    //         QTimer::singleShot(0, sel, &AnimatedSelector::animateToCurrentState);
+    //         break;
+    //     }
+    // }
+
     markChanged();
 }
 
@@ -475,6 +489,8 @@ void SettingsWindow::refreshTranslations() const {
     ui.btn_exclusions_top_sider->setText(Lang::tr("SETTINGS_SIDER_MENU_EXCLUSIONS"));
     ui.btn_info_top_sider->setText(Lang::tr("SETTINGS_SIDER_MENU_INFO"));
     ui.btn_close_bot_sider->setText(Lang::tr("SETTINGS_SIDER_MENU_CLOSE"));
+    ui.btn_enable_startup->setText(Lang::tr("SETTINGS_ENABLE_STARTUP_LABEL"));
+    ui.btn_disable_startup->setText(Lang::tr("SETTINGS_DISABLE_STARTUP_LABEL"));
 
     if (const auto *seq = findChild<QKeySequenceEdit *>("btn_sequence")) {
         if (auto *le = seq->findChild<QLineEdit *>()) {
