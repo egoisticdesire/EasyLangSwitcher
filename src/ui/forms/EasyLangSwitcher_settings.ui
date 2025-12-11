@@ -99,14 +99,18 @@ QFrame#bot_sider_container QPushButton {
 margin: 3px;
 padding: 4px 10px 5px 10px;
 border-radius: 5px;
-color: rgba(255, 255, 255, 225);
+color: rgba(255, 255, 255, 200);
 }
 QFrame#top_sider_container QToolButton:checked,
 QFrame#bot_sider_container QPushButton {
 background: rgba(255, 255, 255, 10);
 }
+QFrame#top_sider_container QToolButton:checked {
+color: rgba(255, 255, 255, 255);
+}
 QFrame#top_sider_container QToolButton:hover,
 QFrame#bot_sider_container QPushButton:hover {
+color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
 }
 QFrame#top_sider_container QToolButton:pressed,

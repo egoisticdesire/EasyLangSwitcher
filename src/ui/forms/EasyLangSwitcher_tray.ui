@@ -95,7 +95,7 @@ QFrame#btns_frame QToolButton {
 margin: 2px;
 padding: 4px;
 border-radius: 5px;
-color: rgba(255, 255, 255, 175);
+color: rgba(255, 255, 255, 200);
 }
 QFrame#btns_frame QToolButton:hover {
 color: rgba(255, 255, 255, 255);
