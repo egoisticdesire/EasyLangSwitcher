@@ -23,9 +23,7 @@ public:
         setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
         setAttribute(Qt::WA_TranslucentBackground);
 
-        QTimer::singleShot(0, this, [this] {
-            AcrylicHelper::enableAcrylic(this);
-        });
+        QTimer::singleShot(0, this, [this] { AcrylicHelper::enableAcrylic(this); });
 
 
         auto *closeAction = new QAction(this);
@@ -70,6 +68,18 @@ public:
 
     void setTranslations(const QString &text) const {
         ui.btn_close->setText(text);
+    }
+
+protected:
+    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override {
+        if (eventType == "windows_generic_MSG") {
+            // Третий параметр - цвет фона, который будет на превью вместо прозрачности.
+            if (AcrylicHelper::handleIconicMessages(this, message, QColor(32, 32, 32))) {
+                *result = 0;
+                return true;
+            }
+        }
+        return QWidget::nativeEvent(eventType, message, result);
     }
 
 private:
