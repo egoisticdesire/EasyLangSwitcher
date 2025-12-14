@@ -5,8 +5,8 @@
 The app cycles through all languages added in your system:
 
 - **Short press** — changes the current layout.
-- **Long press** or using a **combination** with the assigned key (for example, **Ctrl+C**) preserves the standard
-  behavior of that key.
+- **Long press**, **rapid repeated presses**, or using a **combination** with the assigned key
+  (for example, **Ctrl+C**) preserves the standard behavior of that key.
 
 Now with more flexible options:
 
@@ -17,27 +17,27 @@ Now with more flexible options:
 - **Improved layout switching logic**:
     - Any combination with the trigger key returns it to its normal behavior without switching layouts.
     - Quick double presses of the trigger key no longer cause layout changes.
-    - Caps Lock behavior: short press switches layout, long or double press triggers standard Caps Lock on/off.
+    - Caps Lock behavior: **short** press switches layout, **long** or **rapid repeated** presses triggers standard Caps
+      Lock on/off.
+- App language selection (English / Russian).
+- Auto-start on Windows login.
 
-### Using EasyLangSwitcher
+## System Tray Controls
 
 The application starts in the system tray and provides easy actions:
 
 - **Left Click** — toggle on/off (enabled by default)
 - **Right Click** — open the menu with current configuration details
 
-> _Please note that the application does not work in UAC windows._
+## About
 
----
+**The idea behind the app** came from personal experience using a **MacBook** and features of **BetterTouchTool**,
+aiming to provide a similar solution for **Windows**.
 
-To add the application to **Startup**, place a shortcut in:
+## Limitations
 
-```
-%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup
-```
-
-**The idea behind the app** came from personal experience using a MacBook and features of **BetterTouchTool**, aiming to
-provide a similar solution for **Windows**.
+- The application does not work in UAC windows.
+- Some applications may not respond to layout switching (for example, Microsoft Teams).
 
 ## License
 
