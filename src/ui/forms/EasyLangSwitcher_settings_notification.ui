@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>280</width>
-    <height>54</height>
+    <height>50</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,7 +33,6 @@
     <widget class="QFrame" name="background_frame">
      <property name="styleSheet">
       <string notr="true">QFrame#background_frame {
-padding: 4px 8px;
 border: 1px solid rgb(50, 50, 50);
 background: transparent;
 }
@@ -53,19 +52,19 @@ border: 1px solid transparent;
      </property>
      <layout class="QHBoxLayout" name="hlayout_background_frame" stretch="0,1">
       <property name="spacing">
-       <number>10</number>
+       <number>12</number>
       </property>
       <property name="leftMargin">
-       <number>0</number>
+       <number>10</number>
       </property>
       <property name="topMargin">
-       <number>0</number>
+       <number>5</number>
       </property>
       <property name="rightMargin">
-       <number>0</number>
+       <number>10</number>
       </property>
       <property name="bottomMargin">
-       <number>0</number>
+       <number>5</number>
       </property>
       <item>
        <widget class="QPushButton" name="icon_label">
@@ -81,8 +80,8 @@ border: 1px solid transparent;
         </property>
         <property name="iconSize">
          <size>
-          <width>36</width>
-          <height>36</height>
+          <width>32</width>
+          <height>32</height>
          </size>
         </property>
         <property name="flat">

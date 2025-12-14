@@ -57,11 +57,6 @@
    </property>
    <item>
     <widget class="QFrame" name="background_frame">
-     <property name="font">
-      <font>
-       <pointsize>10</pointsize>
-      </font>
-     </property>
      <property name="styleSheet">
       <string notr="true">QFrame#background_frame {
 border: 1px solid rgb(50, 50, 50);
@@ -132,11 +127,6 @@ outline: none;
       </property>
       <item>
        <widget class="QFrame" name="info_frame">
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
         <property name="cursor">
          <cursorShape>WhatsThisCursor</cursorShape>
         </property>
@@ -172,11 +162,6 @@ outline: none;
            </property>
            <item>
             <widget class="QLabel" name="status_key">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
              <property name="text">
               <string>Status:</string>
              </property>
@@ -187,11 +172,6 @@ outline: none;
            </item>
            <item>
             <widget class="QLabel" name="status_value">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
              <property name="text">
               <string>Enabled</string>
              </property>
@@ -209,11 +189,6 @@ outline: none;
            </property>
            <item>
             <widget class="QLabel" name="hotkey_key">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
              <property name="text">
               <string>Hotkey:</string>
              </property>
@@ -224,11 +199,6 @@ outline: none;
            </item>
            <item>
             <widget class="QLabel" name="hotkey_value">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
              <property name="text">
               <string>Left Ctrl</string>
              </property>
@@ -246,11 +216,6 @@ outline: none;
            </property>
            <item>
             <widget class="QLabel" name="delay_key">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
              <property name="text">
               <string>Delay (ms):</string>
              </property>
@@ -261,11 +226,6 @@ outline: none;
            </item>
            <item>
             <widget class="QLabel" name="delay_value">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
              <property name="cursor">
               <cursorShape>WhatsThisCursor</cursorShape>
              </property>
@@ -284,11 +244,6 @@ outline: none;
       </item>
       <item>
        <widget class="QFrame" name="btns_frame">
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
         <property name="styleSheet">
          <string notr="true"/>
         </property>
@@ -318,11 +273,6 @@ outline: none;
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
            </property>
            <property name="focusPolicy">
             <enum>Qt::FocusPolicy::TabFocus</enum>
@@ -362,11 +312,6 @@ outline: none;
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
            <property name="focusPolicy">
             <enum>Qt::FocusPolicy::TabFocus</enum>
            </property>
@@ -398,11 +343,6 @@ outline: none;
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
            </property>
            <property name="focusPolicy">
             <enum>Qt::FocusPolicy::TabFocus</enum>

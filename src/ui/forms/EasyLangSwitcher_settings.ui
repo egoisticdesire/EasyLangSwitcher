@@ -43,11 +43,6 @@
    </property>
    <item>
     <widget class="QWidget" name="background_widget" native="true">
-     <property name="font">
-      <font>
-       <pointsize>10</pointsize>
-      </font>
-     </property>
      <property name="styleSheet">
       <string notr="true">QWidget#background_widget {
 background: rgba(32, 32, 32, 10);
@@ -77,15 +72,8 @@ background: rgba(32, 32, 32, 10);
           <height>0</height>
          </size>
         </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
         <property name="styleSheet">
          <string notr="true">QFrame#sider_container {
-/*border-top-left-radius: 1px;
-border-bottom-left-radius: 1px;*/
 border: 1px solid rgb(50, 50, 50);
 border-right: 1px solid transparent;
 background: transparent;
@@ -97,7 +85,7 @@ outline: none;
 QFrame#top_sider_container QToolButton,
 QFrame#bot_sider_container QPushButton {
 margin: 3px;
-padding: 4px 10px 5px 10px;
+padding: 5px 10px;
 border-radius: 5px;
 color: rgba(255, 255, 255, 200);
 }
@@ -136,11 +124,6 @@ background: rgba(255, 255, 255, 7);
          </property>
          <item>
           <widget class="QFrame" name="top_sider_container">
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
            <layout class="QVBoxLayout" name="vlayout_top_btns_sider">
             <property name="spacing">
              <number>0</number>
@@ -164,11 +147,6 @@ background: rgba(255, 255, 255, 7);
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>General</string>
@@ -205,11 +183,6 @@ background: rgba(255, 255, 255, 7);
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Exclusions</string>
               </property>
@@ -241,11 +214,6 @@ background: rgba(255, 255, 255, 7);
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>Indicator</string>
@@ -279,11 +247,6 @@ background: rgba(255, 255, 255, 7);
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Info</string>
               </property>
@@ -313,11 +276,6 @@ background: rgba(255, 255, 255, 7);
          </item>
          <item>
           <spacer name="vspacer_sider_container">
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
            <property name="orientation">
             <enum>Qt::Orientation::Vertical</enum>
            </property>
@@ -331,11 +289,6 @@ background: rgba(255, 255, 255, 7);
          </item>
          <item>
           <widget class="QFrame" name="bot_sider_container">
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
            <layout class="QVBoxLayout" name="vlayout_bottom_btns_sider">
             <property name="spacing">
              <number>0</number>
@@ -354,11 +307,6 @@ background: rgba(255, 255, 255, 7);
             </property>
             <item>
              <widget class="QPushButton" name="btn_close_bot_sider">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Close</string>
               </property>
@@ -375,11 +323,6 @@ background: rgba(255, 255, 255, 7);
       </item>
       <item>
        <widget class="QStackedWidget" name="content_container">
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
         <property name="styleSheet">
          <string notr="true">QStackedWidget#content_container {
 border: 1px solid rgb(50, 50, 50);
@@ -404,6 +347,16 @@ border-radius: 10px;
 border: 1px solid rgba(255, 255, 255, 30);
 background: rgba(255, 255, 255, 10);
 }
+QWidget#background_widget QPushButton#key_select_label_img,
+QWidget#background_widget QPushButton#key_select_label_img:hover,
+QWidget#background_widget QPushButton#key_select_label_img:pressed,
+QWidget#background_widget QPushButton#key_select_label_img:checked,
+QWidget#background_widget QPushButton#key_select_label_img:focus {
+padding: 0;
+border: 1px solid transparent;
+color: rgba(255, 255, 255, 225);
+background: transparent;
+}
 QFrame#key_select_frame {
 margin-right: 20px;
 }
@@ -426,10 +379,10 @@ QFrame#key_select_frame QLineEdit[hasText=&quot;true&quot;]:focus,
 QFrame#key_select_frame QLineEdit:focus {
 background: rgba(16, 16, 16, 175);
 }
-QToolButton#btn_restore_default {
+QPushButton#btn_restore_default {
 margin-right: 6px;
 margin-bottom: 6px;
-padding: 3px 9px 4px 10px;
+padding: 4px 10px;
 border-radius: 5px;
 color: rgba(255, 255, 255, 150);
 background: transparent;
@@ -439,6 +392,7 @@ QFrame#app_theme_frame QPushButton,
 QFrame#app_startup_frame QPushButton,
 QFrame#app_lang_frame QPushButton {
 margin: 1px;
+padding: 4px 5px;
 border-radius: 8px;
 color: rgba(255, 255, 255, 150);
 background: transparent;
@@ -457,11 +411,11 @@ QFrame#app_lang_frame QPushButton:hover {
 color: rgba(255, 255, 255, 255);
 background: transparent;
 }
-QToolButton#btn_restore_default:hover {
+QPushButton#btn_restore_default:hover {
 color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
 }
-QToolButton#btn_restore_default:pressed {
+QPushButton#btn_restore_default:pressed {
 background: rgba(255, 255, 255, 7);
 }
 QFrame#key_select_frame QPushButton:checked,
@@ -474,7 +428,7 @@ QFrame#key_select_frame QPushButton:focus,
 QFrame#app_theme_frame QPushButton:focus,
 QFrame#app_startup_frame QPushButton:focus,
 QFrame#app_lang_frame QPushButton:focus,
-QToolButton#btn_restore_default:focus {
+QPushButton#btn_restore_default:focus {
 outline: none;
 }</string>
          </property>
@@ -513,11 +467,6 @@ outline: none;
             </property>
             <item row="3" column="0">
              <widget class="QLabel" name="app_startup_label">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Launch at Windows startup</string>
               </property>
@@ -525,11 +474,6 @@ outline: none;
             </item>
             <item row="3" column="1">
              <widget class="QFrame" name="app_startup_frame">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
               <layout class="QHBoxLayout" name="hlayout_app_lang_value_frame_3">
                <property name="spacing">
                 <number>0</number>
@@ -548,23 +492,6 @@ outline: none;
                </property>
                <item>
                 <widget class="QPushButton" name="btn_enable_startup">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Enable</string>
                  </property>
@@ -584,23 +511,6 @@ outline: none;
                </item>
                <item>
                 <widget class="QPushButton" name="btn_disable_startup">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Disable</string>
                  </property>
@@ -629,14 +539,9 @@ outline: none;
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
               <layout class="QHBoxLayout" name="hlayout_key_select_label">
                <property name="spacing">
-                <number>6</number>
+                <number>4</number>
                </property>
                <property name="leftMargin">
                 <number>0</number>
@@ -650,42 +555,39 @@ outline: none;
                <property name="bottomMargin">
                 <number>0</number>
                </property>
-               <item>
+               <item alignment="Qt::AlignmentFlag::AlignVCenter">
                 <widget class="QLabel" name="key_select_label_msg">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Select Key</string>
                  </property>
                 </widget>
                </item>
-               <item alignment="Qt::AlignmentFlag::AlignBottom">
-                <widget class="QLabel" name="key_select_label_img">
+               <item alignment="Qt::AlignmentFlag::AlignVCenter">
+                <widget class="QPushButton" name="key_select_label_img">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>20</horstretch>
+                   <verstretch>20</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>20</width>
+                   <height>20</height>
+                  </size>
+                 </property>
                  <property name="maximumSize">
                   <size>
-                   <width>16</width>
+                   <width>20</width>
                    <height>16</height>
                   </size>
                  </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
+                 <property name="icon">
+                  <iconset resource="../../../resources/resources.qrc">
+                   <normaloff>:/icons/icons/InfoRegular.svg</normaloff>:/icons/icons/InfoRegular.svg</iconset>
                  </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="pixmap">
-                  <pixmap resource="../../../resources/resources.qrc">:/icons/icons/InfoRegular.svg</pixmap>
-                 </property>
-                 <property name="scaledContents">
+                 <property name="flat">
                   <bool>true</bool>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
                 </widget>
                </item>
@@ -694,11 +596,6 @@ outline: none;
             </item>
             <item row="4" column="0">
              <widget class="QLabel" name="app_theme_label">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Application theme</string>
               </property>
@@ -706,11 +603,6 @@ outline: none;
             </item>
             <item row="4" column="1">
              <widget class="QFrame" name="app_theme_frame">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
               <layout class="QHBoxLayout" name="hlayout_app_lang_value_frame_2">
                <property name="spacing">
                 <number>0</number>
@@ -729,23 +621,6 @@ outline: none;
                </property>
                <item>
                 <widget class="QPushButton" name="btn_light_theme">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Light</string>
                  </property>
@@ -765,23 +640,6 @@ outline: none;
                </item>
                <item>
                 <widget class="QPushButton" name="btn_dark_theme">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Dark</string>
                  </property>
@@ -798,23 +656,6 @@ outline: none;
                </item>
                <item>
                 <widget class="QPushButton" name="btn_system_theme">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>System</string>
                  </property>
@@ -835,38 +676,8 @@ outline: none;
               </layout>
              </widget>
             </item>
-            <item row="6" column="1" colspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignBottom">
-             <widget class="QToolButton" name="btn_restore_default">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>125</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::FocusPolicy::NoFocus</enum>
-              </property>
-              <property name="text">
-               <string>Restore default settings</string>
-              </property>
-              <property name="toolButtonStyle">
-               <enum>Qt::ToolButtonStyle::ToolButtonTextBesideIcon</enum>
-              </property>
-             </widget>
-            </item>
             <item row="5" column="0">
              <widget class="QLabel" name="app_lang_label">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Application language</string>
               </property>
@@ -874,11 +685,6 @@ outline: none;
             </item>
             <item row="2" column="0">
              <spacer name="vspacer_main_container_page_1">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
               <property name="orientation">
                <enum>Qt::Orientation::Vertical</enum>
               </property>
@@ -892,11 +698,6 @@ outline: none;
             </item>
             <item row="1" column="0">
              <widget class="QLabel" name="key_delay_label">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Set switch delay</string>
               </property>
@@ -909,11 +710,6 @@ outline: none;
                 <width>200</width>
                 <height>0</height>
                </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
               </property>
               <property name="styleSheet">
                <string notr="true">QFrame#key_delay_frame {
@@ -1044,11 +840,6 @@ background: transparent;
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="minimum">
                   <number>50</number>
                  </property>
@@ -1096,11 +887,6 @@ background: transparent;
             </item>
             <item row="5" column="1">
              <widget class="QFrame" name="app_lang_frame">
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
               <layout class="QHBoxLayout" name="hlayout_app_lang_value_frame">
                <property name="spacing">
                 <number>0</number>
@@ -1119,23 +905,6 @@ background: transparent;
                </property>
                <item>
                 <widget class="QPushButton" name="btn_en_lang">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>English</string>
                  </property>
@@ -1155,23 +924,6 @@ background: transparent;
                </item>
                <item>
                 <widget class="QPushButton" name="btn_ru_lang">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Русский</string>
                  </property>
@@ -1246,11 +998,6 @@ background: transparent;
                    <height>30</height>
                   </size>
                  </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>R Shift</string>
                  </property>
@@ -1285,11 +1032,6 @@ background: transparent;
                    <height>30</height>
                   </size>
                  </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>L Alt</string>
                  </property>
@@ -1323,11 +1065,6 @@ background: transparent;
                    <width>100</width>
                    <height>30</height>
                   </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
                  </property>
                  <property name="text">
                   <string>R Ctrl</string>
@@ -1366,11 +1103,6 @@ background: transparent;
                    <height>30</height>
                   </size>
                  </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>R Alt</string>
                  </property>
@@ -1404,11 +1136,6 @@ background: transparent;
                    <width>100</width>
                    <height>30</height>
                   </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
                  </property>
                  <property name="text">
                   <string>L Shift</string>
@@ -1444,11 +1171,6 @@ background: transparent;
                    <height>30</height>
                   </size>
                  </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Caps Lock</string>
                  </property>
@@ -1482,11 +1204,6 @@ background: transparent;
                    <width>100</width>
                    <height>30</height>
                   </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
                  </property>
                  <property name="text">
                   <string>L Ctrl</string>
@@ -1525,11 +1242,6 @@ background: transparent;
                    <height>30</height>
                   </size>
                  </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="focusPolicy">
                   <enum>Qt::FocusPolicy::ClickFocus</enum>
                  </property>
@@ -1544,6 +1256,28 @@ background: transparent;
               </layout>
              </widget>
             </item>
+            <item row="6" column="1" colspan="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignBottom">
+             <widget class="QPushButton" name="btn_restore_default">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>125</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="focusPolicy">
+               <enum>Qt::FocusPolicy::NoFocus</enum>
+              </property>
+              <property name="text">
+               <string>Restore default settings</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
@@ -1552,7 +1286,7 @@ background: transparent;
          <property name="styleSheet">
           <string notr="true">QFrame#add_exclusions_frame QPushButton {
 margin-right: 20px;
-padding: 7px 10px 8px 10px;
+padding: 8px 10px;
 border-radius: 10px;
 color: rgba(255, 255, 255, 225);
 background: rgba(255, 255, 255, 10);
@@ -1566,15 +1300,15 @@ background: rgba(255, 255, 255, 10);
 }
 QFrame#exclusions_rules_frame QPushButton {
 margin: 1px;
-padding: 3px 5px 4px 5px;
+padding: 4px 5px;
 border-radius: 8px;
 color: rgba(255, 255, 255, 150);
 background: transparent;
 }
-QToolButton#btn_clear_all {
+QPushButton#btn_clear_all {
 margin-right: 6px;
 margin-bottom: 6px;
-padding: 3px 9px 4px 10px;
+padding: 4px 10px;
 border-radius: 5px;
 color: rgba(255, 255, 255, 150);
 background: transparent;
@@ -1587,12 +1321,12 @@ background: transparent;
 QFrame#add_exclusions_frame QPushButton:hover {
 background: rgba(255, 255, 255, 15);
 }
-QToolButton#btn_clear_all:hover {
+QPushButton#btn_clear_all:hover {
 color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
 }
 QFrame#add_exclusions_frame QPushButton:pressed,
-QToolButton#btn_clear_all:pressed {
+QPushButton#btn_clear_all:pressed {
 background: rgba(255, 255, 255, 7);
 }
 QFrame#exclusions_rules_frame QPushButton:checked {
@@ -1600,7 +1334,7 @@ color: rgba(255, 255, 255, 255);
 }
 QFrame#add_exclusions_frame QPushButton:focus,
 QFrame#exclusions_rules_frame QPushButton:focus,
-QToolButton#btn_clear_all:focus {
+QPushButton#btn_clear_all:focus {
 outline: none;
 }
 
@@ -1641,25 +1375,6 @@ outline: none;
             <property name="spacing">
              <number>20</number>
             </property>
-            <item row="2" column="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignBottom">
-             <widget class="QToolButton" name="btn_clear_all">
-              <property name="minimumSize">
-               <size>
-                <width>125</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::FocusPolicy::NoFocus</enum>
-              </property>
-              <property name="text">
-               <string>Clear List</string>
-              </property>
-              <property name="toolButtonStyle">
-               <enum>Qt::ToolButtonStyle::ToolButtonTextBesideIcon</enum>
-              </property>
-             </widget>
-            </item>
             <item row="1" column="0" colspan="3">
              <widget class="QFrame" name="exclusions_rules_table_frame">
               <property name="styleSheet">
@@ -1931,6 +1646,22 @@ height: 13px;
               </layout>
              </widget>
             </item>
+            <item row="2" column="2" alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignBottom">
+             <widget class="QPushButton" name="btn_clear_all">
+              <property name="minimumSize">
+               <size>
+                <width>125</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="focusPolicy">
+               <enum>Qt::FocusPolicy::NoFocus</enum>
+              </property>
+              <property name="text">
+               <string>Clear List</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
@@ -1953,12 +1684,14 @@ border-radius: 8px;
 color: rgba(255, 255, 255, 150);
 background: transparent;
 }
-QFrame#indicator_manage_frame QPushButton,
+QFrame#indicator_manage_frame QPushButton {
+padding: 4px 5px;
+}
 QFrame#indicator_langs_frame QPushButton {
-padding: 5px 10px 6px 10px;
+padding: 10px 5px;
 }
 QFrame#indicator_color_frame QPushButton {
-padding: 9px 10px 10px 10px;
+padding: 10px 5px;
 }
 QFrame#indicator_manage_frame QPushButton:hover,
 QFrame#indicator_langs_frame QPushButton:hover,
@@ -1995,7 +1728,7 @@ background: rgba(55, 125, 255, 200);
 border-radius: 7px;
 }
 QLabel#preview_label {
-padding: 0 4px 1px 4px;
+padding: 1px 4px;
 color: rgba(55, 125, 255, 200);
 background: rgba(32, 32, 32, 225);
 border-radius: 5px;
@@ -2528,11 +2261,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgb(75, 75, 75), stop
                         </property>
                         <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
                          <widget class="QLabel" name="preview_label">
-                          <property name="font">
-                           <font>
-                            <bold>true</bold>
-                           </font>
-                          </property>
                           <property name="text">
                            <string>ENG</string>
                           </property>
