@@ -1,5 +1,6 @@
 #pragma once
 #include "ui_EasyLangSwitcher_settings.h"
+#include "hoverWarning.h"
 #include "animatedSelector.h"
 #include "windowDragger.h"
 #include <QVector>
@@ -35,6 +36,8 @@ protected:
 
     bool event(QEvent *ev) override;
 
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
     bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override;
 
 private:
@@ -47,6 +50,8 @@ private:
     QVector<AnimatedSelector *> selectors;
 
     WindowDragger *dragger = nullptr;
+
+    KeyHoverWarning *keyHoverWarning = nullptr;
 
     QTimer autosaveTimer;
 

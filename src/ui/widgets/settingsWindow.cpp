@@ -26,8 +26,6 @@ SettingsWindow::SettingsWindow(QWidget *parent)
 
     ui.app_theme_frame->hide();
     ui.app_theme_label->hide();
-
-    ui.key_select_label_img->hide();
     //-----------------------------
 
     addSelectorForFrame(ui.key_select_frame);
@@ -38,6 +36,10 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     // восстановить состояние
     ui.btn_en_lang->setChecked(AppSettings::appLang == "en");
     ui.btn_ru_lang->setChecked(AppSettings::appLang == "ru");
+
+    keyHoverWarning = new KeyHoverWarning(this);
+    ui.key_select_label_img->setAttribute(Qt::WA_Hover);
+    ui.key_select_label_img->installEventFilter(this);
 
     refreshTranslations();
 
@@ -65,8 +67,8 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     ui.btn_general_top_sider->setIcon(
         IconHelper::loadIcon(":/icons/icons/SettingsFilled.svg", QColor(225, 225, 225), QSize(42, 42)));
 
-    ui.key_select_label_img->setPixmap(
-        IconHelper::loadIcon(":/icons/icons/InfoRegular.svg", QColor(175, 175, 175)).pixmap(16, 16));
+    ui.key_select_label_img->setIcon(
+        IconHelper::loadIcon(":/icons/icons/InfoRegular.svg", QColor(175, 175, 175), QSize(16, 16)));
 
     buildPresetMap();
 
@@ -283,6 +285,18 @@ bool SettingsWindow::event(QEvent *ev) {
     return QWidget::event(ev);
 }
 
+bool SettingsWindow::eventFilter(QObject *watched, QEvent *event) {
+    if (watched == ui.key_select_label_img && keyHoverWarning) {
+        if (event->type() == QEvent::Enter) {
+            keyHoverWarning->showNear(ui.key_select_label_img);
+        } else if (event->type() == QEvent::Leave) {
+            keyHoverWarning->hideNow();
+        }
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
+
 bool SettingsWindow::nativeEvent(const QByteArray &eventType, void *message, qintptr *result) {
     if (eventType == "windows_generic_MSG") {
         // Третий параметр - цвет фона, который будет на превью вместо прозрачности.
@@ -491,6 +505,8 @@ void SettingsWindow::refreshTranslations() const {
     ui.btn_close_bot_sider->setText(Lang::tr("SETTINGS_SIDER_MENU_CLOSE"));
     ui.btn_enable_startup->setText(Lang::tr("SETTINGS_ENABLE_STARTUP_LABEL"));
     ui.btn_disable_startup->setText(Lang::tr("SETTINGS_DISABLE_STARTUP_LABEL"));
+
+    keyHoverWarning->setText(Lang::tr("SETTINGS_KEY_HOVER_WARNING_POPUP"));
 
     if (const auto *seq = findChild<QKeySequenceEdit *>("btn_sequence")) {
         if (auto *le = seq->findChild<QLineEdit *>()) {

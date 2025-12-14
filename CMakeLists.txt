@@ -61,6 +61,8 @@ add_executable(${APP_NAME}
         src/ui/widgets/animatedSelector.h
         src/ui/widgets/autoStartup.cpp
         src/ui/widgets/autoStartup.h
+        src/ui/widgets/hoverWarning.cpp
+        src/ui/widgets/hoverWarning.h
         src/ui/widgets/saveNotification.cpp
         src/ui/widgets/saveNotification.h
         src/ui/widgets/settingsWindow.cpp
