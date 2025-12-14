@@ -1,5 +1,7 @@
 #include "settingsWindow.h"
 #include "saveNotification.h"
+#include "autoStartup.h"
+#include "../../core/i18n/lang.h"
 #include "../../core/config/logger.h"
 #include "../../core/config/appSettings.h"
 #include "../helpers/acrylicHelper.h"
@@ -22,20 +24,38 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     ui.btn_indicator_top_sider->hide();
     ui.btn_info_top_sider->hide();
 
-    ui.app_startup_frame->hide();
-    ui.app_startup_label->hide();
     ui.app_theme_frame->hide();
     ui.app_theme_label->hide();
-    ui.app_lang_frame->hide();
-    ui.app_lang_label->hide();
-
-    ui.key_select_label_img->hide();
     //-----------------------------
 
     addSelectorForFrame(ui.key_select_frame);
-    // addSelectorForFrame(ui.app_startup_frame);
+    addSelectorForFrame(ui.app_startup_frame);
     // addSelectorForFrame(ui.app_theme_frame);
-    // addSelectorForFrame(ui.app_lang_frame);
+    addSelectorForFrame(ui.app_lang_frame);
+
+    // восстановить состояние
+    ui.btn_en_lang->setChecked(AppSettings::appLang == "en");
+    ui.btn_ru_lang->setChecked(AppSettings::appLang == "ru");
+
+    keyHoverWarning = new KeyHoverWarning(this);
+    ui.key_select_label_img->setAttribute(Qt::WA_Hover);
+    ui.key_select_label_img->installEventFilter(this);
+
+    refreshTranslations();
+
+    connect(ui.btn_en_lang, &QPushButton::clicked, this, [this]() {
+        if (!ui.btn_en_lang->isChecked()) return;
+        AppSettings::appLang = "en";
+        ui.btn_ru_lang->setChecked(false);
+        markChanged();
+    });
+
+    connect(ui.btn_ru_lang, &QPushButton::clicked, this, [this]() {
+        if (!ui.btn_ru_lang->isChecked()) return;
+        AppSettings::appLang = "ru";
+        ui.btn_en_lang->setChecked(false);
+        markChanged();
+    });
 
     m_shadow = new QGraphicsDropShadowEffect(ui.content_container);
     m_shadow->setBlurRadius(12);
@@ -47,13 +67,13 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     ui.btn_general_top_sider->setIcon(
         IconHelper::loadIcon(":/icons/icons/SettingsFilled.svg", QColor(225, 225, 225), QSize(42, 42)));
 
-    ui.key_select_label_img->setPixmap(
-        IconHelper::loadIcon(":/icons/icons/InfoRegular.svg", QColor(175, 175, 175)).pixmap(16, 16));
+    ui.key_select_label_img->setIcon(
+        IconHelper::loadIcon(":/icons/icons/InfoRegular.svg", QColor(175, 175, 175), QSize(16, 16)));
 
     buildPresetMap();
 
-    const auto KEY_PLACEHOLDER = QStringLiteral("Key...");
-    const auto *keyHelper = new KeySequenceHelper(
+    const auto KEY_PLACEHOLDER = Lang::tr("SETTINGS_KEY_SEQUENCE");
+    m_keyHelper = new KeySequenceHelper(
         this,
         "btn_sequence",
         IconHelper::loadIcon(":/icons/icons/ClearFilled.svg", QColor(175, 175, 175), QSize(12, 12)),
@@ -87,6 +107,21 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     connect(ui.btn_restore_default, &QToolButton::clicked,
             this, &SettingsWindow::restoreDefaultsForCurrentPage);
 
+    ui.btn_enable_startup->setChecked(AutoStartupManager::isAutoStartupEnabled());
+    ui.btn_disable_startup->setChecked(!AutoStartupManager::isAutoStartupEnabled());
+
+    connect(ui.btn_enable_startup, &QPushButton::clicked, [this]() {
+        AutoStartupManager::setAutoStartup(true);
+        AppSettings::autoStartup = true;
+        markChanged();
+    });
+
+    connect(ui.btn_disable_startup, &QPushButton::clicked, [this]() {
+        AutoStartupManager::setAutoStartup(false);
+        AppSettings::autoStartup = false;
+        markChanged();
+    });
+
     dragger = new WindowDragger(this);
     dragger->addIgnoredWidget(ui.btn_close_bot_sider);
 
@@ -114,8 +149,8 @@ SettingsWindow::SettingsWindow(QWidget *parent)
         }
     }
 
-    if (keyHelper) {
-        connect(keyHelper, &KeySequenceHelper::hotkeySelected, this,
+    if (m_keyHelper) {
+        connect(m_keyHelper, &KeySequenceHelper::hotkeySelected, this,
                 [this](const int mainVk, int /*mods*/, const QString &name) {
                     if (mainVk == 0) {
                         LOG_DEBUG() << "Sequence cleared by user";
@@ -157,12 +192,13 @@ SettingsWindow::SettingsWindow(QWidget *parent)
             AppSettings::previousHotkeyName = name;
 
             // Очищаем QKeySequenceEdit, чтобы плейсхолдер показывался
-            if (auto *seqEdit = findChild<QKeySequenceEdit *>("btn_sequence")) {
-                seqEdit->setKeySequence(QKeySequence());
-                seqEdit->setStyleSheet("color: rgba(255, 255, 255, 225);");
-                seqEdit->clearFocus();
+            if (auto *seq = findChild<QKeySequenceEdit *>("btn_sequence")) {
+                seq->setKeySequence(QKeySequence());
+                seq->setStyleSheet("color: rgba(255, 255, 255, 225);");
+                seq->clearFocus();
                 this->setFocus(Qt::OtherFocusReason);
-                if (auto *le = seqEdit->findChild<QLineEdit *>()) le->setPlaceholderText(QStringLiteral("Key..."));
+                if (auto *le = seq->findChild<QLineEdit *>())
+                    le->setPlaceholderText(Lang::tr("SETTINGS_KEY_SEQUENCE"));
             }
         });
     }
@@ -203,7 +239,8 @@ SettingsWindow::SettingsWindow(QWidget *parent)
             });
 
     connect(this, &SettingsWindow::settingsSaved, this, [this]() {
-        SaveNotification::showFor(this, QStringLiteral("All changes saved automatically"));
+        SaveNotification::showFor(this, Lang::tr("SETTINGS_ALL_CHANGES_SAVED"));
+        refreshTranslations();
     });
 
     LOG_DEBUG() << "SettingsWindow initialized";
@@ -247,6 +284,18 @@ bool SettingsWindow::event(QEvent *ev) {
     }
     return QWidget::event(ev);
 }
+
+bool SettingsWindow::eventFilter(QObject *watched, QEvent *event) {
+    if (watched == ui.key_select_label_img && keyHoverWarning) {
+        if (event->type() == QEvent::Enter) {
+            keyHoverWarning->showNear(ui.key_select_label_img);
+        } else if (event->type() == QEvent::Leave) {
+            keyHoverWarning->hideNow();
+        }
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
 
 bool SettingsWindow::nativeEvent(const QByteArray &eventType, void *message, qintptr *result) {
     if (eventType == "windows_generic_MSG") {
@@ -359,14 +408,14 @@ void SettingsWindow::restorePreviousPresetIfNeeded() {
 
             markChanged();
         } else {
-            emit settingsChanged();
+            // emit settingsChanged();
             AppSettings::previousHotkeyMainVk = 0;
             AppSettings::previousHotkeyName.clear();
 
             LOG_DEBUG() << "Previous preset not restored - hotkey already matches";
         }
     } else {
-        emit settingsChanged();
+        // emit settingsChanged();
         LOG_DEBUG() << "No previous preset to restore";
     }
 }
@@ -405,7 +454,7 @@ void SettingsWindow::restoreDefaults_General() {
             seq->setKeySequence(QKeySequence());
             seq->setStyleSheet("color: rgba(255, 255, 255, 225);");
             if (auto *le = seq->findChild<QLineEdit *>())
-                le->setPlaceholderText("Key...");
+                le->setPlaceholderText(Lang::tr("SETTINGS_KEY_SEQUENCE"));
         } else {
             seq->setKeySequence(QKeySequence(AppSettings::hotkeyName));
         }
@@ -415,7 +464,7 @@ void SettingsWindow::restoreDefaults_General() {
     ui.key_delay_slider->setValue(AppSettings::defaultSwitchDelayMs);
     ui.key_delay_spinbox->setValue(AppSettings::defaultSwitchDelayMs);
 
-    // запуск анимации индикатора: находим селектор, привязанный к ui.key_select_frame
+    // запуск анимации индикатора: key_select_frame
     for (auto *sel: selectors) {
         if (!sel) continue;
         if (sel->boundFrame() == ui.key_select_frame) {
@@ -427,5 +476,45 @@ void SettingsWindow::restoreDefaults_General() {
         }
     }
 
+    // AppSettings::appLang = AppSettings::defaultAppLang;
+    // ui.btn_en_lang->setChecked(true);
+    // ui.btn_ru_lang->setChecked(false);
+    //
+    // // запуск анимации индикатора: app_lang_frame
+    // for (auto *sel: selectors) {
+    //     if (!sel) continue;
+    //     if (sel->boundFrame() == ui.app_lang_frame) {
+    //         sel->stopAndResetAnimation();
+    //         QTimer::singleShot(0, sel, &AnimatedSelector::animateToCurrentState);
+    //         break;
+    //     }
+    // }
+
     markChanged();
+}
+
+void SettingsWindow::refreshTranslations() const {
+    ui.key_select_label_msg->setText(Lang::tr("SETTINGS_SELECT_KEY_LABEL"));
+    ui.key_delay_label->setText(Lang::tr("SETTINGS_SWITCH_DELAY_LABEL"));
+    ui.app_startup_label->setText(Lang::tr("SETTINGS_APP_STARTUP_LABEL"));
+    ui.app_lang_label->setText(Lang::tr("SETTINGS_APP_LANG_LABEL"));
+    ui.btn_restore_default->setText(Lang::tr("SETTINGS_RESTORE_DEFAULT_LABEL"));
+    ui.btn_general_top_sider->setText(Lang::tr("SETTINGS_SIDER_MENU_GENERAL"));
+    ui.btn_exclusions_top_sider->setText(Lang::tr("SETTINGS_SIDER_MENU_EXCLUSIONS"));
+    ui.btn_info_top_sider->setText(Lang::tr("SETTINGS_SIDER_MENU_INFO"));
+    ui.btn_close_bot_sider->setText(Lang::tr("SETTINGS_SIDER_MENU_CLOSE"));
+    ui.btn_enable_startup->setText(Lang::tr("SETTINGS_ENABLE_STARTUP_LABEL"));
+    ui.btn_disable_startup->setText(Lang::tr("SETTINGS_DISABLE_STARTUP_LABEL"));
+
+    keyHoverWarning->setText(Lang::tr("SETTINGS_KEY_HOVER_WARNING_POPUP"));
+
+    if (const auto *seq = findChild<QKeySequenceEdit *>("btn_sequence")) {
+        if (auto *le = seq->findChild<QLineEdit *>()) {
+            le->setPlaceholderText(Lang::tr("SETTINGS_KEY_SEQUENCE"));
+        }
+    }
+
+    if (m_keyHelper) {
+        m_keyHelper->setPlaceholder(Lang::tr("SETTINGS_KEY_SEQUENCE"));
+    }
 }

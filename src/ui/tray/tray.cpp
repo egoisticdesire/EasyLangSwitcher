@@ -1,4 +1,5 @@
 #include "tray.h"
+#include "../widgets/soundManager.h"
 #include "../../core/config/logger.h"
 #include "../../core/config/appSettings.h"
 #include "../helpers/acrylicHelper.h"
@@ -10,7 +11,8 @@
 #include <QGraphicsOpacityEffect>
 #include <QMouseEvent>
 #include <QPushButton>
-#include <QSoundEffect>
+
+#include "../../core/i18n/lang.h"
 
 TrayManager::TrayManager(QWidget *parent)
     : QWidget(parent) {
@@ -39,13 +41,16 @@ TrayManager::TrayManager(QWidget *parent)
     fadeOut->setEasingCurve(QEasingCurve::InCubic);
     connect(fadeOut, &QPropertyAnimation::finished, this, &QWidget::hide);
 
-    effectOn = new QSoundEffect(this);
-    effectOn->setSource(QUrl("qrc:/sounds/sounds/on.wav"));
-    effectOn->setVolume(0.5f);
+    audioEffectOn = new QSoundEffect(this);
+    audioEffectOn->setSource(QUrl("qrc:/sounds/sounds/on.wav"));
+    audioEffectOn->setVolume(0.5f);
 
-    effectOff = new QSoundEffect(this);
-    effectOff->setSource(QUrl("qrc:/sounds/sounds/off.wav"));
-    effectOff->setVolume(0.5f);
+    audioEffectOff = new QSoundEffect(this);
+    audioEffectOff->setSource(QUrl("qrc:/sounds/sounds/off.wav"));
+    audioEffectOff->setVolume(0.5f);
+
+    soundManager::instance().registerEffect(audioEffectOn);
+    soundManager::instance().registerEffect(audioEffectOff);
 
     setupUiBehavior();
     setupTrayIcon();
@@ -60,7 +65,7 @@ TrayManager::TrayManager(QWidget *parent)
 
 void TrayManager::setupTrayIcon() {
     trayIcon.setIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
-    trayIcon.setToolTip("EasyLangSwitcher");
+    trayIcon.setToolTip(AppSettings::APP_NAME);
     trayIcon.setVisible(true);
 
     connect(&trayIcon, &QSystemTrayIcon::activated, this,
@@ -70,12 +75,12 @@ void TrayManager::setupTrayIcon() {
                         // ЛКМ — быстрый вкл/выкл
                         enabled = !enabled;
 
-                        if (enabled) effectOn->play();
-                        else effectOff->play();
+                        if (enabled) audioEffectOn->play();
+                        else audioEffectOff->play();
 
                         emit keyboardToggled(enabled);
 
-                        LOG_INFO() << "Keyboard toggled via tray: " << (enabled ? "'enabled'" : "'disabled'");
+                        LOG_DEBUG() << "Keyboard toggled via tray: " << (enabled ? "'enabled'" : "'disabled'");
                         updateTrayIcon();
                         break;
                     case QSystemTrayIcon::Context:
@@ -110,18 +115,18 @@ void TrayManager::setupUiBehavior() {
 
     connect(ui.exit_btn, &QToolButton::clicked, this, [this]() {
         emit exitRequested();
-        LOG_INFO() << "Exit requested via tray button";
+        LOG_DEBUG() << "Exit requested via tray button";
     });
     connect(ui.toggle_btn, &QToolButton::clicked, this, [this]() {
         enabled = !enabled;
 
-        if (enabled) effectOn->play();
-        else effectOff->play();
+        if (enabled) audioEffectOn->play();
+        else audioEffectOff->play();
 
         emit keyboardToggled(enabled);
         animateToggleButton();
         updateTrayIcon();
-        LOG_INFO() << "Keyboard toggled via tray menu button: " << (enabled ? "'enabled'" : "'disabled'");
+        LOG_DEBUG() << "Keyboard toggled via tray menu button: " << (enabled ? "'enabled'" : "'disabled'");
     });
 
     updateInfo();
@@ -129,10 +134,17 @@ void TrayManager::setupUiBehavior() {
 }
 
 void TrayManager::updateInfo() const {
-    ui.status_value->setText(enabled ? tr("Enabled") : tr("Disabled"));
+    ui.status_value->setText(enabled ? Lang::tr("TRAY_TOGGLE_ENABLED") : Lang::tr("TRAY_TOGGLE_DISABLED"));
     ui.hotkey_value->setText(AppSettings::hotkeyName);
     ui.delay_value->setText(QString::number(AppSettings::switchDelayMs));
-    ui.toggle_btn->setText(enabled ? tr("  Disable") : tr("  Enable"));
+    ui.toggle_btn->setText(enabled ? Lang::tr("TRAY_TOGGLE_PAUSE") : Lang::tr("TRAY_TOGGLE_RESUME"));
+
+    ui.settings_btn->setText(Lang::tr("TRAY_SETTINGS"));
+    ui.exit_btn->setText(Lang::tr("TRAY_EXIT"));
+
+    ui.status_key->setText(Lang::tr("TRAY_LABEL_STATUS"));
+    ui.hotkey_key->setText(Lang::tr("TRAY_LABEL_HOTKEY"));
+    ui.delay_key->setText(Lang::tr("TRAY_LABEL_DELAY"));
 
     ui.toggle_btn->setIcon(
         enabled

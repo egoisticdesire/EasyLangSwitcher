@@ -40,8 +40,10 @@ private:
     bool enabled = true;
 
     QPropertyAnimation *fadeIn = nullptr;
-
     QPropertyAnimation *fadeOut = nullptr;
+
+    QSoundEffect *audioEffectOn = nullptr;
+    QSoundEffect *audioEffectOff = nullptr;
 
     void updateTrayIcon();
 
@@ -54,8 +56,4 @@ private:
     void animateToggleButton();
 
     void hideAnimated() const;
-
-    QSoundEffect *effectOn = nullptr;
-
-    QSoundEffect *effectOff = nullptr;
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include "ui_EasyLangSwitcher_settings.h"
+#include "hoverWarning.h"
 #include "animatedSelector.h"
 #include "windowDragger.h"
 #include <QVector>
@@ -12,6 +13,7 @@ SettingsWindow
 — восстановление предыдущего preset при очистке input-поля
 — единый маппинг preset кнопок
 */
+class KeySequenceHelper;
 class SaveNotification;
 
 class SettingsWindow final : public QWidget {
@@ -34,16 +36,22 @@ protected:
 
     bool event(QEvent *ev) override;
 
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
     bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override;
 
 private:
     Ui::settings_main_widget ui{};
+
+    KeySequenceHelper *m_keyHelper = nullptr;
 
     SaveNotification *saveNotif = nullptr;
 
     QVector<AnimatedSelector *> selectors;
 
     WindowDragger *dragger = nullptr;
+
+    KeyHoverWarning *keyHoverWarning = nullptr;
 
     QTimer autosaveTimer;
 
@@ -76,4 +84,6 @@ private:
     void restoreDefaultsForCurrentPage();
 
     void restoreDefaults_General();
+
+    void refreshTranslations() const;
 };

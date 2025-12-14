@@ -1,41 +1,47 @@
 #include "../core/config/logger.h"
 #include "../core/config/loggerQtBridge.h"
 #include "../core/handlers/kb.h"
+#include "../ui/helpers/fontHelper.h"
 #include "../ui/helpers/iconHelper.h"
 #include "../ui/helpers/warningHelper.h"
 #include "../ui/tray/tray.h"
 #include "../core/config/appSettings.h"
+#include "../core/i18n/lang.h"
 #include <QApplication>
 #include <Windows.h>
 #include <fcntl.h>
 #include <io.h>
 
 int main(int argc, char *argv[]) {
+    Logger::_debug = false;
+
     SetConsoleOutputCP(CP_UTF8);
     _setmode(_fileno(stdout), _O_U16TEXT);
 
-    const QApplication app(argc, argv);
+    QApplication app(argc, argv);
     QApplication::setStyle("Windows11");
 
+    FontManager::init(app);
+
+    AppSettings::load();
+
     // Проверка на уже запущенный экземпляр
-    const HANDLE hMutex = CreateMutex(nullptr, TRUE, L"MyUniqueFlashSparkleMutex");
+    const QString mutexName = QString("MyUnique%1Mutex").arg(AppSettings::APP_NAME);
+    const HANDLE hMutex = CreateMutex(nullptr, TRUE, mutexName.toStdWString().c_str());
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         WarningDialog dlg;
-        dlg.setText("EasyLangSwitcher is already running!");
+        dlg.setTranslations(Lang::tr("SETTINGS_SIDER_MENU_CLOSE"));
+        dlg.setText(Lang::tr("SECOND_INSTANCE_ERROR").arg(AppSettings::APP_NAME));
         dlg.openCentered();
         dlg.exec();
         return 0;
     }
 
-    Logger::_debug = true;
     QtLoggerBridge::install();
-    LOG_INFO() << "Logger initialized with level: "
-            << (Logger::_debug ? "DEBUG" : "INFO");
+    LOG_INFO() << "Logger initialized with level: " << (Logger::_debug ? "DEBUG" : "INFO");
 
     QApplication::setQuitOnLastWindowClosed(false);
     QApplication::setWindowIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
-
-    AppSettings::load();
 
     TrayManager tray;
     tray.show();

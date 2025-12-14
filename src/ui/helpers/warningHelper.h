@@ -1,8 +1,9 @@
 #pragma once
 #include "ui_EasyLangSwitcher_warning.h"
+#include "../widgets/soundManager.h"
+#include "../widgets/windowDragger.h"
 #include "iconHelper.h"
 #include "acrylicHelper.h"
-#include "../widgets/windowDragger.h"
 #include <QDialog>
 #include <QScreen>
 #include <QSoundEffect>
@@ -22,9 +23,7 @@ public:
         setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
         setAttribute(Qt::WA_TranslucentBackground);
 
-        QTimer::singleShot(0, this, [this] {
-            AcrylicHelper::enableAcrylic(this);
-        });
+        QTimer::singleShot(0, this, [this] { AcrylicHelper::enableAcrylic(this); });
 
 
         auto *closeAction = new QAction(this);
@@ -37,9 +36,11 @@ public:
         dragger = new WindowDragger(this);
         dragger->addIgnoredWidget(ui.btn_close);
 
-        effect = new QSoundEffect(this);
-        effect->setSource(QUrl("qrc:/sounds/sounds/error.wav"));
-        effect->setVolume(0.5f);
+        audioEffect = new QSoundEffect(this);
+        audioEffect->setSource(QUrl("qrc:/sounds/sounds/error.wav"));
+        audioEffect->setVolume(0.5f);
+
+        soundManager::instance().registerEffect(audioEffect);
     }
 
     void setText(const QString &text) const {
@@ -62,7 +63,23 @@ public:
         raise();
         activateWindow();
 
-        if (effect) effect->play();
+        if (audioEffect) audioEffect->play();
+    }
+
+    void setTranslations(const QString &text) const {
+        ui.btn_close->setText(text);
+    }
+
+protected:
+    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override {
+        if (eventType == "windows_generic_MSG") {
+            // Третий параметр - цвет фона, который будет на превью вместо прозрачности.
+            if (AcrylicHelper::handleIconicMessages(this, message, QColor(32, 32, 32))) {
+                *result = 0;
+                return true;
+            }
+        }
+        return QWidget::nativeEvent(eventType, message, result);
     }
 
 private:
@@ -70,5 +87,5 @@ private:
 
     WindowDragger *dragger = nullptr;
 
-    QSoundEffect *effect = nullptr;
+    QSoundEffect *audioEffect = nullptr;
 };

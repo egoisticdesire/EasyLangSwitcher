@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>310</width>
+    <width>330</width>
     <height>110</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>310</width>
+    <width>330</width>
     <height>110</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>310</width>
+    <width>330</width>
     <height>110</height>
    </size>
   </property>
@@ -46,15 +46,19 @@
      <property name="styleSheet">
       <string notr="true">QFrame#background_frame {
 border: 1px solid rgb(50, 50, 50);
-color: rgba(255, 255, 255, 225);
 background: transparent;
 }
+QFrame#background_frame QLabel {
+color: rgba(255, 255, 255, 225);
+}
 QFrame#background_frame QPushButton {
-padding: 4px 10px 5px 10px;
-border-radius: 8px;
+padding: 5px 10px;
+border-radius: 6px;
+color: rgba(255, 255, 255, 200);
 background: rgba(255, 255, 255, 10);
 }
 QFrame#background_frame QPushButton:hover {
+color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 15);
 }
 QFrame#background_frame QPushButton:pressed {
@@ -187,11 +191,6 @@ border: 1px solid transparent;
         </item>
         <item row="0" column="1" colspan="2">
          <widget class="QLabel" name="text_label">
-          <property name="font">
-           <font>
-            <bold>true</bold>
-           </font>
-          </property>
           <property name="text">
            <string>EasyLangSwitcher is already running!</string>
           </property>

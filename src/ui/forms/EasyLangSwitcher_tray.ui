@@ -6,26 +6,26 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>168</width>
-    <height>200</height>
+    <width>180</width>
+    <height>204</height>
    </rect>
   </property>
   <property name="sizePolicy">
    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-    <horstretch>168</horstretch>
+    <horstretch>180</horstretch>
     <verstretch>200</verstretch>
    </sizepolicy>
   </property>
   <property name="minimumSize">
    <size>
-    <width>168</width>
+    <width>180</width>
     <height>200</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>168</width>
-    <height>200</height>
+    <width>180</width>
+    <height>204</height>
    </size>
   </property>
   <property name="baseSize">
@@ -57,15 +57,50 @@
    </property>
    <item>
     <widget class="QFrame" name="background_frame">
-     <property name="font">
-      <font>
-       <pointsize>10</pointsize>
-      </font>
-     </property>
      <property name="styleSheet">
       <string notr="true">QFrame#background_frame {
 border: 1px solid rgb(50, 50, 50);
 background: transparent;
+}
+QFrame#info_frame {
+margin: 4px;
+padding: 2px;
+border-radius: 6px;
+background: rgba(255, 255, 255, 10);
+}
+QLabel#hotkey_key,
+QLabel#hotkey_value,
+QLabel#delay_key,
+QLabel#delay_value,
+QLabel#status_key,
+QLabel#status_value {
+margin: 2px;
+padding: 3px 0;
+border-radius: 5px;
+color: rgba(255, 255, 255, 150);
+background: transparent;
+}
+
+QFrame#btns_frame {
+margin: 2px;
+border-radius: 6px;
+background: transparent;
+}
+QFrame#btns_frame QToolButton {
+margin: 2px;
+padding: 4px;
+border-radius: 5px;
+color: rgba(255, 255, 255, 200);
+}
+QFrame#btns_frame QToolButton:hover {
+color: rgba(255, 255, 255, 255);
+background: rgba(255, 255, 255, 15);
+}
+QFrame#btns_frame QToolButton:pressed {
+background: rgba(255, 255, 255, 7);
+}
+QFrame#btns_frame QToolButton:focus {
+outline: none;
 }</string>
      </property>
      <property name="frameShape">
@@ -92,34 +127,11 @@ background: transparent;
       </property>
       <item>
        <widget class="QFrame" name="info_frame">
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
         <property name="cursor">
          <cursorShape>WhatsThisCursor</cursorShape>
         </property>
         <property name="styleSheet">
-         <string notr="true">QFrame#info_frame {
-margin: 4px;
-padding: 2px;
-border-radius: 6px;
-background: rgba(255, 255, 255, 7);
-}
-QLabel#hotkey_key,
-QLabel#hotkey_value,
-QLabel#delay_key,
-QLabel#delay_value,
-QLabel#status_key,
-QLabel#status_value {
-margin: 2px;
-padding: 3px 0;
-border-radius: 5px;
-color: rgba(255, 255, 255, 150);
-background: transparent;
-}
-</string>
+         <string notr="true"/>
         </property>
         <property name="frameShape">
          <enum>QFrame::Shape::StyledPanel</enum>
@@ -150,11 +162,6 @@ background: transparent;
            </property>
            <item>
             <widget class="QLabel" name="status_key">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
              <property name="text">
               <string>Status:</string>
              </property>
@@ -165,11 +172,6 @@ background: transparent;
            </item>
            <item>
             <widget class="QLabel" name="status_value">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
              <property name="text">
               <string>Enabled</string>
              </property>
@@ -187,11 +189,6 @@ background: transparent;
            </property>
            <item>
             <widget class="QLabel" name="hotkey_key">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
              <property name="text">
               <string>Hotkey:</string>
              </property>
@@ -202,11 +199,6 @@ background: transparent;
            </item>
            <item>
             <widget class="QLabel" name="hotkey_value">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
              <property name="text">
               <string>Left Ctrl</string>
              </property>
@@ -224,11 +216,6 @@ background: transparent;
            </property>
            <item>
             <widget class="QLabel" name="delay_key">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
              <property name="text">
               <string>Delay (ms):</string>
              </property>
@@ -239,11 +226,6 @@ background: transparent;
            </item>
            <item>
             <widget class="QLabel" name="delay_value">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
              <property name="cursor">
               <cursorShape>WhatsThisCursor</cursorShape>
              </property>
@@ -262,34 +244,8 @@ background: transparent;
       </item>
       <item>
        <widget class="QFrame" name="btns_frame">
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
         <property name="styleSheet">
-         <string notr="true">QFrame#btns_frame {
-margin: 2px;
-border-radius: 6px;
-background: transparent;
-}
-QFrame#btns_frame QToolButton {
-margin: 2px;
-padding: 2px 4px;
-border-radius: 5px;
-color: rgba(255, 255, 255, 175);
-qproperty-iconSize: 22px;
-}
-QFrame#btns_frame QToolButton:hover {
-color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 20);
-}
-QFrame#btns_frame QToolButton:pressed {
-background: rgba(255, 255, 255, 10);
-}
-QFrame#btns_frame QToolButton:pressed {
-outline: none;
-}</string>
+         <string notr="true"/>
         </property>
         <layout class="QVBoxLayout" name="v_layout_btns">
          <property name="spacing">
@@ -318,11 +274,6 @@ outline: none;
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
            <property name="focusPolicy">
             <enum>Qt::FocusPolicy::TabFocus</enum>
            </property>
@@ -341,8 +292,8 @@ outline: none;
            </property>
            <property name="iconSize">
             <size>
-             <width>22</width>
-             <height>22</height>
+             <width>20</width>
+             <height>20</height>
             </size>
            </property>
            <property name="toolButtonStyle">
@@ -361,11 +312,6 @@ outline: none;
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
            <property name="focusPolicy">
             <enum>Qt::FocusPolicy::TabFocus</enum>
            </property>
@@ -381,8 +327,8 @@ outline: none;
            </property>
            <property name="iconSize">
             <size>
-             <width>22</width>
-             <height>22</height>
+             <width>20</width>
+             <height>20</height>
             </size>
            </property>
            <property name="toolButtonStyle">
@@ -397,11 +343,6 @@ outline: none;
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
            </property>
            <property name="focusPolicy">
             <enum>Qt::FocusPolicy::TabFocus</enum>
@@ -418,8 +359,8 @@ outline: none;
            </property>
            <property name="iconSize">
             <size>
-             <width>22</width>
-             <height>22</height>
+             <width>20</width>
+             <height>20</height>
             </size>
            </property>
            <property name="toolButtonStyle">

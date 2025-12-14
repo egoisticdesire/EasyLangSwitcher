@@ -7,10 +7,10 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>180</height>
+    <height>100</height>
    </rect>
   </property>
-  <layout class="QVBoxLayout" name="vlayout_settings_warning_main_widget">
+  <layout class="QHBoxLayout" name="hlayout_settings_warning_main_widget">
    <property name="spacing">
     <number>0</number>
    </property>
@@ -30,13 +30,12 @@
     <widget class="QFrame" name="background_frame">
      <property name="styleSheet">
       <string notr="true">QFrame#background_frame {
-padding: 10px;
-border-radius: 16px;
-border: 1px solid rgba(255, 255, 255, 30);
-background: rgba(42, 42, 42, 235);
+/*padding: 0 12px;*/
+border: 1px solid rgb(50, 50, 50);
+background: transparent;
 };</string>
      </property>
-     <layout class="QVBoxLayout" name="vlayout_background_frame">
+     <layout class="QHBoxLayout" name="hlayout_background_frame">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -55,24 +54,27 @@ background: rgba(42, 42, 42, 235);
       <item>
        <widget class="QLabel" name="label_warning">
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
-&lt;div style=&quot;color: rgba(255, 255, 255, 200); font-size: 12px;&quot;&gt;
-&lt;p align=&quot;justify&quot; style=&quot;font-size: 14px;&quot;&gt;
-&lt;span style=&quot; font-weight:700;&quot;&gt;Warnings:&lt;/span&gt;
-&lt;/p&gt;
-&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;
-&lt;li align=&quot;justify&quot; style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;
-&lt;p align=&quot;justify&quot;&gt;
-When selecting the &lt;code style=&quot;color: rgba(74, 144, 226, 255); font-size: 13px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Alt&lt;/span&gt;&lt;/code&gt; key as a layout switch modifier, its default behavior will be disabled — specifically, the activation of the window’s top menu;
-&lt;/p&gt;
-&lt;/li&gt;
-&lt;li align=&quot;justify&quot; style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;
-&lt;p align=&quot;justify&quot;&gt;
-When selecting the &lt;code style=&quot;color: rgba(74, 144, 226, 255); font-size: 13px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Caps Lock&lt;/span&gt;&lt;/code&gt;  key as a layout switch modifier, its default behavior will change: a short press will switch the layout, while a long press will perform the standard action.
-&lt;/p&gt;
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body style=&quot;color: rgba(255, 255, 255, 200); margin: 0; padding: 0;&quot;&gt;
+&lt;div style=&quot;font-size: 14px;&quot;&gt;
+&lt;span style=&quot;color:rgba(255, 255, 255, 225); font-weight:700;&quot;&gt;Warnings:&lt;/span&gt;
+&lt;/div&gt;
+&lt;ul style=&quot;margin:0; padding:0; list-style:none;&quot;&gt;
+&lt;li style=&quot;margin-top:12px;&quot;&gt;
+    &lt;table cellspacing=&quot;0&quot; cellpadding=&quot;0&quot;&gt;
+    &lt;tr&gt;
+        &lt;td width=&quot;16&quot; valign=&quot;top&quot;&gt;•&lt;/td&gt;
+        &lt;td align=&quot;justify&quot; style=&quot;font-size: 12px;&quot;&gt;
+            When selecting the
+            &lt;code style=&quot;color: rgba(74,144,226,255); font-size:14px;&quot;&gt;Caps&lt;/code&gt;
+            &lt;code style=&quot;color: rgba(74,144,226,255); font-size:14px;&quot;&gt;Lock&lt;/code&gt;
+            key as a layout switch modifier, its default behavior will change: a short
+            press will switch the layout, while repeated or long presses will perform
+            the standard action.
+        &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;/table&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;/div&gt;
 &lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="wordWrap">
@@ -85,6 +87,8 @@ When selecting the &lt;code style=&quot;color: rgba(74, 144, 226, 255); font-siz
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../../resources/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

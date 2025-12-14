@@ -57,6 +57,11 @@
     <file>icons/TableSimpleExcludeFilled.svg</file>
     <file>icons/TableSimpleExcludeRegular.svg</file>
   </qresource>
+  <qresource prefix="fonts">
+    <file>fonts/Inter-Regular.ttf</file>
+    <file>fonts/InterVariable.ttf</file>
+    <file>fonts/InterVariable-Italic.ttf</file>
+  </qresource>
   <qresource prefix="sounds">
     <file>sounds/off.wav</file>
     <file>sounds/on.wav</file>

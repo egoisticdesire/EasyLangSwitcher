@@ -1,14 +1,15 @@
 #pragma once
-#include <QTimer>
 #include "ui_EasyLangSwitcher_settings_notification.h"
 #include <QGraphicsOpacityEffect>
 #include <QPropertyAnimation>
 #include <QVector>
+#include <QTimer>
 
 class SettingsWindow;
 
 class SaveNotification final : public QWidget {
     Q_OBJECT
+    Q_PROPERTY(qreal progress READ progress WRITE setProgress)
 
 public:
     explicit SaveNotification(SettingsWindow *settings, const QString &text);
@@ -17,8 +18,17 @@ public:
 
     static QVector<SaveNotification *> stack;
 
+    qreal progress() const { return m_progress; }
+
+    void setProgress(const qreal v) {
+        m_progress = v;
+        update();
+    }
+
 protected:
     bool eventFilter(QObject *o, QEvent *e) override;
+
+    void paintEvent(QPaintEvent *e) override;
 
 private:
     void startShowAnimation();
@@ -28,6 +38,8 @@ private:
     void animateTo(int newIndex);
 
     bool m_closing = false;
+
+    qreal m_progress = 0.0;
 
     QWidget *m_content = nullptr; // контейнер, который содержит текст+иконку в .ui
 

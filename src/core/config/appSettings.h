@@ -9,6 +9,8 @@ AppSettings
 
 class AppSettings {
 public:
+    static constexpr auto APP_NAME = "EasyLangSwitcher";
+
     static void logger(const QString &action);
 
     static void load();
@@ -17,7 +19,8 @@ public:
 
     static void reset();
 
-    // runtime
+    static bool autoStartup;
+
     static int hotkeyMainVk;
 
     static int hotkeyModifiers;
@@ -30,7 +33,6 @@ public:
 
     static QString previousHotkeyName;
 
-    // defaults
     static int defaultHotkeyModifiers;
 
     static QString defaultHotkeyName;
@@ -39,6 +41,10 @@ public:
 
     static int defaultHotkeyMainVk;
 
+    static QString appLang;
+
+    static QString defaultAppLang;
+
 private:
-    static inline QSettings settings{"EasyLangSwitcher", "EasyLangSwitcher"};
+    static inline QSettings settings{APP_NAME, APP_NAME};
 };
