@@ -47,13 +47,16 @@ add_executable(${APP_NAME}
 
         # ui
         src/ui/helpers/acrylicHelper.h
+        src/ui/helpers/fontHelper.h
         src/ui/helpers/hoverHelper.h
         src/ui/helpers/iconHelper.h
         src/ui/helpers/keySequenceHelper.h
         src/ui/helpers/vkMapper.h
         src/ui/helpers/warningHelper.h
+
         src/ui/tray/tray.cpp
         src/ui/tray/tray.h
+
         src/ui/widgets/animatedSelector.cpp
         src/ui/widgets/animatedSelector.h
         src/ui/widgets/autoStartup.cpp
