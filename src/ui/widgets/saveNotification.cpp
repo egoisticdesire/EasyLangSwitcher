@@ -2,6 +2,8 @@
 #include "settingsWindow.h"
 #include "../helpers/iconHelper.h"
 #include "../helpers/acrylicHelper.h"
+#include <QTextDocument>
+#include <QtMath>
 #include <QScreen>
 #include <QEvent>
 
@@ -11,18 +13,78 @@ SaveNotification::SaveNotification(SettingsWindow *settings, const QString &text
     : QWidget(settings), settings(settings) {
     ui.setupUi(this);
 
-    // Предполагается, что в .ui есть root widget для контента
-    m_content = ui.background_frame ? ui.background_frame : static_cast<QWidget *>(nullptr);
-    if (!m_content) {
-        // fallback: если в .ui нет явного контейнера, используем this как содержимое
-        m_content = this;
+    // Фиксируем ширину виджета. Это важно сделать ДО расчетов текста.
+    constexpr int totalWidth = 260;
+    setFixedWidth(totalWidth);
+
+    // Получаем корневой лейаут (тот, что управляет background_frame)
+    if (auto *rootLayout = this->layout()) {
+        // Убираем отступы у корня, чтобы ui.background_frame прилип к краям SaveNotification.
+        // Это решит проблему "потери отступа от края экрана" и "странной рамки".
+        rootLayout->setContentsMargins(0, 0, 0, 0);
+        rootLayout->setSpacing(0);
     }
+
+    // Определяем контейнер контента и его лейаут
+    QWidget *contentWidget = ui.background_frame ? ui.background_frame : static_cast<QWidget *>(this);
+    QLayout *innerLayout = contentWidget->layout();
+
+    // Параметры "внутренней красоты" (padding внутри пузыря)
+    constexpr int paddingW = 12; // Отступ от краев рамки до текста
+    constexpr int paddingH = 6; // Отступ от краев рамки до текста
+    constexpr int iconSpacing = 12; // Отступ между иконкой и текстом
+    constexpr int iconSize = 32; // Размер иконки
+
+    if (innerLayout) {
+        // Задаем отступы только внутри фрейма
+        innerLayout->setContentsMargins(paddingW, paddingH, paddingW, paddingH);
+        innerLayout->setSpacing(iconSpacing);
+        // Выравнивание, чтобы иконка и текст были по центру по вертикали (опционально)
+        innerLayout->setAlignment(Qt::AlignVCenter);
+    }
+
+    ui.icon_label->setFixedSize(iconSize, iconSize);
+    ui.icon_label->setIcon(
+        IconHelper::loadIcon(":/icons/icons/checked.svg", QColor(91, 239, 91), QSize(iconSize, iconSize)));
+    ui.icon_label->setAttribute(Qt::WA_TransparentForMouseEvents);
+
+    ui.message_label->setText(text);
+    ui.message_label->setWordWrap(true);
+    ui.message_label->setContentsMargins(0, 0, 0, 0);
+
+    // Вычисляем доступную ширину для текста:
+    // Ширина всего виджета - (левый + правый отступ) - ширина иконки - отступ между иконкой и текстом
+    constexpr int textAvailableWidth = totalWidth - (paddingW * 2) - iconSize - iconSpacing;
+
+    QTextDocument doc;
+    doc.setDefaultFont(ui.message_label->font());
+    doc.setPlainText(text);
+    doc.setDocumentMargin(0);
+    doc.setTextWidth(textAvailableWidth);
+
+    // Считаем высоту текста
+    const QFontMetricsF fm(ui.message_label->font());
+    // qCeil округляет вверх. descent() нужен для "хвостиков" букв (р, у, д, щ).
+    int contentHeight = qCeil(doc.size().height());
+
+    // Высота не должна быть меньше иконки
+    if (contentHeight < iconSize) {
+        contentHeight = iconSize;
+    }
+
+    int finalHeight = contentHeight + (paddingH * 2);
+
+    constexpr int borderSafetyMargin = 2;
+
+    finalHeight += borderSafetyMargin;
+
+    setFixedHeight(finalHeight);
+
+    m_content = contentWidget;
 
     installEventFilter(this);
 
     if (settings) {
-        // Каждый SaveNotification — дочерний виджет settings, поэтому нет необходимости
-        // отдельно инсталлировать eventFilter на settings для обрезки, но нужно следить за закрытием и перемещением.
         settings->installEventFilter(this);
         connect(settings, &QObject::destroyed, this, [] {
             for (auto *n: stack) {
@@ -34,18 +96,11 @@ SaveNotification::SaveNotification(SettingsWindow *settings, const QString &text
         });
     }
 
-    QTimer::singleShot(0, this, [this] {
-        AcrylicHelper::enableAcrylic(this);
+    QTimer::singleShot(0, this, [this]() {
+        AcrylicHelper::setAcrylicEnabled(this, true);
+        AcrylicHelper::updateRegion(this);
     });
 
-    ui.icon_label->setIcon(IconHelper::loadIcon(":/icons/icons/checked.svg", QColor(91, 239, 91), QSize(32, 32)));
-    ui.icon_label->setAttribute(Qt::WA_TransparentForMouseEvents);
-
-    ui.message_label->setText(text);
-    setFixedWidth(280);
-    adjustSize();
-
-    // флаги: оставляем фрейм без рамки, но это внутренний виджет родителя — не будет "выталкивать" фокус.
     setWindowFlags(Qt::FramelessWindowHint
                    | Qt::Tool
                    | Qt::WindowDoesNotAcceptFocus
@@ -54,20 +109,16 @@ SaveNotification::SaveNotification(SettingsWindow *settings, const QString &text
     setAttribute(Qt::WA_ShowWithoutActivating);
     setFocusPolicy(Qt::NoFocus);
 
-    // удаляем ранее использовавшийся QGraphicsOpacityEffect на this и ставим на m_content
     if (m_content != this) {
-        // эффект для содержимого (контейнера)
         fx = new QGraphicsOpacityEffect(m_content);
         fx->setOpacity(0.0);
         m_content->setGraphicsEffect(fx);
     } else {
-        // fallback: если нет контейнера — всё же ставим на this
         fx = new QGraphicsOpacityEffect(this);
         fx->setOpacity(0.0);
         setGraphicsEffect(fx);
     }
 
-    // анимации появления
     animInOpacity = new QPropertyAnimation(fx, "opacity", this);
     animInOpacity->setDuration(200);
     animInOpacity->setStartValue(0.0);
@@ -78,7 +129,6 @@ SaveNotification::SaveNotification(SettingsWindow *settings, const QString &text
     animInPos->setDuration(250);
     animInPos->setEasingCurve(QEasingCurve::InOutCubic);
 
-    // анимации скрытия
     animOutOpacity = new QPropertyAnimation(fx, "opacity", this);
     animOutOpacity->setDuration(200);
     animOutOpacity->setStartValue(1.0);
@@ -89,12 +139,32 @@ SaveNotification::SaveNotification(SettingsWindow *settings, const QString &text
     animOutPos->setDuration(250);
     animOutPos->setEasingCurve(QEasingCurve::InOutCubic);
 
-    // таймер — запускает startHideAnimation()
     hideTimer.setSingleShot(true);
     hideTimer.setInterval(3000);
 
     connect(&hideTimer, &QTimer::timeout,
             this, [this]() { startHideAnimation(true); });
+}
+
+void SaveNotification::paintEvent(QPaintEvent *e) {
+    QWidget::paintEvent(e);
+
+    if (m_progress <= 0.0) return;
+
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+
+    QRectF r = rect();
+    r.setWidth(r.width() * m_progress);
+
+    QLinearGradient grad(r.topLeft(), r.topRight());
+    grad.setColorAt(1.0, QColor(255, 255, 255, 0));
+    grad.setColorAt(0.98, QColor(255, 255, 255, 6));
+    grad.setColorAt(0.0, QColor(255, 255, 255, 3));
+
+    p.setPen(Qt::NoPen);
+    p.setBrush(grad);
+    p.drawRect(r);
 }
 
 bool SaveNotification::eventFilter(QObject *o, QEvent *e) {
@@ -177,6 +247,14 @@ void SaveNotification::startShowAnimation() {
     // перед показом ставим в позицию старта
     move(startP);
     show();
+
+    auto *progressAnim = new QPropertyAnimation(this, "progress", this);
+    progressAnim->setDuration(hideTimer.interval());
+    progressAnim->setStartValue(0.0);
+    progressAnim->setEndValue(1.0);
+    progressAnim->setEasingCurve(QEasingCurve::Linear);
+    progressAnim->start(QAbstractAnimation::DeleteWhenStopped);
+
 
     // защита от многократного запуска анимаций
     animInPos->stop();
