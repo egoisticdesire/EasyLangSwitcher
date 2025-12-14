@@ -77,12 +77,13 @@ inline bool isWindows10OrGreater() {
 
 class AcrylicHelper {
 public:
-    static void setAcrylicEnabled( // 0xCC (~80%) | 0xE0 (~88%) | 0xF0 (~94%)
+    // 0xCC (~80%) | 0xE0 (~88%) | 0xE3 (~90%) | 0xE6 (~92%) | 0xF0 (~94%) | 0xF3 (~96%) | 0xF6 (~98%) | 0xF9 (~100%)
+    static void setAcrylicEnabled(
         const QWidget *widget,
         const bool enabled,
         const DWORD alphaActiveWin11 = 0x40,
         const DWORD rgbActiveWin11 = 0x202020,
-        const DWORD alphaActiveWin10 = 0xE0,
+        const DWORD alphaActiveWin10 = 0xE6,
         const DWORD rgbActiveWin10 = 0x151515,
         const DWORD alphaInactiveWin11 = 0xFF,
         const DWORD rgbInactiveWin11 = 0x101010,
@@ -233,11 +234,12 @@ public:
         return false;
     }
 
-    static void enableAcrylic( // 0xCC (~80%) | 0xE0 (~88%) | 0xF0 (~94%)
+    // 0xCC (~80%) | 0xE0 (~88%) | 0xE3 (~90%) | 0xE6 (~92%) | 0xF0 (~94%) | 0xF3 (~96%) | 0xF6 (~98%) | 0xF9 (~100%)
+    static void enableAcrylic(
         const QWidget *widget,
         const DWORD alphaWin11 = 0x40,
         const DWORD rgbWin11 = 0x202020,
-        const DWORD alphaWin10 = 0xE0,
+        const DWORD alphaWin10 = 0xE6,
         const DWORD rgbWin10 = 0x101010
     ) {
         if (!widget) return;
@@ -278,11 +280,9 @@ public:
             policy.GradientColor = (alphaWin10 << 24) | rgbWin10;
             policy.AccentFlags = 2;
 
-            if (const HRGN hrgn = CreateRectRgn(0, 0, widget->width() + 1, widget->height() + 1))
+            if (const HRGN hrgn = CreateRectRgn(
+                0, 0, widget->width() + 1, widget->height() + 1))
                 SetWindowRgn(hwnd, hrgn, TRUE);
-
-            // Добавляем шум поверх окна
-            addNoiseForWin10(widget);
         } else {
             policy.AccentState = ACCENT_DISABLED;
             policy.GradientColor = 0;
@@ -334,36 +334,5 @@ public:
         data.SizeOfData = sizeof(policy);
 
         setWindowCompositionAttribute(hwnd, &data);
-    }
-
-    static void addNoiseForWin10(const QWidget *widget, const BYTE intensity = 15) {
-        if (!widget || !isWindows10OrGreater() || isWindows11OrGreater()) return;
-
-        static QWidget *noiseOverlay = nullptr;
-        if (!noiseOverlay) {
-            noiseOverlay = new QWidget(const_cast<QWidget *>(widget));
-            noiseOverlay->setAttribute(Qt::WA_TransparentForMouseEvents);
-            noiseOverlay->setAttribute(Qt::WA_NoSystemBackground);
-            noiseOverlay->setGeometry(widget->rect());
-            noiseOverlay->show();
-
-            std::srand(static_cast<unsigned int>(std::time(nullptr)));
-        }
-
-        QImage img(widget->size(), QImage::Format_ARGB32);
-        img.fill(Qt::transparent);
-
-        for (int y = 0; y < img.height(); ++y) {
-            const auto line = reinterpret_cast<QRgb *>(img.scanLine(y));
-            for (int x = 0; x < img.width(); ++x) {
-                const int val = std::rand() % intensity;
-                line[x] = qRgba(val, val, val, val);
-            }
-        }
-
-        QPalette palette;
-        palette.setBrush(noiseOverlay->backgroundRole(), QBrush(img));
-        noiseOverlay->setPalette(palette);
-        noiseOverlay->setAutoFillBackground(true);
     }
 };
