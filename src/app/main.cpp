@@ -1,6 +1,7 @@
 #include "../core/config/logger.h"
 #include "../core/config/loggerQtBridge.h"
 #include "../core/handlers/kb.h"
+#include "../ui/helpers/fontHelper.h"
 #include "../ui/helpers/iconHelper.h"
 #include "../ui/helpers/warningHelper.h"
 #include "../ui/tray/tray.h"
@@ -12,11 +13,15 @@
 #include <io.h>
 
 int main(int argc, char *argv[]) {
+    Logger::_debug = false;
+
     SetConsoleOutputCP(CP_UTF8);
     _setmode(_fileno(stdout), _O_U16TEXT);
 
-    const QApplication app(argc, argv);
+    QApplication app(argc, argv);
     QApplication::setStyle("Windows11");
+
+    FontManager::init(app);
 
     AppSettings::load();
 
@@ -32,10 +37,8 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    Logger::_debug = false;
     QtLoggerBridge::install();
-    LOG_INFO() << "Logger initialized with level: "
-            << (Logger::_debug ? "DEBUG" : "INFO");
+    LOG_INFO() << "Logger initialized with level: " << (Logger::_debug ? "DEBUG" : "INFO");
 
     QApplication::setQuitOnLastWindowClosed(false);
     QApplication::setWindowIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
