@@ -80,7 +80,7 @@ void TrayManager::setupTrayIcon() {
 
                         emit keyboardToggled(enabled);
 
-                        LOG_INFO() << "Keyboard toggled via tray: " << (enabled ? "'enabled'" : "'disabled'");
+                        LOG_DEBUG() << "Keyboard toggled via tray: " << (enabled ? "'enabled'" : "'disabled'");
                         updateTrayIcon();
                         break;
                     case QSystemTrayIcon::Context:
@@ -115,7 +115,7 @@ void TrayManager::setupUiBehavior() {
 
     connect(ui.exit_btn, &QToolButton::clicked, this, [this]() {
         emit exitRequested();
-        LOG_INFO() << "Exit requested via tray button";
+        LOG_DEBUG() << "Exit requested via tray button";
     });
     connect(ui.toggle_btn, &QToolButton::clicked, this, [this]() {
         enabled = !enabled;
@@ -126,7 +126,7 @@ void TrayManager::setupUiBehavior() {
         emit keyboardToggled(enabled);
         animateToggleButton();
         updateTrayIcon();
-        LOG_INFO() << "Keyboard toggled via tray menu button: " << (enabled ? "'enabled'" : "'disabled'");
+        LOG_DEBUG() << "Keyboard toggled via tray menu button: " << (enabled ? "'enabled'" : "'disabled'");
     });
 
     updateInfo();
