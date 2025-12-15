@@ -14,7 +14,7 @@ SaveNotification::SaveNotification(SettingsWindow *settings, const QString &text
     ui.setupUi(this);
 
     // Фиксируем ширину виджета. Это важно сделать ДО расчетов текста.
-    constexpr int totalWidth = 260;
+    constexpr int totalWidth = 270;
     setFixedWidth(totalWidth);
 
     // Получаем корневой лейаут (тот, что управляет background_frame)
