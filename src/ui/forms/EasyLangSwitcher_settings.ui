@@ -327,7 +327,7 @@ background: rgba(255, 255, 255, 7);
          <string notr="true">QStackedWidget#content_container {
 border: 1px solid rgb(50, 50, 50);
 border-left: 1px solid rgba(255, 255, 255, 20);
-background: rgba(32, 32, 32, 200);
+background: rgba(32, 32, 32, 225);
 }
 QStackedWidget#content_container QLabel {
 color: rgba(255, 255, 255, 225);
