@@ -23,33 +23,29 @@ public:
     void setActive(const bool value) { isActive = value; }
 
 private:
+    // state
+    bool isActive = true;
+    bool isAltDown = false;
     bool triggerKeyDown = false;
-
     bool isLongPress = false;
-
     bool switchPending = false;
-
     bool rapidRepeatSuppressed = false;
 
     DWORD pressStartTime = 0;
-
     DWORD lastTriggerDownTime = 0;
 
-    static constexpr int fallbackCheckMs = 20;
-
     QTimer longPressTimer;
-
     QTimer doublePressTimer;
 
     HHOOK keyboardHook = nullptr;
 
-    bool isActive = true;
-
-    bool isAltDown = false;
-
+    // hook
     static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 
+    // switching
     static void switchKeyboardLayout();
+
+    static void sendWinSpace();
 
     static thread_local KeyboardHandler *instance;
 };

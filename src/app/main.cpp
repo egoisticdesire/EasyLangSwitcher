@@ -15,6 +15,9 @@
 int main(int argc, char *argv[]) {
     Logger::_debug = false;
 
+    QtLoggerBridge::install();
+    LOG_INFO() << "Logger initialized with level: " << (Logger::_debug ? "DEBUG" : "INFO");
+
     SetConsoleOutputCP(CP_UTF8);
     _setmode(_fileno(stdout), _O_U16TEXT);
 
@@ -36,9 +39,6 @@ int main(int argc, char *argv[]) {
         dlg.exec();
         return 0;
     }
-
-    QtLoggerBridge::install();
-    LOG_INFO() << "Logger initialized with level: " << (Logger::_debug ? "DEBUG" : "INFO");
 
     QApplication::setQuitOnLastWindowClosed(false);
     QApplication::setWindowIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));

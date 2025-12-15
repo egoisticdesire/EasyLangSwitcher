@@ -3,7 +3,7 @@ add_compile_options(/utf-8)
 
 set(APP_NAME "EasyLangSwitcher")
 
-project(${APP_NAME} VERSION 1.2.0)
+project(${APP_NAME} VERSION 1.2.1)
 
 set(APP_VERSION "${PROJECT_VERSION}")
 
@@ -40,8 +40,10 @@ add_executable(${APP_NAME}
         src/core/config/appSettings.h
         src/core/config/logger.h
         src/core/config/loggerQtBridge.h
+
         src/core/handlers/kb.cpp
         src/core/handlers/kb.h
+
         src/core/i18n/lang.cpp
         src/core/i18n/lang.h
 
@@ -75,10 +77,10 @@ add_executable(${APP_NAME}
         # resources
         resources/resources.qrc
 
-        ${UI_FILES}
-
         # app icon
         resources/icon.rc
+
+        ${UI_FILES}
 )
 
 target_compile_definitions(${APP_NAME} PRIVATE APP_VERSION="${PROJECT_VERSION}")
@@ -130,4 +132,26 @@ if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
 
             COMMENT "Deploying minimal set to ${DIST_DIR}"
     )
+
+    #    # тянет слишком много мусора
+    #    add_custom_command(TARGET ${APP_NAME} POST_BUILD
+    #            # Создаем папку
+    #            COMMAND ${CMAKE_COMMAND} -E make_directory "${DIST_DIR}"
+    #
+    #            # Копируем сам EXE
+    #            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE :${APP_NAME}>" "${DIST_DIR}/"
+    #
+    #            COMMAND "${WINDEPLOYQT}"
+    #            --no-translations
+    #            --no-opengl-sw
+    #            --no-compiler-runtime
+    #            --dir "${DIST_DIR}"
+    #            "${DIST_DIR}/${APP_NAME}.exe"
+    #
+    #            # (Опционально) Если windeployqt всё же тянет что-то лишнее,
+    #            # можно удалить их принудительно после работы утилиты:
+    #            COMMAND ${CMAKE_COMMAND} -E remove "${DIST_DIR}/vc_redist.x64.exe"
+    #
+    #            COMMENT "Deploying minimal set to ${DIST_DIR}"
+    #    )
 endif ()

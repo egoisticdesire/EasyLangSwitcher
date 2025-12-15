@@ -40,7 +40,6 @@ KeyboardHandler::KeyboardHandler(QObject *parent)
         // если было ожидающее переключение и оно не подавлено/не longPress -> переключаем
         if (switchPending && !isLongPress && !rapidRepeatSuppressed) {
             switchKeyboardLayout();
-
             LOG_DEBUG() << "Switch executed after delay";
         }
         // очистка флагов
@@ -58,11 +57,10 @@ KeyboardHandler::~KeyboardHandler() {
 void KeyboardHandler::start() {
     instance = this;
     keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, nullptr, 0);
-    if (!keyboardHook) {
+    if (!keyboardHook)
         LOG_WARNING() << "Hook installation failed";
-    } else {
+    else
         LOG_DEBUG() << "Hook installed successfully";
-    }
 }
 
 void KeyboardHandler::stop() {
@@ -70,7 +68,6 @@ void KeyboardHandler::stop() {
         UnhookWindowsHookEx(keyboardHook);
         keyboardHook = nullptr;
         instance = nullptr;
-
         LOG_DEBUG() << "Hook removed";
     }
 }
@@ -99,7 +96,7 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
         if (isDown && vk == configuredMain) {
             // проверяем, нажаты ли другие клавиши => комбо
             // считаем комбо при наличии любой другой зажатой клавише,
-            // включая модификаторы (чтобы "Modifier -> Trigger" тоже было комбо).
+            // включая модификаторы (чтобы "Modifier + Trigger" тоже было комбо).
             bool otherKeyDown = false;
             for (const int d: downKeys) {
                 if (d == vk) continue;
@@ -124,7 +121,7 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
             // проверяем интервал между нажатиями для быстрого повторного нажатия
             const DWORD intervalSinceLastDown = now - instance->lastTriggerDownTime;
 
-            if (const DWORD doublePress = static_cast<DWORD>(AppSettings::switchDelayMs);
+            if (const auto doublePress = static_cast<DWORD>(AppSettings::switchDelayMs);
                 intervalSinceLastDown <= doublePress) {
                 // обнаружено быстрое повторное нажатие: трактуем как отмену переключения
                 // и возвращаем нативное поведение
@@ -159,16 +156,8 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
 
                 instance->lastTriggerDownTime = now;
 
-                // Подавлять нативное действие нужно только если триггер — CapsLock или Alt
-                // (Если триггер — Shift/Ctrl/Win и т.д., нативное поведение оставляем)
-                if (configuredMain == VK_CAPITAL
-                    // || configuredMain == VK_MENU
-                    // || configuredMain == VK_LMENU
-                    // || configuredMain == VK_RMENU
-                ) {
-                    // suppress keydown — чтобы CapsLock не переключался при коротком нажатии
-                    return 1;
-                }
+                // Подавлять нативное действие нужно только если триггер — CapsLock
+                if (configuredMain == VK_CAPITAL) return 1;
                 // для остальных клавиш разрешаем нативное поведение
                 return CallNextHookEx(nullptr, nCode, wParam, lParam);
             }
@@ -185,7 +174,6 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
             instance->longPressTimer.stop();
 
             const DWORD pressDuration = now - instance->pressStartTime;
-
             LOG_DEBUG() << QString("Hotkey up "
                            "vk=%1: duration=%2; isLongPress=%3; rapidRepeatSuppressed=%4; switchPending=%5")
                             .arg(vk)
@@ -217,15 +205,9 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
                 instance->switchPending = false;
                 instance->rapidRepeatSuppressed = false;
 
-                // если триггер — CapsLock или Alt, подавляем keyup чтобы Caps не переключился,
-                // иначе разрешаем нативное поведение (Shift/Ctrl/Alt остаются изначально активными)
-                if (configuredMain == VK_CAPITAL
-                    // || configuredMain == VK_MENU
-                    // || configuredMain == VK_LMENU
-                    // || configuredMain == VK_RMENU
-                ) {
-                    return 1;
-                }
+                // если триггер — CapsLock, подавляем keyup чтобы Caps не переключился,
+                // иначе разрешаем нативное поведение
+                if (configuredMain == VK_CAPITAL) return 1;
                 return CallNextHookEx(nullptr, nCode, wParam, lParam);
             }
             // помечаем как ожидающее переключение
@@ -235,14 +217,8 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
             // triggerKeyDown будет очищен после обработки doublePressTimer
             instance->triggerKeyDown = false;
 
-            // suppress keyup только для CapsLock и Alt (иначе нативное поведение)
-            if (configuredMain == VK_CAPITAL
-                // || configuredMain == VK_MENU
-                // || configuredMain == VK_LMENU
-                // || configuredMain == VK_RMENU
-            ) {
-                return 1;
-            }
+            // подавляем keyup только для CapsLock (иначе нативное поведение)
+            if (configuredMain == VK_CAPITAL) return 1;
             return CallNextHookEx(nullptr, nCode, wParam, lParam);
         }
 
@@ -270,65 +246,39 @@ void KeyboardHandler::switchKeyboardLayout() {
     const HWND hwnd = GetForegroundWindow();
     if (!hwnd) return;
 
-    DWORD threadId = GetWindowThreadProcessId(hwnd, nullptr);
-    HKL current = GetKeyboardLayout(threadId);
+    const DWORD threadId = GetWindowThreadProcessId(hwnd, nullptr);
+    const HKL before = GetKeyboardLayout(threadId);
 
-    const int n = GetKeyboardLayoutList(0, nullptr);
-    if (n <= 0) return;
-    std::vector<HKL> layouts(n);
-    GetKeyboardLayoutList(n, layouts.data());
+    sendWinSpace();
 
-    int idx = 0;
-    for (int i = 0; i < n; ++i)
-        if (layouts[i] == current) {
-            idx = i;
-            break;
-        }
-    HKL next = layouts[(idx + 1) % n];
+    // отложенная проверка
+    QTimer::singleShot(20, [threadId, before]() {
+        const HKL after = GetKeyboardLayout(threadId);
 
-    // Проверка типа окна: UWP/Store apps и т.п.
-    wchar_t className[256] = {};
-    GetClassName(hwnd, className, sizeof(className) / sizeof(wchar_t));
-
-    bool useDirectFallback = false;
-    if (const std::wstring cls(className);
-        cls.starts_with(L"ApplicationFrameWindow") // большинство UWP окон
-        || cls.starts_with(L"Windows.UI.Core.CoreWindow")
-        || cls.starts_with(L"Xaml")
-        // || cls.starts_with(L"Calculator") // конкретные "проблемные" окна
-    ) {
-        useDirectFallback = true;
-    }
-
-    if (!useDirectFallback) {
-        // 1. Пытаемся PostMessage
-        PostMessage(hwnd, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(next));
-    }
-
-    // 2. Проверка через короткий таймер, при необходимости fallback через Win+Space
-    QTimer::singleShot(fallbackCheckMs, [threadId, next, useDirectFallback]() {
-        if (const HKL now = GetKeyboardLayout(threadId); now != next || useDirectFallback) {
-            // fallback: эмуляция Win+Space
-            INPUT inputs[4] = {};
-            inputs[0].type = INPUT_KEYBOARD;
-            inputs[0].ki.wVk = VK_LWIN;
-            inputs[1].type = INPUT_KEYBOARD;
-            inputs[1].ki.wVk = VK_SPACE;
-            inputs[2].type = INPUT_KEYBOARD;
-            inputs[2].ki.wVk = VK_SPACE;
-            inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
-            inputs[3].type = INPUT_KEYBOARD;
-            inputs[3].ki.wVk = VK_LWIN;
-            inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
-            SendInput(4, inputs, sizeof(INPUT));
-
-            LOG_DEBUG() << "Switch layout: fallback win+space";
-        }
+        LOG_DEBUG() << QString("Layout switched: '%1' (%2) → '%3' (%4)")
+        .arg(hklToLangLabel(before))
+        .arg(QString::number(reinterpret_cast<qulonglong>(before), 16))
+        .arg(hklToLangLabel(after))
+        .arg(QString::number(reinterpret_cast<qulonglong>(after), 16));
     });
+}
 
-    LOG_DEBUG() << QString("Switch layout: old='%1' (%2); new='%3' (%4)")
-                    .arg(hklToLangLabel(current))
-                    .arg(QString::number(reinterpret_cast<qulonglong>(current), 16))
-                    .arg(hklToLangLabel(next))
-                    .arg(QString::number(reinterpret_cast<qulonglong>(next), 16));
+void KeyboardHandler::sendWinSpace() {
+    INPUT in[4] = {};
+
+    in[0].type = INPUT_KEYBOARD;
+    in[0].ki.wVk = VK_LWIN;
+
+    in[1].type = INPUT_KEYBOARD;
+    in[1].ki.wVk = VK_SPACE;
+
+    in[2].type = INPUT_KEYBOARD;
+    in[2].ki.wVk = VK_SPACE;
+    in[2].ki.dwFlags = KEYEVENTF_KEYUP;
+
+    in[3].type = INPUT_KEYBOARD;
+    in[3].ki.wVk = VK_LWIN;
+    in[3].ki.dwFlags = KEYEVENTF_KEYUP;
+
+    SendInput(4, in, sizeof(INPUT));
 }
