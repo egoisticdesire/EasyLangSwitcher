@@ -37,7 +37,7 @@ aiming to provide a similar solution for **Windows**.
 ## Limitations
 
 - The application does not work in UAC windows.
-- Some applications may not respond to layout switching (for example, Microsoft Teams).
+- Running the app as administrator allows layout switching even in Task Manager (UAC windows are still not supported).
 
 ## License
 
