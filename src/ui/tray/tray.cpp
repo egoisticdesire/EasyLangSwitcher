@@ -7,31 +7,35 @@
 #include "../helpers/hoverHelper.h"
 #include "../helpers/iconHelper.h"
 #include <QApplication>
-#include <QCursor>
-#include <QTimer>
+#include <QParallelAnimationGroup>
 #include <QGraphicsOpacityEffect>
 #include <QMouseEvent>
-#include <QPushButton>
 
 TrayManager::TrayManager(QWidget *parent)
     : QWidget(parent) {
     ui.setupUi(this);
+
     setWindowFlags(Qt::Popup | Qt::NoDropShadowWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setFocusPolicy(Qt::StrongFocus);
 
+    // Создаем один раз при запуске
     settingsWindow = new SettingsWindow(nullptr);
     settingsWindow->setAttribute(Qt::WA_DeleteOnClose, false);
 
-    ui.info_frame->installEventFilter(this);
-    qApp->installEventFilter(this);
-
+    // Анимации
     fadeIn = new QPropertyAnimation(this, "windowOpacity", this);
     fadeIn->setDuration(180);
-    fadeIn->setStartValue(0.0);
-    fadeIn->setEndValue(1.0);
     fadeIn->setEasingCurve(QEasingCurve::OutCubic);
+
+    posAnim = new QPropertyAnimation(this, "pos", this);
+    posAnim->setDuration(250);
+    posAnim->setEasingCurve(QEasingCurve::OutBack);
+
+    showGroup = new QParallelAnimationGroup(this);
+    showGroup->addAnimation(fadeIn);
+    showGroup->addAnimation(posAnim);
 
     fadeOut = new QPropertyAnimation(this, "windowOpacity", this);
     fadeOut->setDuration(140);
@@ -40,6 +44,7 @@ TrayManager::TrayManager(QWidget *parent)
     fadeOut->setEasingCurve(QEasingCurve::InCubic);
     connect(fadeOut, &QPropertyAnimation::finished, this, &QWidget::hide);
 
+    // Звуки
     audioEffectOn = new QSoundEffect(this);
     audioEffectOn->setSource(QUrl("qrc:/sounds/sounds/on.wav"));
     audioEffectOn->setVolume(0.5f);
@@ -51,15 +56,140 @@ TrayManager::TrayManager(QWidget *parent)
     soundManager::instance().registerEffect(audioEffectOn);
     soundManager::instance().registerEffect(audioEffectOff);
 
+    // Таймер для разделения Single и Double кликов
+    clickTimer = new QTimer(this);
+    clickTimer->setSingleShot(true);
+    connect(clickTimer, &QTimer::timeout, this, [this]() {
+        enabled = !enabled;
+        enabled ? audioEffectOn->play() : audioEffectOff->play();
+        emit keyboardToggled(enabled);
+        updateTrayIcon();
+        LOG_DEBUG() << "Single click: Toggle keyboard";
+    });
+
+    ui.info_frame->installEventFilter(this);
+    if (auto *app = qobject_cast<QApplication *>(QCoreApplication::instance())) {
+        app->installEventFilter(this);
+    }
+
     setupUiBehavior();
     setupTrayIcon();
 
     setWindowOpacity(0.0);
     hide();
-
     updateInfo();
 
     LOG_DEBUG() << "TrayManager initialized";
+}
+
+// Деструктор для очистки памяти
+TrayManager::~TrayManager() {
+    if (settingsWindow) {
+        delete settingsWindow; // Удаляем окно из памяти
+        settingsWindow = nullptr;
+    }
+}
+
+void TrayManager::openSettings() const {
+    if (!settingsWindow) return;
+
+    // Сначала скрываем меню трея, так как мы уже нажали кнопку
+    hideAnimated();
+
+    if (settingsWindow->isVisible()) {
+        settingsWindow->showNormal(); // На случай, если оно свернуто
+        settingsWindow->raise(); // Поверх других окон
+        settingsWindow->activateWindow(); // Фокус на окно
+    } else {
+        settingsWindow->openCentered(); // Открываем по центру
+    }
+    LOG_DEBUG() << "Settings window opened or brought to front";
+}
+
+void TrayManager::showAtCursor() {
+    updateInfo();
+    resize(sizeHint());
+
+    const QPoint cursorPos = QCursor::pos();
+    const QScreen *screen = QGuiApplication::screenAt(cursorPos);
+    if (!screen) screen = QGuiApplication::primaryScreen();
+
+    const QRect screenRect = screen->geometry();
+    QPoint finalPos = cursorPos;
+    constexpr int padding = 3;
+    constexpr int slideDist = 12;
+
+    bool isLeft, isTop;
+
+    if (finalPos.x() + width() > screenRect.right()) {
+        finalPos.rx() -= (width() + padding);
+        isLeft = false;
+    } else {
+        finalPos.rx() += padding;
+        isLeft = true;
+    }
+
+    if (finalPos.y() + height() > screenRect.bottom()) {
+        finalPos.ry() -= (height() + padding);
+        isTop = false;
+    } else {
+        finalPos.ry() += padding;
+        isTop = true;
+    }
+
+    QPoint startPos = finalPos;
+    if (cursorPos.y() > screenRect.bottom() - 100 || cursorPos.y() < screenRect.top() + 100) {
+        startPos.setY(isTop ? finalPos.y() - slideDist : finalPos.y() + slideDist);
+    } else {
+        startPos.setX(isLeft ? finalPos.x() - slideDist : finalPos.x() + slideDist);
+    }
+
+    fadeIn->setStartValue(0.0);
+    fadeIn->setEndValue(1.0);
+    posAnim->setStartValue(startPos);
+    posAnim->setEndValue(finalPos);
+
+    move(startPos);
+    setVisible(true);
+    raise();
+    activateWindow();
+    showGroup->start();
+
+    QTimer::singleShot(1, this, [this]() { AcrylicHelper::enableAcrylic(this); });
+}
+
+void TrayManager::animateToggleButton() {
+    // Создаем эффект только на время анимации, чтобы не портить цвет текста
+    auto *effect = new QGraphicsOpacityEffect(ui.toggle_btn);
+    ui.toggle_btn->setGraphicsEffect(effect);
+
+    auto *fadeOutBtn = new QPropertyAnimation(effect, "opacity");
+    fadeOutBtn->setDuration(160);
+    fadeOutBtn->setStartValue(1.0);
+    fadeOutBtn->setEndValue(0.0);
+
+    auto *fadeInBtn = new QPropertyAnimation(effect, "opacity");
+    fadeInBtn->setDuration(200);
+    fadeInBtn->setStartValue(0.0);
+    fadeInBtn->setEndValue(1.0);
+
+    connect(fadeOutBtn, &QPropertyAnimation::finished, this, [this, fadeInBtn]() {
+        updateInfo();
+        fadeInBtn->start(QAbstractAnimation::DeleteWhenStopped);
+    });
+
+    // Удаляем эффект полностью после завершения, чтобы вернуть родной рендеринг текста
+    connect(fadeInBtn, &QPropertyAnimation::finished, this, [this]() {
+        ui.toggle_btn->setGraphicsEffect(nullptr);
+    });
+
+    fadeOutBtn->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void TrayManager::hideAnimated() const {
+    if (isVisible() && fadeOut->state() != QAbstractAnimation::Running) {
+        fadeOut->start();
+    }
 }
 
 void TrayManager::setupTrayIcon() {
@@ -69,66 +199,41 @@ void TrayManager::setupTrayIcon() {
 
     connect(&trayIcon, &QSystemTrayIcon::activated, this,
             [this](const QSystemTrayIcon::ActivationReason reason) {
-                switch (reason) {
-                    case QSystemTrayIcon::Trigger:
-                        // ЛКМ — быстрый вкл/выкл
-                        enabled = !enabled;
-
-                        if (enabled) audioEffectOn->play();
-                        else audioEffectOff->play();
-
-                        emit keyboardToggled(enabled);
-
-                        LOG_DEBUG() << "Keyboard toggled via tray: " << (enabled ? "'enabled'" : "'disabled'");
-                        updateTrayIcon();
-                        break;
-                    case QSystemTrayIcon::Context:
-                        // ПКМ — показать меню
-                        if (isVisible()) hideAnimated();
-                        else showAtCursor();
-
-                        LOG_DEBUG() << "Tray menu triggered via context menu";
-                        break;
-                    default:
-                        break;
+                if (reason == QSystemTrayIcon::Trigger) {
+                    clickTimer->start(250);
+                } else if (reason == QSystemTrayIcon::DoubleClick) {
+                    clickTimer->stop();
+                    openSettings();
+                } else if (reason == QSystemTrayIcon::Context) {
+                    isVisible() ? hideAnimated() : showAtCursor();
                 }
             });
 }
 
 void TrayManager::setupUiBehavior() {
+    // Используем метод напрямую
     connect(ui.settings_btn, &QPushButton::clicked, this, [this]() {
-        if (!settingsWindow) {
-            settingsWindow = new SettingsWindow(nullptr);
-            settingsWindow->setAttribute(Qt::WA_DeleteOnClose, false);
-        }
-        settingsWindow->openCentered();
+        openSettings();
     });
 
-    // отслеживание изменений настроек, чтобы информация в меню обновлялась
     if (settingsWindow) {
         connect(settingsWindow, &SettingsWindow::settingsChanged, this, [this]() {
-            LOG_DEBUG() << "Received settings changed - updating info";
             updateInfo();
         });
     }
 
     connect(ui.exit_btn, &QToolButton::clicked, this, [this]() {
         emit exitRequested();
-        LOG_DEBUG() << "Exit requested via tray button";
     });
+
     connect(ui.toggle_btn, &QToolButton::clicked, this, [this]() {
         enabled = !enabled;
-
-        if (enabled) audioEffectOn->play();
-        else audioEffectOff->play();
-
+        enabled ? audioEffectOn->play() : audioEffectOff->play();
         emit keyboardToggled(enabled);
         animateToggleButton();
         updateTrayIcon();
-        LOG_DEBUG() << "Keyboard toggled via tray menu button: " << (enabled ? "'enabled'" : "'disabled'");
     });
 
-    updateInfo();
     HoverEffectHelper::initializeHoverEffects(this);
 }
 
@@ -145,59 +250,12 @@ void TrayManager::updateInfo() const {
     ui.hotkey_key->setText(Lang::tr("TRAY_LABEL_HOTKEY"));
     ui.delay_key->setText(Lang::tr("TRAY_LABEL_DELAY"));
 
-    ui.toggle_btn->setIcon(
+    ui.toggle_btn->setIcon(IconHelper::loadIcon(
         enabled
-            ? IconHelper::loadIcon(":/icons/icons/FlashSparkleRegular.svg")
-            : IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled.svg")
-    );
+            ? ":/icons/icons/FlashSparkleRegular.svg"
+            : ":/icons/icons/FlashSparkleFilled.svg"));
     ui.settings_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FlashSettingsRegular.svg"));
     ui.exit_btn->setIcon(IconHelper::loadIcon(":/icons/icons/FlashOffRegular.svg"));
-}
-
-void TrayManager::showAtCursor() {
-    updateInfo();
-
-    // размер окна
-    resize(sizeHint());
-
-    // получаем текущий экран под курсором
-    const QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
-    if (!screen) screen = QGuiApplication::primaryScreen();
-
-    const QRect workArea = screen->geometry();
-    const QPoint cursorPos = QCursor::pos();
-
-    QPoint pos = cursorPos;
-
-    // горизонтальная ориентация
-    if (pos.x() + width() > workArea.right()) pos.rx() -= width() + 3;
-    else pos.rx() += 3;
-    // вертикальная ориентация
-    if (pos.y() + height() > workArea.bottom()) pos.ry() -= height() + 3;
-    else pos.ry() += 3;
-    // применяем скорректированную позицию
-    move(pos);
-
-    setWindowOpacity(0.0);
-    setVisible(true);
-    raise();
-    activateWindow();
-    setFocus(Qt::ActiveWindowFocusReason);
-
-    QTimer::singleShot(0, this, [this]() { AcrylicHelper::enableAcrylic(this); });
-    fadeIn->start();
-
-    LOG_DEBUG() << QString("Tray menu shown at cursor position: "
-                   "(%1, %2); size: (%3, %4); screen: (%5, %6); screen name: '%7'")
-                    .arg(pos.x()).arg(pos.y())
-                    .arg(width()).arg(height())
-                    .arg(screen->geometry().width()).arg(screen->geometry().height())
-                    .arg(screen->name());
-}
-
-void TrayManager::hideAnimated() const {
-    if (isVisible()) fadeOut->start();
-    LOG_DEBUG() << "Tray menu animation hidden";
 }
 
 bool TrayManager::eventFilter(QObject *obj, QEvent *event) {
@@ -206,11 +264,11 @@ bool TrayManager::eventFilter(QObject *obj, QEvent *event) {
         else if (event->type() == QEvent::Leave) HoverEffectHelper::animateHover(ui.info_frame, false);
     }
     if (isVisible() && event->type() == QEvent::MouseButtonPress) {
-        const auto *me = static_cast<QMouseEvent *>(event);
-
-        if (const QPoint global = me->globalPosition().toPoint(); !geometry().contains(global)) {
-            hideAnimated();
-            return true;
+        if (const auto *me = dynamic_cast<QMouseEvent *>(event)) {
+            if (!geometry().contains(me->globalPosition().toPoint())) {
+                hideAnimated();
+                return true;
+            }
         }
     }
     return QWidget::eventFilter(obj, event);
@@ -226,36 +284,9 @@ void TrayManager::resizeEvent(QResizeEvent *event) {
     AcrylicHelper::updateRegion(this);
 }
 
-void TrayManager::animateToggleButton() {
-    auto *btn = ui.toggle_btn;
-    auto *effect = new QGraphicsOpacityEffect(btn);
-    btn->setGraphicsEffect(effect);
-
-    auto *fadeOutBtn = new QPropertyAnimation(effect, "opacity");
-    fadeOutBtn->setDuration(160);
-    fadeOutBtn->setStartValue(1.0);
-    fadeOutBtn->setEndValue(0.0);
-
-    auto *fadeInBtn = new QPropertyAnimation(effect, "opacity");
-    fadeInBtn->setDuration(200);
-    fadeInBtn->setStartValue(0.0);
-    fadeInBtn->setEndValue(1.0);
-
-    connect(fadeOutBtn, &QPropertyAnimation::finished, [this, fadeInBtn]() {
-        updateInfo();
-
-        LOG_DEBUG() << "Toggle button animation finished, info updated";
-
-        fadeInBtn->start(QAbstractAnimation::DeleteWhenStopped);
-    });
-    connect(fadeInBtn, &QPropertyAnimation::finished, [effect]() { effect->deleteLater(); });
-    fadeOutBtn->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
 void TrayManager::updateTrayIcon() {
-    trayIcon.setIcon(
+    trayIcon.setIcon(IconHelper::loadIcon(
         enabled
-            ? IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png")
-            : IconHelper::loadIcon(":/icons/icons/FlashSparkleRegular2.png")
-    );
+            ? ":/icons/icons/FlashSparkleFilled2.png"
+            : ":/icons/icons/FlashSparkleRegular2.png"));
 }

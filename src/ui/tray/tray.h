@@ -2,6 +2,7 @@
 #include "ui_EasyLangSwitcher_tray.h"
 #include "../widgets/settingsWindow.h"
 #include <QSystemTrayIcon>
+#include <QParallelAnimationGroup>
 #include <QPropertyAnimation>
 #include <QSoundEffect>
 
@@ -15,6 +16,8 @@ class TrayManager final : public QWidget {
 
 public:
     explicit TrayManager(QWidget *parent = nullptr);
+
+    ~TrayManager() override;
 
     void showAtCursor();
 
@@ -42,8 +45,15 @@ private:
     QPropertyAnimation *fadeIn = nullptr;
     QPropertyAnimation *fadeOut = nullptr;
 
+    QParallelAnimationGroup *showGroup;
+    QPropertyAnimation *posAnim;
+
     QSoundEffect *audioEffectOn = nullptr;
     QSoundEffect *audioEffectOff = nullptr;
+
+    QTimer *clickTimer;
+
+    void openSettings() const;
 
     void updateTrayIcon();
 

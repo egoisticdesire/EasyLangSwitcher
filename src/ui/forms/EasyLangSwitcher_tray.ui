@@ -262,12 +262,6 @@ outline: none;
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="focusPolicy">
-            <enum>Qt::FocusPolicy::TabFocus</enum>
-           </property>
-           <property name="contextMenuPolicy">
-            <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
-           </property>
            <property name="layoutDirection">
             <enum>Qt::LayoutDirection::LeftToRight</enum>
            </property>
@@ -300,12 +294,6 @@ outline: none;
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="focusPolicy">
-            <enum>Qt::FocusPolicy::TabFocus</enum>
-           </property>
-           <property name="contextMenuPolicy">
-            <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
-           </property>
            <property name="text">
             <string>  Settings</string>
            </property>
@@ -331,12 +319,6 @@ outline: none;
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="focusPolicy">
-            <enum>Qt::FocusPolicy::TabFocus</enum>
-           </property>
-           <property name="contextMenuPolicy">
-            <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
            </property>
            <property name="text">
             <string>  Exit</string>
