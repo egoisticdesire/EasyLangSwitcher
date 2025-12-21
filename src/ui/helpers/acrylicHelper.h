@@ -264,24 +264,23 @@ public:
             policy.GradientColor = (alphaWin11 << 24) | rgbWin11;
             policy.AccentFlags = 2;
 
-            // Скругление углов через DWM
+            // Включаем нативное скругление Win11
             constexpr DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
             constexpr int DWMWCP_ROUND = 2;
             (void) DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &DWMWCP_ROUND, sizeof(DWMWCP_ROUND));
-
-            // Скругление региона
-            if (const HRGN hrgn = CreateRoundRectRgn(
-                0, 0, widget->width() + 1, widget->height() + 1,
-                ACRYLIC_WINDOW_RADIUS, ACRYLIC_WINDOW_RADIUS))
-                SetWindowRgn(hwnd, hrgn, TRUE);
         } else if (isWindows10OrGreater()) {
             // Win10: простой blur без скруглений
             policy.AccentState = ACCENT_ENABLE_BLURBEHIND;
             policy.GradientColor = (alphaWin10 << 24) | rgbWin10;
             policy.AccentFlags = 2;
 
-            if (const HRGN hrgn = CreateRectRgn(
-                0, 0, widget->width() + 1, widget->height() + 1))
+            // Считаем коэффициент масштабирования (DPI)
+            const qreal dpr = widget->devicePixelRatio();
+            // Переводим логические пиксели Qt в физические пиксели Windows
+            const int physW = qRound(widget->width() * dpr);
+            const int physH = qRound(widget->height() * dpr);
+            // На Win10 скруглений нет, просто создаем прямоугольный регион в ФИЗИЧЕСКИХ пикселях
+            if (const HRGN hrgn = CreateRectRgn(0, 0, physW + 1, physH + 1))
                 SetWindowRgn(hwnd, hrgn, TRUE);
         } else {
             policy.AccentState = ACCENT_DISABLED;
@@ -302,13 +301,12 @@ public:
         const auto hwnd = reinterpret_cast<HWND>(widget->winId());
         if (!hwnd) return;
 
-        if (isWindows11OrGreater()) {
-            if (const HRGN hrgn = CreateRoundRectRgn(
-                0, 0, widget->width() + 1, widget->height() + 1,
-                ACRYLIC_WINDOW_RADIUS, ACRYLIC_WINDOW_RADIUS))
-                SetWindowRgn(hwnd, hrgn, TRUE);
-        } else if (isWindows10OrGreater()) {
-            if (const HRGN hrgn = CreateRectRgn(0, 0, widget->width() + 1, widget->height() + 1))
+        if (isWindows11OrGreater()) return;
+        if (isWindows10OrGreater()) {
+            const qreal dpr = widget->devicePixelRatio();
+            const int physW = qRound(widget->width() * dpr);
+            const int physH = qRound(widget->height() * dpr);
+            if (const HRGN hrgn = CreateRectRgn(0, 0, physW + 1, physH + 1))
                 SetWindowRgn(hwnd, hrgn, TRUE);
         }
     }

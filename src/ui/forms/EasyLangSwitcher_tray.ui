@@ -7,31 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>180</width>
-    <height>204</height>
+    <height>207</height>
    </rect>
-  </property>
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-    <horstretch>180</horstretch>
-    <verstretch>200</verstretch>
-   </sizepolicy>
   </property>
   <property name="minimumSize">
    <size>
     <width>180</width>
-    <height>200</height>
+    <height>207</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>180</width>
-    <height>204</height>
-   </size>
-  </property>
-  <property name="baseSize">
-   <size>
-    <width>168</width>
-    <height>200</height>
+    <height>207</height>
    </size>
   </property>
   <property name="font">

@@ -2,6 +2,7 @@
 #include "../widgets/soundManager.h"
 #include "../../core/config/logger.h"
 #include "../../core/config/appSettings.h"
+#include "../../core/i18n/lang.h"
 #include "../helpers/acrylicHelper.h"
 #include "../helpers/hoverHelper.h"
 #include "../helpers/iconHelper.h"
@@ -11,8 +12,6 @@
 #include <QGraphicsOpacityEffect>
 #include <QMouseEvent>
 #include <QPushButton>
-
-#include "../../core/i18n/lang.h"
 
 TrayManager::TrayManager(QWidget *parent)
     : QWidget(parent) {
