@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>icons/SyncFilled.svg</file>
     <file>icons/checked.svg</file>
     <file>icons/CaretDownFilledDark.svg</file>
     <file>icons/CaretDownFilledLight.svg</file>
