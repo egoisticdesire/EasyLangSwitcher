@@ -47,14 +47,14 @@ SettingsWindow::SettingsWindow(QWidget *parent)
 
     connect(ui.btn_en_lang, &QPushButton::clicked, this, [this]() {
         if (!ui.btn_en_lang->isChecked()) return;
-        AppSettings::appLang = "en";
+        // AppSettings::appLang = "en";
         ui.btn_ru_lang->setChecked(false);
         markChanged();
     });
 
     connect(ui.btn_ru_lang, &QPushButton::clicked, this, [this]() {
         if (!ui.btn_ru_lang->isChecked()) return;
-        AppSettings::appLang = "ru";
+        // AppSettings::appLang = "ru";
         ui.btn_en_lang->setChecked(false);
         markChanged();
     });
@@ -92,6 +92,12 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     LOG_DEBUG() << "Autosave timer configured, interval=" << autosaveIntervalMs;
 
     connect(&autosaveTimer, &QTimer::timeout, this, [this]() {
+        if (ui.btn_en_lang->isChecked()) {
+            AppSettings::appLang = "en";
+        } else if (ui.btn_ru_lang->isChecked()) {
+            AppSettings::appLang = "ru";
+        }
+
         AppSettings::save();
         hasPendingChanges = false;
         LOG_DEBUG() << "Autosave successfully";
@@ -245,7 +251,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
 
     connect(this, &SettingsWindow::settingsSaved, this, [this]() {
         SaveNotification::showFor(this, Lang::tr("SETTINGS_ALL_CHANGES_SAVED"));
-        refreshTranslations();
+        QTimer::singleShot(50, this, [this]() { refreshTranslations(); });
     });
 
     LOG_DEBUG() << "SettingsWindow initialized";
@@ -259,7 +265,6 @@ void SettingsWindow::addSelectorForFrame(QFrame *frame, const QString &extraStyl
     sel->bindToFrame(frame, extraStyle);
     selectors.append(sel);
     QTimer::singleShot(0, sel, &AnimatedSelector::initPosition);
-    LOG_DEBUG() << "Selector added for frame '" << frame->objectName() << "'";
 }
 
 void SettingsWindow::showEvent(QShowEvent *event) {
@@ -297,10 +302,17 @@ bool SettingsWindow::eventFilter(QObject *watched, QEvent *event) {
         } else if (event->type() == QEvent::Leave) {
             keyHoverWarning->hideNow();
         }
+    } else if (watched == ui.btn_upd_manually && updateBtnToolTip) {
+        if (event->type() == QEvent::Enter) {
+            // Показываем тултип с нужным ключом локализации
+            updateBtnToolTip->showAt(ui.btn_upd_manually, "SETTINGS_TOOLTIP_CHECK_NOW");
+        } else if (event->type() == QEvent::Leave) {
+            updateBtnToolTip->hideAnimated();
+        }
     }
+
     return QWidget::eventFilter(watched, event);
 }
-
 
 bool SettingsWindow::nativeEvent(const QByteArray &eventType, void *message, qintptr *result) {
     if (eventType == "windows_generic_MSG") {
@@ -311,6 +323,22 @@ bool SettingsWindow::nativeEvent(const QByteArray &eventType, void *message, qin
         }
     }
     return QWidget::nativeEvent(eventType, message, result);
+}
+
+void SettingsWindow::hideEvent(QHideEvent *event) {
+    QWidget::hideEvent(event);
+
+    if (updateBtnToolTip) {
+        updateBtnToolTip->hide();
+    }
+
+    if (keyHoverWarning) {
+        keyHoverWarning->hideNow();
+    }
+
+    if (updPopup) {
+        updPopup->hide();
+    }
 }
 
 void SettingsWindow::openCentered() {
@@ -498,6 +526,17 @@ void SettingsWindow::restoreDefaults_General() {
     markChanged();
 }
 
+void SettingsWindow::setUpdateManager(UpdateManager *manager) {
+    if (!manager) return;
+    this->updateManager = manager;
+
+    connect(ui.btn_upd_manually, &QPushButton::clicked, updateManager, &UpdateManager::checkForUpdatesForce);
+
+    connect(updPopup, &UpdFrequencyPopup::selected, this, [this](const AppSettings::UpdateFrequency) {
+        if (updateManager) updateManager->checkForUpdatesIfDue();
+    });
+}
+
 void SettingsWindow::initUpdateFrequency() {
     ui.btn_upd_frequency->setText(
         AppSettings::updateFrequencyToString(AppSettings::updateFrequency));
@@ -524,12 +563,16 @@ void SettingsWindow::initUpdateFrequency() {
         AppSettings::updateFrequency = value;
         markChanged();
 
-        ui.btn_upd_frequency->setText(
-            AppSettings::updateFrequencyToString(value));
+        ui.btn_upd_frequency->setText(AppSettings::updateFrequencyToString(value));
     });
 
     connect(this, &SettingsWindow::settingsSaved,
             updPopup, &UpdFrequencyPopup::refreshTranslations);
+
+    updateBtnToolTip = new CustomToolTip(this);
+
+    // Устанавливаем фильтр на кнопку ручной проверки
+    ui.btn_upd_manually->installEventFilter(this);
 }
 
 void SettingsWindow::refreshTranslations() const {
@@ -547,16 +590,14 @@ void SettingsWindow::refreshTranslations() const {
     ui.app_upd_check_label->setText(Lang::tr("SETTINGS_APP_UPD_CHECK_LABEL"));
     ui.btn_upd_frequency->setText(
         AppSettings::updateFrequencyToString(AppSettings::updateFrequency));
+    if (updPopup) updPopup->refreshTranslations();
+    if (updateBtnToolTip) updateBtnToolTip->refreshTranslations();
 
     keyHoverWarning->setText(Lang::tr("SETTINGS_KEY_HOVER_WARNING_POPUP"));
 
-    if (const auto *seq = findChild<QKeySequenceEdit *>("btn_sequence")) {
-        if (auto *le = seq->findChild<QLineEdit *>()) {
+    if (const auto *seq = findChild<QKeySequenceEdit *>("btn_sequence"))
+        if (auto *le = seq->findChild<QLineEdit *>())
             le->setPlaceholderText(Lang::tr("SETTINGS_KEY_SEQUENCE"));
-        }
-    }
 
-    if (m_keyHelper) {
-        m_keyHelper->setPlaceholder(Lang::tr("SETTINGS_KEY_SEQUENCE"));
-    }
+    if (m_keyHelper) m_keyHelper->setPlaceholder(Lang::tr("SETTINGS_KEY_SEQUENCE"));
 }

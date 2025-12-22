@@ -2,6 +2,8 @@
 #include "ui_EasyLangSwitcher_settings.h"
 #include "hoverWarning.h"
 #include "animatedSelector.h"
+#include "customToolTip.h"
+#include "updateManager.h"
 #include "updFrequencyPopup.h"
 #include "windowDragger.h"
 #include <QVector>
@@ -27,6 +29,8 @@ public:
 
     void openCentered();
 
+    void setUpdateManager(UpdateManager *manager);
+
 signals:
     void settingsChanged();
 
@@ -40,6 +44,8 @@ protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
 
     bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override;
+
+    void hideEvent(QHideEvent *event) override;
 
 private:
     Ui::settings_main_widget ui{};
@@ -57,6 +63,10 @@ private:
     UpdFrequencyPopup *updPopup = nullptr;
 
     void initUpdateFrequency();
+
+    UpdateManager *updateManager = nullptr;
+
+    CustomToolTip *updateBtnToolTip = nullptr;
 
     QTimer autosaveTimer;
 

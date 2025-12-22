@@ -92,6 +92,21 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                 QStringLiteral("Автоматически проверять обновления"),
             });
         t.insert(
+            QStringLiteral("SETTINGS_TOOLTIP_CHECK_NOW"), {
+                QStringLiteral("Check for updates now"),
+                QStringLiteral("Проверить обновления сейчас"),
+            });
+        t.insert(
+            QStringLiteral("SETTINGS_APP_UPD_AVAILABLE_TITLE"), {
+                QStringLiteral("Update available"),
+                QStringLiteral("Доступно обновление"),
+            });
+        t.insert(
+            QStringLiteral("SETTINGS_APP_UPD_AVAILABLE_MSG"), {
+                QStringLiteral("Version %1 is out!"),
+                QStringLiteral("Версия %1 вышла!"),
+            });
+        t.insert(
             QStringLiteral("SETTINGS_APP_UPD_CHECK_NEVER"), {
                 QStringLiteral("Never"),
                 QStringLiteral("Никогда"),

@@ -1,6 +1,7 @@
 #pragma once
 #include <QSettings>
 #include <QString>
+#include <QDate>
 
 /*
 AppSettings
@@ -52,6 +53,12 @@ public:
     static UpdateFrequency defaultUpdateFrequency;
 
     static UpdateFrequency updateFrequency;
+
+    static QDate lastUpdateCheckDate;
+
+    static QDate defaultLastUpdateCheckDate;
+
+    static constexpr auto GITHUB_REPO = "egoisticdesire/EasyLangSwitcher";
 
 private:
     static inline QSettings settings{APP_NAME, APP_NAME};

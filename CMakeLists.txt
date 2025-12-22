@@ -63,6 +63,8 @@ add_executable(${APP_NAME}
         src/ui/widgets/animatedSelector.h
         src/ui/widgets/autoStartup.cpp
         src/ui/widgets/autoStartup.h
+        src/ui/widgets/customToolTip.cpp
+        src/ui/widgets/customToolTip.h
         src/ui/widgets/hoverWarning.cpp
         src/ui/widgets/hoverWarning.h
         src/ui/widgets/saveNotification.cpp
@@ -71,6 +73,8 @@ add_executable(${APP_NAME}
         src/ui/widgets/settingsWindow.h
         src/ui/widgets/soundManager.cpp
         src/ui/widgets/soundManager.h
+        src/ui/widgets/updateManager.cpp
+        src/ui/widgets/updateManager.h
         src/ui/widgets/updFrequencyPopup.cpp
         src/ui/widgets/updFrequencyPopup.h
         src/ui/widgets/windowDragger.cpp

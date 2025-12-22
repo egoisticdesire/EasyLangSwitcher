@@ -10,6 +10,8 @@ QString AppSettings::defaultHotkeyName = "Left Ctrl";
 int AppSettings::defaultSwitchDelayMs = 250;
 QString AppSettings::defaultAppLang = "en";
 AppSettings::UpdateFrequency AppSettings::defaultUpdateFrequency = UpdateFrequency::Never;
+QDate AppSettings::defaultLastUpdateCheckDate = QDate();
+QDate AppSettings::lastUpdateCheckDate = defaultLastUpdateCheckDate;
 
 int AppSettings::hotkeyMainVk = defaultHotkeyMainVk;
 int AppSettings::hotkeyModifiers = defaultHotkeyModifiers;
@@ -38,9 +40,8 @@ updateFrequencyMeta = {
 };
 
 void AppSettings::logger(const QString &action) {
-    LOG_DEBUG() << QString(
-                   "%1 settings: vk=%2; name='%3'; delay=%4; prevVk=%5; prevName='%6'; "
-                   "autoStartup=%7; lang='%8'; updateFrequency='%9'")
+    LOG_DEBUG() << QString("%1 settings: vk=%2; name='%3'; delay=%4; prevVk=%5; prevName='%6'; "
+                   "autoStartup=%7; lang='%8'; updateFrequency='%9'; lastUpdCheck='%10'")
                     .arg(action)
                     .arg(hotkeyMainVk)
                     .arg(hotkeyName.toLower())
@@ -49,7 +50,8 @@ void AppSettings::logger(const QString &action) {
                     .arg(previousHotkeyName.toLower())
                     .arg(autoStartup ? "true" : "false")
                     .arg(appLang.toLower())
-                    .arg(updateFrequencyToString(updateFrequency, false).toLower());
+                    .arg(updateFrequencyToString(updateFrequency, false).toLower())
+                    .arg(lastUpdateCheckDate.isValid() ? lastUpdateCheckDate.toString(Qt::ISODate) : "never");
 }
 
 QString AppSettings::updateFrequencyToString(
@@ -75,6 +77,7 @@ void AppSettings::load() {
     appLang = settings.value("app/lang", defaultAppLang).toString();
     updateFrequency = static_cast<UpdateFrequency>(settings.value("updates/frequency",
                                                                   static_cast<int>(defaultUpdateFrequency)).toInt());
+    lastUpdateCheckDate = settings.value("updates/last_check_date", defaultLastUpdateCheckDate).toDate();
 
     logger("Loaded");
 }
@@ -89,6 +92,7 @@ void AppSettings::save() {
     settings.setValue("auto_startup", autoStartup);
     settings.setValue("app/lang", appLang);
     settings.setValue("updates/frequency", static_cast<int>(updateFrequency));
+    settings.setValue("updates/last_check_date", lastUpdateCheckDate);
 
     logger("Saved");
 }
