@@ -87,6 +87,31 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                 QStringLiteral("Язык приложения"),
             });
         t.insert(
+            QStringLiteral("SETTINGS_APP_UPD_CHECK_LABEL"), {
+                QStringLiteral("Automatically check for updates"),
+                QStringLiteral("Автоматически проверять обновления"),
+            });
+        t.insert(
+            QStringLiteral("SETTINGS_APP_UPD_CHECK_NEVER"), {
+                QStringLiteral("Never"),
+                QStringLiteral("Никогда"),
+            });
+        t.insert(
+            QStringLiteral("SETTINGS_APP_UPD_CHECK_DAILY"), {
+                QStringLiteral("Daily"),
+                QStringLiteral("Ежедневно"),
+            });
+        t.insert(
+            QStringLiteral("SETTINGS_APP_UPD_CHECK_WEEKLY"), {
+                QStringLiteral("Weekly"),
+                QStringLiteral("Еженедельно"),
+            });
+        t.insert(
+            QStringLiteral("SETTINGS_APP_UPD_CHECK_MONTHLY"), {
+                QStringLiteral("Monthly"),
+                QStringLiteral("Ежемесячно"),
+            });
+        t.insert(
             QStringLiteral("SETTINGS_RESTORE_DEFAULT_LABEL"), {
                 QStringLiteral("Restore default settings"),
                 QStringLiteral("Восстановить настройки по умолчанию"),
@@ -352,14 +377,10 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     </ul>
                     </body></html>
             )")
-                .arg("font-family: 'Inter', 'Segoe UI', sans-serif;")
-                .arg("padding-top: 12px;")
-                .arg("line-height: 1.2;")
+                .arg("font-family: 'Inter', 'Segoe UI', sans-serif;", "padding-top: 12px;", "line-height: 1.2;")
                 .arg(FontManager::Small().pixelSize())
                 .arg(FontManager::Default().pixelSize())
-                .arg("color:rgba(255, 255, 255, 175);")
-                .arg("color:rgba(255, 255, 255, 200);")
-                .arg("font-weight: 600;"),
+                .arg("color:rgba(255, 255, 255, 175);", "color:rgba(255, 255, 255, 200);", "font-weight: 600;"),
                 QString::fromUtf8(R"(
                     <html><head/><body style="%1 margin: 0; padding: 0;">
                     <div style="%1 %3 font-size: %5pt;">
@@ -385,14 +406,10 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     </ul>
                     </body></html>
             )")
-                .arg("font-family: 'Inter', 'Segoe UI', sans-serif;")
-                .arg("padding-top: 12px;")
-                .arg("line-height: 1.2;")
+                .arg("font-family: 'Inter', 'Segoe UI', sans-serif;", "padding-top: 12px;", "line-height: 1.2;")
                 .arg(FontManager::Small().pixelSize())
                 .arg(FontManager::Default().pixelSize())
-                .arg("color:rgba(255, 255, 255, 175);")
-                .arg("color:rgba(255, 255, 255, 200);")
-                .arg("font-weight: 600;"),
+                .arg("color:rgba(255, 255, 255, 175);", "color:rgba(255, 255, 255, 200);", "font-weight: 600;"),
             });
 
         t.insert(

@@ -13,8 +13,8 @@ SaveNotification::SaveNotification(SettingsWindow *settings, const QString &text
     : QWidget(settings), settings(settings) {
     ui.setupUi(this);
 
-    // Фиксируем ширину виджета. Это важно сделать ДО расчетов текста.
-    constexpr int totalWidth = 270;
+    // Фиксируем ширину виджета
+    constexpr int totalWidth = 250;
     setFixedWidth(totalWidth);
 
     // Получаем корневой лейаут (тот, что управляет background_frame)
@@ -101,10 +101,7 @@ SaveNotification::SaveNotification(SettingsWindow *settings, const QString &text
         AcrylicHelper::updateRegion(this);
     });
 
-    setWindowFlags(Qt::FramelessWindowHint
-                   | Qt::Tool
-                   | Qt::WindowDoesNotAcceptFocus
-                   | Qt::BypassWindowManagerHint);
+    setWindowFlags(Qt::FramelessWindowHint | Qt::Tool | Qt::WindowDoesNotAcceptFocus | Qt::BypassWindowManagerHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setFocusPolicy(Qt::NoFocus);

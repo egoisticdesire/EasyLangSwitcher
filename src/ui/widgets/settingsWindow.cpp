@@ -19,6 +19,8 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     : QWidget(parent) {
     ui.setupUi(this);
 
+    initUpdateFrequency();
+
     // временно скрываем кнопки
     ui.btn_exclusions_top_sider->hide();
     ui.btn_indicator_top_sider->hide();
@@ -69,6 +71,9 @@ SettingsWindow::SettingsWindow(QWidget *parent)
 
     ui.key_select_label_img->setIcon(
         IconHelper::loadIcon(":/icons/icons/InfoRegular.svg", QColor(175, 175, 175), QSize(16, 16)));
+
+    ui.btn_upd_manually->setIcon(
+        IconHelper::loadIcon(":/icons/icons/SyncFilled.svg", QColor(175, 175, 175), QSize(18, 18)));
 
     buildPresetMap();
 
@@ -493,6 +498,40 @@ void SettingsWindow::restoreDefaults_General() {
     markChanged();
 }
 
+void SettingsWindow::initUpdateFrequency() {
+    ui.btn_upd_frequency->setText(
+        AppSettings::updateFrequencyToString(AppSettings::updateFrequency));
+
+    updPopup = new UpdFrequencyPopup(this);
+
+    connect(ui.btn_upd_frequency, &QPushButton::clicked, this, [this] {
+        updPopup->setCurrent(AppSettings::updateFrequency);
+
+        constexpr int padding = 4;
+        updPopup->setFixedWidth(ui.btn_upd_frequency->width() + (padding * 2));
+
+        const QPoint btnGlobal =
+                ui.btn_upd_frequency->mapToGlobal(QPoint(-padding, 0));
+
+        const int offsetY = updPopup->currentButtonYOffset();
+
+        updPopup->move(btnGlobal.x(), btnGlobal.y() - offsetY);
+        updPopup->show();
+    });
+
+
+    connect(updPopup, &UpdFrequencyPopup::selected, this, [this](const AppSettings::UpdateFrequency value) {
+        AppSettings::updateFrequency = value;
+        markChanged();
+
+        ui.btn_upd_frequency->setText(
+            AppSettings::updateFrequencyToString(value));
+    });
+
+    connect(this, &SettingsWindow::settingsSaved,
+            updPopup, &UpdFrequencyPopup::refreshTranslations);
+}
+
 void SettingsWindow::refreshTranslations() const {
     ui.key_select_label_msg->setText(Lang::tr("SETTINGS_SELECT_KEY_LABEL"));
     ui.key_delay_label->setText(Lang::tr("SETTINGS_SWITCH_DELAY_LABEL"));
@@ -505,6 +544,9 @@ void SettingsWindow::refreshTranslations() const {
     ui.btn_close_bot_sider->setText(Lang::tr("SETTINGS_SIDER_MENU_CLOSE"));
     ui.btn_enable_startup->setText(Lang::tr("SETTINGS_ENABLE_STARTUP_LABEL"));
     ui.btn_disable_startup->setText(Lang::tr("SETTINGS_DISABLE_STARTUP_LABEL"));
+    ui.app_upd_check_label->setText(Lang::tr("SETTINGS_APP_UPD_CHECK_LABEL"));
+    ui.btn_upd_frequency->setText(
+        AppSettings::updateFrequencyToString(AppSettings::updateFrequency));
 
     keyHoverWarning->setText(Lang::tr("SETTINGS_KEY_HOVER_WARNING_POPUP"));
 

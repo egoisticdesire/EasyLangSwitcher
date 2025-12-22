@@ -2,6 +2,7 @@
 #include "ui_EasyLangSwitcher_settings.h"
 #include "hoverWarning.h"
 #include "animatedSelector.h"
+#include "updFrequencyPopup.h"
 #include "windowDragger.h"
 #include <QVector>
 #include <QTimer>
@@ -52,6 +53,10 @@ private:
     WindowDragger *dragger = nullptr;
 
     KeyHoverWarning *keyHoverWarning = nullptr;
+
+    UpdFrequencyPopup *updPopup = nullptr;
+
+    void initUpdateFrequency();
 
     QTimer autosaveTimer;
 
