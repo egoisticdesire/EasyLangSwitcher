@@ -3,7 +3,7 @@ add_compile_options(/utf-8)
 
 set(APP_NAME "EasyLangSwitcher")
 
-project(${APP_NAME} VERSION 1.2.1)
+project(${APP_NAME} VERSION 1.3.0)
 
 set(APP_VERSION "${PROJECT_VERSION}")
 
@@ -71,6 +71,8 @@ add_executable(${APP_NAME}
         src/ui/widgets/settingsWindow.h
         src/ui/widgets/soundManager.cpp
         src/ui/widgets/soundManager.h
+        src/ui/widgets/updFrequencyPopup.cpp
+        src/ui/widgets/updFrequencyPopup.h
         src/ui/widgets/windowDragger.cpp
         src/ui/widgets/windowDragger.h
 
