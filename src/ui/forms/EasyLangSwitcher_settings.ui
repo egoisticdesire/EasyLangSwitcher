@@ -344,7 +344,6 @@ QFrame#app_startup_frame,
 QFrame#app_lang_frame {
 padding: 1px;
 border-radius: 10px;
-/*border: 1px solid rgba(255, 255, 255, 30);*/
 border: 1px solid rgb(60, 60, 60);
 background: rgba(255, 255, 255, 10);
 }
@@ -438,9 +437,8 @@ QFrame#app_check_upd_frame QPushButton,
 QFrame#app_check_upd_frame QToolButton {
 padding: 6px;
 border-radius: 10px;
-/*border: 1px solid rgba(255, 255, 255, 30);*/
 border: 1px solid rgb(60, 60, 60);
-color: rgba(255, 255, 255, 200);
+color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 10);
 }
 QFrame#app_check_upd_frame QToolButton {
