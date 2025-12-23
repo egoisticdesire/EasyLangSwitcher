@@ -302,7 +302,7 @@ bool SettingsWindow::eventFilter(QObject *watched, QEvent *event) {
         } else if (event->type() == QEvent::Leave) {
             keyHoverWarning->hideNow();
         }
-    } else if (watched == ui.btn_upd_manually && updateBtnToolTip) {
+    } else if (watched == ui.btn_upd_manually && updateBtnToolTip && SaveNotification::stack.isEmpty()) {
         if (event->type() == QEvent::Enter) {
             // Показываем тултип с нужным ключом локализации
             updateBtnToolTip->showAt(ui.btn_upd_manually, "SETTINGS_TOOLTIP_CHECK_NOW");
@@ -328,7 +328,7 @@ bool SettingsWindow::nativeEvent(const QByteArray &eventType, void *message, qin
 void SettingsWindow::hideEvent(QHideEvent *event) {
     QWidget::hideEvent(event);
 
-    if (updateBtnToolTip) {
+    if (updateBtnToolTip || !SaveNotification::stack.isEmpty()) {
         updateBtnToolTip->hide();
     }
 
@@ -346,7 +346,7 @@ void SettingsWindow::openCentered() {
     if (!screen) screen = QGuiApplication::screens().first();
     const QRect geom = screen->availableGeometry();
     QSize s = sizeHint();
-    if (!s.isValid()) s = QSize(850, 500);
+    if (!s.isValid()) s = QSize(900, 500);
 
     const int x = geom.center().x() - s.width() / 2;
     const int y = geom.center().y() - s.height() / 2;

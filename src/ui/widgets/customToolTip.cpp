@@ -71,9 +71,6 @@ void CustomToolTip::showAt(const QWidget *target, const QString &langKey) {
         this->show();
     }
 
-    // Прячем подсказку, если есть хоть одно активное уведомление
-    if (!SaveNotification::stack.isEmpty()) this->lower();
-
     animGroup->start();
 }
 
