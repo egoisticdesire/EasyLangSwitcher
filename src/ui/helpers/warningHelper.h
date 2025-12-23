@@ -25,7 +25,6 @@ public:
 
         QTimer::singleShot(0, this, [this] { AcrylicHelper::enableAcrylic(this); });
 
-
         auto *closeAction = new QAction(this);
         closeAction->setShortcut(Qt::Key_Escape);
         connect(closeAction, &QAction::triggered, this, &WarningDialog::close);
@@ -60,6 +59,9 @@ public:
 
         move(x, y);
         show();
+
+        AcrylicHelper::updateRegion(this);
+
         raise();
         activateWindow();
 
@@ -73,7 +75,6 @@ public:
 protected:
     bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override {
         if (eventType == "windows_generic_MSG") {
-            // Третий параметр - цвет фона, который будет на превью вместо прозрачности.
             if (AcrylicHelper::handleIconicMessages(this, message, QColor(32, 32, 32))) {
                 *result = 0;
                 return true;

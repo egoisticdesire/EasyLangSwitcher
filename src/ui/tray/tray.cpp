@@ -157,7 +157,7 @@ void TrayManager::showAtCursor() {
 
     showGroup->start();
 
-    QTimer::singleShot(1, this, [this]() { AcrylicHelper::enableAcrylic(this); });
+    QTimer::singleShot(0, this, [this]() { AcrylicHelper::enableAcrylic(this); });
 }
 
 void TrayManager::hideAnimated() const {

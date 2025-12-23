@@ -107,7 +107,10 @@ void SaveNotification::startShowAnimation() {
     show();
     raise();
 
-    QTimer::singleShot(0, this, [this]() { AcrylicHelper::enableAcrylic(this); });
+    QTimer::singleShot(0, this, [this]() {
+        AcrylicHelper::enableAcrylic(this);
+        AcrylicHelper::updateRegion(this);
+    });
 
     animInPos->setStartValue(startP);
     animInPos->setEndValue(endP);

@@ -13,7 +13,7 @@ public:
 
     int currentButtonYOffset() const;
 
-    void refreshTranslations() const;
+    void refreshTranslations();
 
 signals:
     void selected(AppSettings::UpdateFrequency value);

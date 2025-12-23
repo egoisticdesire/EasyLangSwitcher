@@ -19,9 +19,9 @@ void UpdFrequencyPopup::showEvent(QShowEvent *event) {
 
     QTimer::singleShot(0, this, [this]() {
         AcrylicHelper::enableAcrylic(this);
+        AcrylicHelper::updateRegion(this);
     });
 }
-
 
 void UpdFrequencyPopup::setupConnections() {
     connect(ui.btn_upd_never, &QPushButton::clicked, this, [this] {
@@ -77,10 +77,14 @@ void UpdFrequencyPopup::setCurrent(const AppSettings::UpdateFrequency value) con
     ui.btn_upd_monthly->setChecked(value == AppSettings::UpdateFrequency::Monthly);
 }
 
-void UpdFrequencyPopup::refreshTranslations() const {
+void UpdFrequencyPopup::refreshTranslations() {
     ui.btn_upd_never->setText(Lang::tr("SETTINGS_APP_UPD_CHECK_NEVER"));
     ui.btn_upd_daily->setText(Lang::tr("SETTINGS_APP_UPD_CHECK_DAILY"));
     ui.btn_upd_weekly->setText(Lang::tr("SETTINGS_APP_UPD_CHECK_WEEKLY"));
     ui.btn_upd_monthly->setText(Lang::tr("SETTINGS_APP_UPD_CHECK_MONTHLY"));
-}
 
+    if (this->isVisible()) {
+        this->adjustSize();
+        AcrylicHelper::updateRegion(this);
+    }
+}

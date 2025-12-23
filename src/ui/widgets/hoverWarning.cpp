@@ -125,6 +125,8 @@ void KeyHoverWarning::showNear(const QWidget *anchor) {
         setWindowOpacity(0.0);
         move(startPos);
         show();
+
+        AcrylicHelper::updateRegion(this);
     }
 
     animGroupIn->start();

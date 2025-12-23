@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
 
     AppSettings::load();
     // для тестов
-    // AppSettings::lastUpdateCheckDate = QDate::currentDate().addDays(-2);
+    // AppSettings::lastUpdateCheckDate = QDate::currentDate().addDays(-7);
 
     // Проверка на уже запущенный экземпляр
     const QString mutexName = QString("MyUnique%1Mutex").arg(AppSettings::APP_NAME);

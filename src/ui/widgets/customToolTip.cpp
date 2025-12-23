@@ -71,6 +71,8 @@ void CustomToolTip::showAt(const QWidget *target, const QString &langKey) {
         this->show();
     }
 
+    AcrylicHelper::updateRegion(this);
+
     animGroup->start();
 }
 
@@ -99,5 +101,7 @@ void CustomToolTip::refreshTranslations() {
     if (!currentLangKey.isEmpty()) {
         ui.tooltip_label->setText(Lang::tr(currentLangKey));
         updateSize();
+
+        AcrylicHelper::updateRegion(this);
     }
 }
