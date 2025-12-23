@@ -8,14 +8,8 @@
 #include "windowDragger.h"
 #include <QVector>
 #include <QTimer>
+#include <QGraphicsDropShadowEffect>
 
-/*
-SettingsWindow
-— управление выбором клавишей-триггером
-— автосохранение (1s) при реальных изменениях
-— восстановление предыдущего preset при очистке input-поля
-— единый маппинг preset кнопок
-*/
 class KeySequenceHelper;
 class SaveNotification;
 
@@ -48,45 +42,40 @@ protected:
     void hideEvent(QHideEvent *event) override;
 
 private:
+    // UI и компоненты
     Ui::settings_main_widget ui{};
-
     KeySequenceHelper *m_keyHelper = nullptr;
-
     SaveNotification *saveNotif = nullptr;
-
     QVector<AnimatedSelector *> selectors;
-
     WindowDragger *dragger = nullptr;
-
     KeyHoverWarning *keyHoverWarning = nullptr;
-
     UpdFrequencyPopup *updPopup = nullptr;
-
-    void initUpdateFrequency();
-
-    UpdateManager *updateManager = nullptr;
-
     CustomToolTip *updateBtnToolTip = nullptr;
+    UpdateManager *updateManager = nullptr;
+    QGraphicsDropShadowEffect *m_shadow = nullptr;
 
+    // Логика и состояние
     QTimer autosaveTimer;
-
-    QGraphicsDropShadowEffect *m_shadow;
-
     static constexpr int autosaveIntervalMs = 1000;
-
     bool hasPendingChanges = false;
 
     int previousPresetVk = 0;
-
     QString previousPresetName;
-
     QHash<QString, int> presetMap;
 
+    // Методы инициализации (Рефакторинг)
+    void initVisuals(); // Иконки, тени, драггер, скрытие лишнего
+    void initHotkeyLogic(); // PresetMap, KeySequenceHelper и кнопки клавиш
+    void initUpdateLogic(); // Тултипы, попапы частоты обновлений
+    void initLanguageAndStartup(); // Кнопки языка и автозагрузки
+    void initAutosaveLogic(); // Коннекты таймера и логика сохранения
+
+    // Вспомогательные методы
     void addSelectorForFrame(QFrame *frame, const QString &extraStyle = QString());
 
     void buildPresetMap();
 
-    int vkFromPresetObjectName(const QString &obj) const;
+    [[nodiscard]] int vkFromPresetObjectName(const QString &obj) const;
 
     static QString nameFromVk(int vk);
 
