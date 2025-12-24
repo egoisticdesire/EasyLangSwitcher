@@ -20,7 +20,7 @@ public:
 private:
     void updateSize();
 
-    Ui::tooltip_main_widget ui;
+    Ui::tooltip_main_widget ui{};
     QString currentLangKey;
 
     QParallelAnimationGroup *animGroup;

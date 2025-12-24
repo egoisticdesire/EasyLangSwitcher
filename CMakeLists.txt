@@ -50,9 +50,9 @@ add_executable(${APP_NAME}
         # ui
         src/ui/helpers/acrylicHelper.h
         src/ui/helpers/fontHelper.h
-        src/ui/helpers/hoverHelper.h
         src/ui/helpers/iconHelper.h
         src/ui/helpers/keySequenceHelper.h
+        src/ui/helpers/trayHoverHelper.h
         src/ui/helpers/vkMapper.h
         src/ui/helpers/warningHelper.h
 

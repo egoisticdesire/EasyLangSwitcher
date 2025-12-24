@@ -3,11 +3,6 @@
 #include <QString>
 #include <QDate>
 
-/*
-AppSettings
-— централизованное хранение настроек (runtime + defaults)
-*/
-
 class AppSettings {
 public:
     static constexpr auto APP_NAME = "EasyLangSwitcher";

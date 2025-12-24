@@ -4,6 +4,9 @@
 #include <QtGui/QPainter>
 #include <QtGui/QPainterPath>
 #include <QtGui/QWindow>
+#include <QtCore/QEvent>
+#include <QtCore/QObject>
+#include <QtCore/QCoreApplication>
 #include <Windows.h>
 #include <dwmapi.h>
 
@@ -46,7 +49,7 @@ struct WINDOWCOMPOSITIONATTRIBDATA {
 using pSetWindowCompositionAttribute = BOOL(WINAPI*)(HWND, WINDOWCOMPOSITIONATTRIBDATA *);
 using pRtlGetVersion = LONG(WINAPI*)(PRTL_OSVERSIONINFOEXW);
 
-class AcrylicHelper {
+class AcrylicHelper final : public QObject {
     // Структура для хранения версии ОС и указателей на функции (инициализируется один раз)
     struct WinInternal {
         bool isWin11;
@@ -54,7 +57,7 @@ class AcrylicHelper {
         pSetWindowCompositionAttribute setAttribPtr;
 
         WinInternal() {
-            // 1. Получаем версию ОС
+            // Получаем версию ОС
             isWin11 = false;
             isWin10 = false;
             if (const auto ntdll = GetModuleHandleW(L"ntdll.dll")) {
@@ -67,23 +70,78 @@ class AcrylicHelper {
                     }
                 }
             }
-            // 2. Ищем функцию акрила
+            // Ищем функцию акрила
             setAttribPtr = reinterpret_cast<pSetWindowCompositionAttribute>(
                 GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetWindowCompositionAttribute"));
         }
     };
 
-    // Статический доступ к внутренним данным (потокобезопасно в C++11+)
+    // Статический доступ к внутренним данным
     static const WinInternal &info() {
         static WinInternal instance;
         return instance;
+    }
+
+    // Синглтон для управления фильтром
+    static AcrylicHelper *instance() {
+        static AcrylicHelper inst;
+        return &inst;
+    }
+
+    // Генерация текстуры шума для Win10
+    static QPixmap &noiseTexture(const qreal dpr = 1.0) {
+        static QPixmap pix;
+        static qreal lastDpr = 0;
+
+        // Пересоздаем текстуру только если изменился масштаб или её еще нет
+        if (pix.isNull() || !qFuzzyCompare(dpr, lastDpr)) {
+            lastDpr = dpr;
+            constexpr int baseSize = 128;
+            // Физический размер текстуры в пикселях
+            const int physSize = qRound(baseSize * dpr);
+
+            QImage img(physSize, physSize, QImage::Format_ARGB32_Premultiplied);
+            img.fill(Qt::transparent);
+
+            unsigned int x = 123456789, y = 362436069, z = 521288629;
+            auto fastRand = [&]() {
+                x ^= x << 16;
+                x ^= x >> 5;
+                x ^= x << 1;
+                const unsigned int t = x;
+                x = y;
+                y = z;
+                z = t ^ x ^ y;
+                return z;
+            };
+
+            // Увеличиваем количество точек пропорционально площади (DPR^2)
+            constexpr int dotsCount = 50000;
+            const int iterations = qRound(dotsCount * dpr * dpr);
+
+            QPainter p(&img);
+            p.setRenderHint(QPainter::Antialiasing, false);
+
+            for (int i = 0; i < iterations; ++i) {
+                const int px = fastRand() % physSize;
+                const int py = fastRand() % physSize;
+                const int shade = fastRand() % 256;
+                p.setPen(QColor(shade, shade, shade, 1));
+                p.drawPoint(px, py);
+            }
+            p.end();
+
+            pix = QPixmap::fromImage(img);
+            pix.setDevicePixelRatio(dpr); // Говорим Qt, что это HiDPI текстура
+        }
+        return pix;
     }
 
 public:
     static bool isWindows11OrGreater() { return info().isWin11; }
     static bool isWindows10OrGreater() { return info().isWin10; }
 
-    static void setAcrylicEnabled(const QWidget *widget, const bool enabled) {
+    static void setAcrylicEnabled(QWidget *widget, const bool enabled) {
         if (!widget) return;
         if (enabled) {
             enableAcrylic(widget);
@@ -95,13 +153,19 @@ public:
 
     // 0xCC (~80%) | 0xE0 (~88%) | 0xE3 (~90%) | 0xE6 (~92%) | 0xF0 (~94%) | 0xF3 (~96%) | 0xF6 (~98%) | 0xF9 (~100%)
     static void enableAcrylic(
-        const QWidget *widget,
+        QWidget *widget,
         const DWORD alphaWin11 = 0x40, const DWORD rgbWin11 = 0x202020,
-        const DWORD alphaWin10 = 0xE6, const DWORD rgbWin10 = 0x101010
+        const DWORD alphaWin10 = 0xE6, const DWORD rgbWin10 = 0x141414
     ) {
         if (!widget || !info().setAttribPtr) return;
         const auto hwnd = reinterpret_cast<HWND>(widget->winId());
         if (!hwnd) return;
+
+        // Регистрация фильтра шума для Win10 прямо здесь
+        if (info().isWin10 && !info().isWin11) {
+            widget->removeEventFilter(instance());
+            widget->installEventFilter(instance());
+        }
 
         // Чистим флаг Layered, чтобы WinAPI акрил не конфликтовал с прозрачностью Qt
         if (const LONG ex = GetWindowLongW(hwnd, GWL_EXSTYLE); ex & WS_EX_LAYERED)
@@ -123,7 +187,7 @@ public:
             policy.AccentState = ACCENT_ENABLE_BLURBEHIND;
             policy.GradientColor = (alphaWin10 << 24) | rgbWin10;
             policy.AccentFlags = 2;
-            updateRegion(widget); // На Win10 нужен физический регион обрезки
+            updateRegion(widget);
         }
 
         WINDOWCOMPOSITIONATTRIBDATA data{19, &policy, sizeof(policy)};
@@ -145,8 +209,13 @@ public:
             SetWindowRgn(hwnd, hrgn, TRUE);
     }
 
-    static void disableAcrylic(const QWidget *widget) {
-        if (!widget || !info().setAttribPtr) return;
+    static void disableAcrylic(QWidget *widget) {
+        if (!widget) return;
+
+        // Обязательно снимаем фильтр при выключении
+        widget->removeEventFilter(instance());
+
+        if (!info().setAttribPtr) return;
         const auto hwnd = reinterpret_cast<HWND>(widget->winId());
 
         ACCENT_POLICY policy{ACCENT_DISABLED, 0, 0, 0};
@@ -183,6 +252,26 @@ public:
             return true;
         }
         return false;
+    }
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override {
+        if (event->type() == QEvent::Paint) {
+            if (const auto widget = static_cast<QWidget *>(obj)) {
+                widget->removeEventFilter(this);
+                QCoreApplication::sendEvent(widget, event);
+                widget->installEventFilter(this);
+
+                QPainter painter(widget);
+                // Получаем DPR (например, 1.25, 1.5 и т.д.)
+                const qreal dpr = widget->devicePixelRatio();
+
+                // Рисуем текстуру, которая соответствует физическим пикселям
+                painter.drawTiledPixmap(widget->rect(), noiseTexture(dpr));
+                return true;
+            }
+        }
+        return QObject::eventFilter(obj, event);
     }
 
 private:

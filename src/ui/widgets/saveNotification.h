@@ -20,7 +20,7 @@ public:
 
     static QVector<SaveNotification *> stack;
 
-    qreal progress() const { return m_progress; }
+    [[nodiscard]] qreal progress() const { return m_progress; }
 
     void setProgress(const qreal v) {
         m_progress = v;
@@ -41,9 +41,9 @@ private:
 
     void animateTo(int newIndex);
 
-    QPoint basePosition(int index) const;
+    [[nodiscard]] QPoint basePosition(int index) const;
 
-    Ui_notif_main_widget ui;
+    Ui_notif_main_widget ui{};
     SettingsWindow *settings = nullptr;
 
     bool m_closing = false;

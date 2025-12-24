@@ -4,7 +4,7 @@
 #include "../../core/config/appSettings.h"
 #include "../../core/i18n/lang.h"
 #include "../helpers/acrylicHelper.h"
-#include "../helpers/hoverHelper.h"
+#include "../helpers/trayHoverHelper.h"
 #include "../helpers/iconHelper.h"
 #include <QMouseEvent>
 #include <QScreen>
@@ -72,7 +72,7 @@ TrayManager::TrayManager(QWidget *parent)
 }
 
 TrayManager::~TrayManager() {
-    if (settingsWindow) delete settingsWindow;
+    delete settingsWindow;
 }
 
 void TrayManager::setupAnimations() {
@@ -172,13 +172,11 @@ void TrayManager::openSettings() const {
     hideAnimated();
     if (!settingsWindow) return;
 
-    if (settingsWindow->isVisible()) {
-        settingsWindow->showNormal();
+    QTimer::singleShot(0, settingsWindow, [this]() {
+        settingsWindow->openCentered();
         settingsWindow->raise();
         settingsWindow->activateWindow();
-    } else {
-        settingsWindow->openCentered();
-    }
+    });
 }
 
 void TrayManager::setupTrayIcon() {
@@ -267,13 +265,13 @@ void TrayManager::setupUiBehavior() {
         updateTrayIcon();
     });
 
-    HoverEffectHelper::initializeHoverEffects(this);
+    TrayHoverHelper::initializeHover(this);
 }
 
 bool TrayManager::eventFilter(QObject *obj, QEvent *event) {
     if (obj == ui.info_frame) {
-        if (event->type() == QEvent::Enter) HoverEffectHelper::animateHover(ui.info_frame, true);
-        else if (event->type() == QEvent::Leave) HoverEffectHelper::animateHover(ui.info_frame, false);
+        if (event->type() == QEvent::Enter) TrayHoverHelper::animateHover(ui.info_frame, true);
+        else if (event->type() == QEvent::Leave) TrayHoverHelper::animateHover(ui.info_frame, false);
     }
     return QWidget::eventFilter(obj, event);
 }

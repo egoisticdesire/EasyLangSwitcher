@@ -24,7 +24,7 @@ public:
         appFont.setPointSize(DefaultSize);
         appFont.setHintingPreference(QFont::PreferNoHinting);
         appFont.setStyleStrategy(QFont::PreferAntialias);
-        app.setFont(appFont);
+        QApplication::setFont(appFont);
 
         LOG_DEBUG() << "Font family: " << family << "; size: " << appFont.pointSize() << "pt";
     }

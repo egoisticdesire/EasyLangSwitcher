@@ -96,7 +96,7 @@ void SaveNotification::setupAnimations() {
 }
 
 void SaveNotification::startShowAnimation() {
-    const int index = stack.indexOf(this);
+    const int index = static_cast<int>(stack.indexOf(this));
     if (index < 0 || !settings) return;
 
     const QPoint endP = basePosition(index);
@@ -161,7 +161,7 @@ QPoint SaveNotification::basePosition(const int index) const {
 
     const int x = win.right() - width() - margin;
     const int y = win.bottom() - height() - margin - index * (height() + spacing);
-    return QPoint(x, y);
+    return {x, y};
 }
 
 void SaveNotification::paintEvent(QPaintEvent *e) {
@@ -208,7 +208,7 @@ bool SaveNotification::eventFilter(QObject *o, QEvent *e) {
                             n->progressAnim->resume();
 
                             // Запускаем таймер заново на остаток времени
-                            if (const int rem = n->progressAnim->duration() * (1.0 - n->progress()); rem > 0) {
+                            if (const int rem = qRound(n->progressAnim->duration() * (1.0 - n->progress())); rem > 0) {
                                 n->hideTimer.start(rem);
                             } else {
                                 n->startHideAnimation(true);

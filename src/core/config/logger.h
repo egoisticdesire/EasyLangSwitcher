@@ -93,7 +93,7 @@ public:
         f.replace(reExtraSpaces, " ");
 
         // упрощаем параметры функций до (...)
-        if (const int idx = f.indexOf('('); idx != -1) {
+        if (const qsizetype idx = f.indexOf('('); idx != -1) {
             f = f.left(idx + 1) + "...)";
         }
 
@@ -101,23 +101,14 @@ public:
     }
 
 
-    Logger(const char *file, const char *function, int line, Level level = Level::DEBUG)
+    Logger(const char *file, const char *function, const int line, const Level level = Level::DEBUG)
         : m_level(level), m_file(file), m_function(function), m_line(line) {
-        // минимальный уровень в зависимости от тумблера
-        Level minLevel = _debug ? Level::DEBUG : Level::INFO;
+        // Быстрая проверка: нужно ли вообще логировать?
+        const Level minLevel = _debug ? Level::DEBUG : Level::INFO;
         m_suppressed = (level < minLevel);
         if (m_suppressed) return;
 
-        // цвета
-        m_reset = "\033[0m";
-        m_red = "\033[38;2;239;41;41m";
-        m_green = "\033[38;2;135;225;110m";
-        m_blue = "\033[38;2;4;96;215m";
-        m_cyan = "\033[38;2;100;195;205m";
-        m_gold = "\033[38;2;234;191;0m";
-        m_purple = "\033[38;2;200;120;200m";
-        m_gray = "\033[38;2;175;175;175m";
-
+        // Определяем цвет уровня (используем готовые статические строки)
         switch (level) {
             case Level::DEBUG: m_levelColor = m_blue;
                 break;
@@ -129,28 +120,31 @@ public:
                 break;
         }
 
+        // Вспомогательная функция теперь внутри, чтобы не засорять класс
         auto visibleLength = [](const QString &s) {
             static const QRegularExpression reColors("\033\\[[0-9;]*m");
             QString plain = s;
-            plain.remove(QRegularExpression(reColors));
+            plain.remove(reColors);
             return plain.length();
         };
 
+        // Формируем мета-данные только если лог активен
         // QString threadStr = QString("Thread=%1").arg(reinterpret_cast<quintptr>(QThread::currentThreadId()));
-
-        QString timeStr = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz");
-        QString levelStr = levelToString(level).leftJustified(9, ' ');
+        const QString timeStr = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz");
+        const QString levelStr = levelToString(level).leftJustified(9, ' ');
 
         QString formattedFileName = QString("%1%2%3").arg(m_purple, QFileInfo(file).fileName(), m_reset);
         QString formattedFuncName = QString("%1%2%3").arg(m_cyan, cleanFunction(function), m_reset);
         QString formattedName = QString("%1 %2→%3 %4").arg(formattedFileName, m_levelColor, m_reset, formattedFuncName);
 
-        qsizetype padRaw = 80 - visibleLength(formattedName);
-        if (int pad = static_cast<int>(padRaw); pad > 0)
-            formattedName = QString(pad, ' ') + formattedName;
+        // Выравнивание
+        if (const qsizetype padRaw = 80 - visibleLength(formattedName); padRaw > 0) {
+            formattedName = QString(static_cast<int>(padRaw), ' ') + formattedName;
+        }
 
-        QString lineStr = QString::number(line).leftJustified(5, ' ');
+        const QString lineStr = QString::number(line).leftJustified(5, ' ');
 
+        // Записываем в поток
         m_stream
                 // << threadStr << " "
                 << m_green << "[" << timeStr << "]" << m_reset << " "
@@ -173,14 +167,19 @@ public:
 
 private:
     bool m_suppressed = false;
-
     QString m_str;
     QTextStream m_stream{&m_str};
-
     Level m_level;
     QString m_levelColor;
 
-    QString m_reset, m_green, m_cyan, m_blue, m_gray, m_gold, m_red, m_purple;
+    inline static const QString m_reset = "\033[0m";
+    inline static const QString m_green = "\033[38;2;135;225;110m";
+    inline static const QString m_cyan = "\033[38;2;100;195;205m";
+    inline static const QString m_blue = "\033[38;2;4;96;215m";
+    inline static const QString m_gray = "\033[38;2;175;175;175m";
+    inline static const QString m_gold = "\033[38;2;234;191;0m";
+    inline static const QString m_red = "\033[38;2;239;41;41m";
+    inline static const QString m_purple = "\033[38;2;200;120;200m";
 
     const char *m_file;
     const char *m_function;
@@ -197,7 +196,7 @@ private:
     }
 };
 
-#define LOG_DEBUG() if (!Logger::_debug) ; else Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::DEBUG)
+#define LOG_DEBUG() if (!Logger::_debug) {} else Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::DEBUG)
 #define LOG_INFO() Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::INFO)
 #define LOG_WARNING() Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::WARN)
 #define LOG_ERROR() Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::ERR)

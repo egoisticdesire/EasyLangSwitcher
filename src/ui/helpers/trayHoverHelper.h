@@ -5,9 +5,9 @@
 #include <QPropertyAnimation>
 #include <QEasingCurve>
 
-class HoverEffectHelper {
+class TrayHoverHelper {
 public:
-    static void initializeHoverEffects(const QWidget *widget) {
+    static void initializeHover(const QWidget *widget) {
         for (const auto *frame: widget->findChildren<QFrame *>()) {
             for (auto *lbl: frame->findChildren<QLabel *>()) {
                 auto *eff = new QGraphicsOpacityEffect(lbl);

@@ -400,16 +400,38 @@ void SettingsWindow::hideEvent(QHideEvent *event) {
 
 void SettingsWindow::openCentered() {
     const QScreen *screen = QGuiApplication::primaryScreen();
-    if (!screen) screen = QGuiApplication::screens().first();
+    if (!screen) screen = QGuiApplication::primaryScreen();
+    if (!screen) return;
+
     const QRect geom = screen->availableGeometry();
-    const QSize s = sizeHint().isValid() ? sizeHint() : QSize(900, 500);
-    const int x = geom.center().x() - s.width() / 2;
-    const int y = geom.center().y() - s.height() / 2;
-    resize(s);
+
+    // Принудительно заставляем Qt пересчитать размеры контента
+    if (layout()) layout()->activate();
+    adjustSize();
+
+    const QSize s = size();
+
+    // Считаем центр
+    const int x = geom.left() + (geom.width() - s.width()) / 2;
+    const int y = geom.top() + (geom.height() - s.height()) / 2;
+
+    // Сначала двигаем, потом показываем
     move(x, y);
-    show();
-    raise();
-    activateWindow();
+
+    if (isHidden()) {
+        show();
+    } else {
+        if (isMinimized()) showNormal();
+        raise();
+        activateWindow();
+    }
+
+    // Фокус и акрил
+    QTimer::singleShot(50, this, [this]() {
+        const bool trulyActive = this->isActiveWindow() || (QApplication::activeWindow() == this);
+        AcrylicHelper::setAcrylicEnabled(this, trulyActive);
+        AcrylicHelper::updateRegion(this);
+    });
 }
 
 int SettingsWindow::vkFromPresetObjectName(const QString &obj) const { return presetMap.value(obj, 0); }

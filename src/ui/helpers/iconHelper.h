@@ -19,7 +19,7 @@ public:
             QFile file(path);
             if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
                 LOG_DEBUG() << "Failed to open SVG file: " << path;
-                return QIcon();
+                return {};
             }
 
             QString svgData = file.readAll();
@@ -33,12 +33,12 @@ public:
             QSvgRenderer renderer(svgData.toUtf8());
             if (!renderer.isValid()) {
                 LOG_DEBUG() << "Invalid SVG renderer for path: " << path;
-                return QIcon();
+                return {};
             }
 
             const QSize finalSize = size.isEmpty() ? renderer.defaultSize() : size;
             if (finalSize.isEmpty())
-                return QIcon();
+                return {};
 
             QPixmap pixmap(finalSize);
             pixmap.fill(Qt::transparent);
@@ -46,7 +46,7 @@ public:
             QPainter painter(&pixmap);
             renderer.render(&painter);
 
-            return QIcon(pixmap);
+            return {pixmap};
         }
 
         // PNG/JPG и другие растровые форматы
@@ -54,6 +54,6 @@ public:
         if (!pixmap.isNull() && !size.isEmpty())
             pixmap = pixmap.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
-        return QIcon(pixmap);
+        return {pixmap};
     }
 };

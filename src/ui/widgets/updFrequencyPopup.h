@@ -11,7 +11,7 @@ public:
 
     void setCurrent(AppSettings::UpdateFrequency value) const;
 
-    int currentButtonYOffset() const;
+    [[nodiscard]] int currentButtonYOffset() const;
 
     void refreshTranslations();
 
@@ -22,7 +22,7 @@ protected:
     void showEvent(QShowEvent *event) override;
 
 private:
-    Ui::upd_freq_main_widget ui;
+    Ui::upd_freq_main_widget ui{};
 
     void setupConnections();
 };

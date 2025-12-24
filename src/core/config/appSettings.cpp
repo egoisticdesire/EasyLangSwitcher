@@ -49,9 +49,8 @@ void AppSettings::logger(const QString &action) {
                     .arg(previousHotkeyMainVk)
                     .arg(previousHotkeyName.toLower())
                     .arg(autoStartup ? "true" : "false")
-                    .arg(appLang.toLower())
-                    .arg(updateFrequencyToString(updateFrequency, false).toLower())
-                    .arg(lastUpdateCheckDate.isValid() ? lastUpdateCheckDate.toString(Qt::ISODate) : "never");
+                    .arg(appLang.toLower(), updateFrequencyToString(updateFrequency, false).toLower(),
+                         lastUpdateCheckDate.isValid() ? lastUpdateCheckDate.toString(Qt::ISODate) : "never");
 }
 
 QString AppSettings::updateFrequencyToString(

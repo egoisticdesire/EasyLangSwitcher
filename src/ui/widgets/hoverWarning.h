@@ -6,7 +6,6 @@
 
 class KeyHoverWarning final : public QWidget {
     Q_OBJECT
-    // Регистрируем свойство для анимации позиции
     Q_PROPERTY(QPoint pos READ pos WRITE move)
 
 public:
@@ -26,7 +25,7 @@ protected:
 private:
     void setupAnimations();
 
-    Ui_settings_warning_main_widget ui;
+    Ui_settings_warning_main_widget ui{};
     QWidget *owner = nullptr;
     QWidget *m_content = nullptr;
 

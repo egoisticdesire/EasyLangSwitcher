@@ -1,28 +1,26 @@
 #pragma once
-#include <QObject>
 #include <QTimer>
-#include <QDate>
-#include <QNetworkAccessManager>
 #include <QNetworkReply>
 
-class UpdateManager : public QObject {
+class UpdateManager final : public QObject {
     Q_OBJECT
 
 public:
     explicit UpdateManager(QObject *parent = nullptr);
 
     void start();
+
     void stop();
 
     // Публичный слот, чтобы его можно было вызывать из SettingsWindow
     void checkForUpdatesIfDue();
 
-    // Принудительная проверка (например, при нажатии кнопки "Check manually")
+    // Принудительная проверка
     void checkForUpdatesForce();
 
-    signals:
-        // Сигнал, что обновление найдено (передаем ссылку на скачивание или версию)
-        void updateAvailable(const QString &tagName, const QString &url);
+signals:
+    // Сигнал, что обновление найдено (передаем ссылку на скачивание или версию)
+    void updateAvailable(const QString &tagName, const QString &url);
 
     void noUpdateAvailable();
 
@@ -38,7 +36,7 @@ private:
 
     static bool isUpdateDue();
 
-    // Вспомогательная функция для сравнения версий (v1.0.0 vs 1.0.1)
+    // Вспомогательная функция для сравнения версий
     static bool isNewerVersion(const QString &currentVer, const QString &remoteVer);
 
     void performCheck();

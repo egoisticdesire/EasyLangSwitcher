@@ -3,7 +3,6 @@
 #include "../../core/config/logger.h"
 #include <QCoreApplication>
 #include <QJsonObject>
-#include <QRegularExpression>
 #include <QVersionNumber>
 
 UpdateManager::UpdateManager(QObject *parent)
