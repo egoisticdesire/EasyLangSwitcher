@@ -1,7 +1,7 @@
-#include "saveNotification.h"
-#include "settingsWindow.h"
-#include "../helpers/iconHelper.h"
-#include "../helpers/acrylicHelper.h"
+#include "inAppNotification.h"
+#include "../settingsWindow.h"
+#include "../../helpers/iconHelper.h"
+#include "../../helpers/acrylicHelper.h"
 #include <QTextDocument>
 #include <QtMath>
 #include <QScreen>
@@ -9,18 +9,16 @@
 #include <QPainter>
 #include <QGuiApplication>
 
-QVector<SaveNotification *> SaveNotification::stack;
+QVector<InAppNotification *> InAppNotification::stack;
 
-SaveNotification::SaveNotification(SettingsWindow *settings, const QString &text)
-    : QWidget(nullptr), settings(settings) {
+InAppNotification::InAppNotification(SettingsWindow *settings, const QString &text, Type type)
+    : QWidget(nullptr), settings(settings), m_type(type) {
     ui.setupUi(this);
 
     setWindowFlags(Qt::ToolTip | Qt::NoDropShadowWindowHint | Qt::WindowDoesNotAcceptFocus | Qt::WindowStaysOnTopHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setFocusPolicy(Qt::NoFocus);
-
-    // Включаем отслеживание мыши, чтобы Enter/Leave работали стабильно
     setAttribute(Qt::WA_Hover);
 
     constexpr int totalWidth = 250;
@@ -40,8 +38,33 @@ SaveNotification::SaveNotification(SettingsWindow *settings, const QString &text
 
     ui.icon_label->setAttribute(Qt::WA_TransparentForMouseEvents);
     ui.icon_label->setFixedSize(iconSize, iconSize);
-    ui.icon_label->setIcon(IconHelper::loadIcon(":/icons/icons/checked.svg", QColor(91, 239, 91),
-                                                QSize(iconSize, iconSize)));
+
+    // Настройка иконки и цвета в зависимости от типа
+    QString iconPath;
+    QColor iconColor;
+
+    switch (m_type) {
+        case Success:
+            iconPath = ":/icons/icons/checked.svg";
+            iconColor = QColor(91, 239, 91);
+            break;
+        case Error:
+            iconPath = ":/icons/icons/DismissCircleFilled.svg";
+            iconColor = QColor(255, 70, 70);
+            break;
+        case Warning:
+            iconPath = ":/icons/icons/WarningFilled.svg";
+            iconColor = QColor(234, 191, 0);
+            break;
+        case Info:
+        default:
+            iconPath = ":/icons/icons/InfoFilled.svg";
+            iconColor = QColor(80, 160, 255);
+            break;
+    }
+
+    ui.icon_label->setIcon(IconHelper::loadIcon(iconPath, iconColor, QSize(iconSize, iconSize)));
+
     ui.message_label->setText(text);
     ui.message_label->setWordWrap(true);
 
@@ -62,7 +85,7 @@ SaveNotification::SaveNotification(SettingsWindow *settings, const QString &text
     connect(&hideTimer, &QTimer::timeout, this, [this]() { startHideAnimation(true); });
 }
 
-void SaveNotification::setupAnimations() {
+void InAppNotification::setupAnimations() {
     animGroupIn = new QParallelAnimationGroup(this);
     animInPos = new QPropertyAnimation(this, "pos", this);
     animInOpacity = new QPropertyAnimation(this, "windowOpacity", this);
@@ -88,14 +111,12 @@ void SaveNotification::setupAnimations() {
             this->hide();
             if (const qsizetype idx = stack.indexOf(this); idx >= 0) stack.removeAt(idx);
             this->deleteLater();
-            for (int i = 0; i < stack.size(); ++i) {
-                if (stack[i]) stack[i]->animateTo(i);
-            }
+            for (int i = 0; i < stack.size(); ++i) { if (stack[i]) stack[i]->animateTo(i); }
         }
     });
 }
 
-void SaveNotification::startShowAnimation() {
+void InAppNotification::startShowAnimation() {
     const int index = static_cast<int>(stack.indexOf(this));
     if (index < 0 || !settings) return;
 
@@ -119,7 +140,6 @@ void SaveNotification::startShowAnimation() {
 
     animGroupIn->start();
 
-    // Прогресс-бар
     progressAnim = new QPropertyAnimation(this, "progress", this);
     progressAnim->setDuration(hideTimer.interval());
     progressAnim->setStartValue(0.0);
@@ -129,7 +149,7 @@ void SaveNotification::startShowAnimation() {
     hideTimer.start();
 }
 
-void SaveNotification::startHideAnimation(const bool removeFromStack) {
+void InAppNotification::startHideAnimation(const bool removeFromStack) {
     if (m_closing) return;
     m_closing = removeFromStack;
 
@@ -145,7 +165,7 @@ void SaveNotification::startHideAnimation(const bool removeFromStack) {
     animGroupOut->start();
 }
 
-void SaveNotification::animateTo(const int newIndex) {
+void InAppNotification::animateTo(const int newIndex) {
     if (m_closing) return;
     auto *a = new QPropertyAnimation(this, "pos", this);
     a->setDuration(200);
@@ -154,7 +174,7 @@ void SaveNotification::animateTo(const int newIndex) {
     a->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
-QPoint SaveNotification::basePosition(const int index) const {
+QPoint InAppNotification::basePosition(const int index) const {
     constexpr int margin = 12;
     constexpr int spacing = 12;
     const QRect win = settings ? settings->geometry() : QGuiApplication::primaryScreen()->availableGeometry();
@@ -164,13 +184,14 @@ QPoint SaveNotification::basePosition(const int index) const {
     return {x, y};
 }
 
-void SaveNotification::paintEvent(QPaintEvent *e) {
+void InAppNotification::paintEvent(QPaintEvent *e) {
     QWidget::paintEvent(e);
     if (m_progress <= 0.0) return;
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
     QRectF r = rect();
     r.setWidth(r.width() * m_progress);
+
     QLinearGradient grad(r.topLeft(), r.topRight());
     grad.setColorAt(1.0, QColor(255, 255, 255, 0));
     grad.setColorAt(0.98, QColor(255, 255, 255, 6));
@@ -181,47 +202,30 @@ void SaveNotification::paintEvent(QPaintEvent *e) {
     p.drawRect(r);
 }
 
-bool SaveNotification::eventFilter(QObject *o, QEvent *e) {
+bool InAppNotification::eventFilter(QObject *o, QEvent *e) {
     if (o == this) {
-        switch (e->type()) {
-            case QEvent::MouseButtonPress:
-                startHideAnimation(true);
-                return true;
-
-            case QEvent::Enter:
-                for (auto *n: stack) {
-                    if (n && n->progressAnim) {
-                        // Пауза только если она сейчас запущена
-                        if (n->progressAnim->state() == QAbstractAnimation::Running) {
-                            n->progressAnim->pause();
-                        }
-                    }
-                    if (n) n->hideTimer.stop();
+        if (e->type() == QEvent::MouseButtonPress) {
+            startHideAnimation(true);
+            return true;
+        }
+        if (e->type() == QEvent::Enter) {
+            for (auto *n: stack) {
+                if (n && n->progressAnim && n->progressAnim->state() == QAbstractAnimation::Running)
+                    n->progressAnim->pause();
+                if (n) n->hideTimer.stop();
+            }
+            return true;
+        }
+        if (e->type() == QEvent::Leave) {
+            for (auto *n: stack) {
+                if (n && n->progressAnim && n->progressAnim->state() == QAbstractAnimation::Paused) {
+                    n->progressAnim->resume();
+                    if (const int rem = qRound(n->progressAnim->duration() * (1.0 - n->progress())); rem > 0)
+                        n->hideTimer.start(rem);
+                    else n->startHideAnimation(true);
                 }
-                return true;
-
-            case QEvent::Leave:
-                for (auto *n: stack) {
-                    if (n && n->progressAnim) {
-                        // Возобновляем только если она реально на паузе
-                        if (n->progressAnim->state() == QAbstractAnimation::Paused) {
-                            n->progressAnim->resume();
-
-                            // Запускаем таймер заново на остаток времени
-                            if (const int rem = qRound(n->progressAnim->duration() * (1.0 - n->progress())); rem > 0) {
-                                n->hideTimer.start(rem);
-                            } else {
-                                n->startHideAnimation(true);
-                            }
-                        } else if (n->progressAnim->state() == QAbstractAnimation::Stopped && !n->m_closing) {
-                            // Если вдруг анимация на паузе, но мы не в процессе закрытия — закрываем
-                            n->startHideAnimation(true);
-                        }
-                    }
-                }
-                return true;
-
-            default: break;
+            }
+            return true;
         }
     }
 
@@ -245,12 +249,12 @@ bool SaveNotification::eventFilter(QObject *o, QEvent *e) {
     return QWidget::eventFilter(o, e);
 }
 
-void SaveNotification::showFor(SettingsWindow *settings, const QString &text) {
+void InAppNotification::showFor(SettingsWindow *settings, const QString &text, const Type type) {
     if (!settings) return;
     if (stack.size() >= 3) {
         if (auto *last = stack.last()) last->startHideAnimation(true);
     }
-    auto *n = new SaveNotification(settings, text);
+    auto *n = new InAppNotification(settings, text, type);
     for (int i = 0; i < stack.size(); ++i) {
         if (stack[i]) stack[i]->animateTo(i + 1);
     }

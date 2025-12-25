@@ -54,7 +54,6 @@ add_executable(${APP_NAME}
         src/ui/helpers/iconHelper.h
         src/ui/helpers/keySequenceHelper.h
         src/ui/helpers/trayHoverHelper.h
-        src/ui/helpers/updateNotification.h
         src/ui/helpers/vkMapper.h
         src/ui/helpers/warningHelper.h
 
@@ -69,8 +68,10 @@ add_executable(${APP_NAME}
         src/ui/widgets/customToolTip.h
         src/ui/widgets/hoverWarning.cpp
         src/ui/widgets/hoverWarning.h
-        src/ui/widgets/saveNotification.cpp
-        src/ui/widgets/saveNotification.h
+        src/ui/widgets/notifications/globalNotification.cpp
+        src/ui/widgets/notifications/globalNotification.h
+        src/ui/widgets/notifications/inAppNotification.cpp
+        src/ui/widgets/notifications/inAppNotification.h
         src/ui/widgets/settingsWindow.cpp
         src/ui/widgets/settingsWindow.h
         src/ui/widgets/soundManager.cpp

@@ -2,7 +2,7 @@
 #include "ui_EasyLangSwitcher_settings.h"
 #include "hoverWarning.h"
 #include "animatedSelector.h"
-#include "../helpers/updateNotification.h"
+#include "notifications/globalNotification.h"
 #include "customToolTip.h"
 #include "updateManager.h"
 #include "updFrequencyPopup.h"
@@ -12,7 +12,7 @@
 #include <QGraphicsDropShadowEffect>
 
 class KeySequenceHelper;
-class SaveNotification;
+class InAppNotification;
 
 class SettingsWindow final : public QWidget {
     Q_OBJECT
@@ -46,7 +46,7 @@ private:
     // UI и компоненты
     Ui::settings_main_widget ui{};
     KeySequenceHelper *m_keyHelper = nullptr;
-    SaveNotification *saveNotif = nullptr;
+    InAppNotification *inAppNotif = nullptr;
     QVector<AnimatedSelector *> selectors;
     WindowDragger *dragger = nullptr;
     KeyHoverWarning *keyHoverWarning = nullptr;
@@ -54,7 +54,7 @@ private:
     CustomToolTip *updateBtnToolTip = nullptr;
     UpdateManager *updateManager = nullptr;
     QGraphicsDropShadowEffect *m_shadow = nullptr;
-    QPointer<UpdateNotification> m_currentUpdateNotif;
+    QPointer<GlobalNotification> m_currentGlobalNotif;
 
     // Логика и состояние
     QTimer autosaveTimer;

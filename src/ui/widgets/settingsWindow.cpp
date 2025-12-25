@@ -1,5 +1,5 @@
 #include "settingsWindow.h"
-#include "saveNotification.h"
+#include "notifications/inAppNotification.h"
 #include "autoStartup.h"
 #include "../../core/i18n/lang.h"
 #include "../../core/config/logger.h"
@@ -268,7 +268,7 @@ void SettingsWindow::initAutosaveLogic() {
     });
 
     connect(this, &SettingsWindow::settingsSaved, this, [this]() {
-        SaveNotification::showFor(this, Lang::tr("SETTINGS_ALL_CHANGES_SAVED"));
+        InAppNotification::showFor(this, Lang::tr("SETTINGS_ALL_CHANGES_SAVED"));
         QTimer::singleShot(50, this, [this]() { refreshTranslations(); });
     });
 
@@ -334,11 +334,11 @@ void SettingsWindow::setUpdateManager(UpdateManager *manager) {
 
     // 1. Если обновление найдено
     connect(updateManager, &UpdateManager::updateAvailable, this, [this](const QString &ver, const QString &url) {
-        if (m_currentUpdateNotif) m_currentUpdateNotif->deleteLater();
+        if (m_currentGlobalNotif) m_currentGlobalNotif->deleteLater();
 
-        m_currentUpdateNotif = new UpdateNotification(UpdateNotification::UpdateAvailable, ver, url);
+        m_currentGlobalNotif = new GlobalNotification(GlobalNotification::UpdateAvailable, ver, url);
         // Тут добавим логику позиционирования позже
-        m_currentUpdateNotif->show();
+        m_currentGlobalNotif->show();
     });
 
     // 2. Если обновлений нет (ручная проверка)
@@ -346,9 +346,9 @@ void SettingsWindow::setUpdateManager(UpdateManager *manager) {
         // Показываем уведомление "У вас последняя версия" только если окно настроек активно
         // (чтобы не спамить при фоновой проверке)
         if (this->isActiveWindow()) {
-            if (m_currentUpdateNotif) m_currentUpdateNotif->deleteLater();
-            m_currentUpdateNotif = new UpdateNotification(UpdateNotification::UpToDate, ver, "");
-            m_currentUpdateNotif->show();
+            if (m_currentGlobalNotif) m_currentGlobalNotif->deleteLater();
+            m_currentGlobalNotif = new GlobalNotification(GlobalNotification::UpToDate, ver, "");
+            m_currentGlobalNotif->show();
         }
     });
 
@@ -393,7 +393,7 @@ bool SettingsWindow::eventFilter(QObject *watched, QEvent *event) {
     if (watched == ui.key_select_label_img && keyHoverWarning) {
         if (event->type() == QEvent::Enter) keyHoverWarning->showNear(ui.key_select_label_img);
         else if (event->type() == QEvent::Leave) keyHoverWarning->hideNow();
-    } else if (watched == ui.btn_upd_manually && updateBtnToolTip && SaveNotification::stack.isEmpty()) {
+    } else if (watched == ui.btn_upd_manually && updateBtnToolTip && InAppNotification::stack.isEmpty()) {
         if (event->type() == QEvent::Enter) updateBtnToolTip->showAt(ui.btn_upd_manually, "SETTINGS_TOOLTIP_CHECK_NOW");
         else if (event->type() == QEvent::Leave) updateBtnToolTip->hideAnimated();
     }
@@ -412,7 +412,7 @@ bool SettingsWindow::nativeEvent(const QByteArray &eventType, void *message, qin
 
 void SettingsWindow::hideEvent(QHideEvent *event) {
     QWidget::hideEvent(event);
-    if (updateBtnToolTip || !SaveNotification::stack.isEmpty()) updateBtnToolTip->hide();
+    if (updateBtnToolTip || !InAppNotification::stack.isEmpty()) updateBtnToolTip->hide();
     if (keyHoverWarning) keyHoverWarning->hideNow();
     if (updPopup) updPopup->hide();
 }
@@ -533,7 +533,7 @@ void SettingsWindow::refreshTranslations() const {
     ui.btn_upd_frequency->setText(AppSettings::updateFrequencyToString(AppSettings::updateFrequency));
     if (updPopup) updPopup->refreshTranslations();
     if (updateBtnToolTip) updateBtnToolTip->refreshTranslations();
-    if (m_currentUpdateNotif) m_currentUpdateNotif->refreshTranslations();
+    if (m_currentGlobalNotif) m_currentGlobalNotif->refreshTranslations();
     keyHoverWarning->setText(Lang::tr("SETTINGS_KEY_HOVER_WARNING_POPUP"));
     if (const auto *seq = findChild<QKeySequenceEdit *>("btn_sequence"))
         if (auto *le = seq->findChild<QLineEdit *>()) le->setPlaceholderText(Lang::tr("SETTINGS_KEY_SEQUENCE"));

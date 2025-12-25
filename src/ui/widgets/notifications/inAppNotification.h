@@ -8,17 +8,19 @@
 
 class SettingsWindow;
 
-class SaveNotification final : public QWidget {
+class InAppNotification final : public QWidget {
     Q_OBJECT
     Q_PROPERTY(qreal progress READ progress WRITE setProgress)
     Q_PROPERTY(QPoint pos READ pos WRITE move)
 
 public:
-    explicit SaveNotification(SettingsWindow *settings, const QString &text);
+    enum Type { Success, Error, Info, Warning };
 
-    static void showFor(SettingsWindow *settings, const QString &text);
+    explicit InAppNotification(SettingsWindow *settings, const QString &text, Type type = Success);
 
-    static QVector<SaveNotification *> stack;
+    static void showFor(SettingsWindow *settings, const QString &text, Type type = Success);
+
+    static QVector<InAppNotification *> stack;
 
     [[nodiscard]] qreal progress() const { return m_progress; }
 
@@ -48,6 +50,7 @@ private:
 
     bool m_closing = false;
     qreal m_progress = 0.0;
+    Type m_type;
 
     // Анимации
     QParallelAnimationGroup *animGroupIn = nullptr;

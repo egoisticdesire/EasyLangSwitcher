@@ -1,5 +1,5 @@
 #include "customToolTip.h"
-#include "saveNotification.h"
+#include "notifications/inAppNotification.h"
 #include "../../ui/helpers/acrylicHelper.h"
 #include "../../core/i18n/lang.h"
 #include <QScreen>
