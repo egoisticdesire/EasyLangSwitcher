@@ -23,6 +23,8 @@ public:
 
     ~GlobalNotification() override;
 
+    void toggleInterface(bool downloading);
+
     void startShowAnimation();
 
     void startExitAnimation();

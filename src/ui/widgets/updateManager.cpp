@@ -29,7 +29,7 @@ void UpdateManager::stop() {
 
 void UpdateManager::checkForUpdatesIfDue() {
     if (!isUpdateDue()) {
-        // LOG_DEBUG() << "Update check skipped: not due yet.";
+        LOG_DEBUG() << "Update check skipped: not due yet";
         return;
     }
 

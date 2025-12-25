@@ -164,24 +164,58 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
 
 
         t.insert(
+            QStringLiteral("NOTIFICATION_UPD_BTN_DOWNLOAD"), {
+                QStringLiteral("  Download"),
+                QStringLiteral("  Загрузить"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_BTN_SAVE_AS_TOOLTIP"), {
+                QStringLiteral("Save to a specific location..."),
+                QStringLiteral("Сохранить в выбранную папку..."),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_BTN_RELEASES"), {
+                QStringLiteral("  What's new"),
+                QStringLiteral("  Что нового"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_SAVE_FILE_TITLE"), {
+                QStringLiteral("Save Installer"),
+                QStringLiteral("Сохранить файл установки"),
+            });
+        t.insert(
             QStringLiteral("NOTIFICATION_UPD_AVAILABLE_TITLE"), {
-                QStringLiteral("A new version of %1 is ready").arg(AppSettings::APP_NAME),
-                QStringLiteral("Доступна новая версия %1").arg(AppSettings::APP_NAME),
+                QStringLiteral("A new version of %1 is ready")
+                .arg(AppSettings::APP_NAME),
+                QStringLiteral("Доступна новая версия %1")
+                .arg(AppSettings::APP_NAME),
             });
         t.insert(
             QStringLiteral("NOTIFICATION_UPD_AVAILABLE_DESC"), {
-                QStringLiteral("Download %1 now or view the changes on the release page!"),
-                QStringLiteral("Загрузите %1 прямо сейчас или посмотрите список изменений в описании релиза!"),
+                QStringLiteral("Download version %1 now or view the changes on the release page!"),
+                QStringLiteral("Загрузите версию %1 прямо сейчас или посмотрите список изменений в описании релиза!"),
             });
         t.insert(
             QStringLiteral("NOTIFICATION_UPD_NOT_AVAILABLE_TITLE"), {
-                QStringLiteral("The latest version of %1 is installed").arg(AppSettings::APP_NAME),
-                QStringLiteral("У вас установлена последняя версия %1").arg(AppSettings::APP_NAME),
+                QStringLiteral("The latest version of %1 is installed")
+                .arg(AppSettings::APP_NAME),
+                QStringLiteral("У вас установлена последняя версия %1")
+                .arg(AppSettings::APP_NAME),
             });
         t.insert(
             QStringLiteral("NOTIFICATION_UPD_NOT_AVAILABLE_DESC"), {
                 QStringLiteral("The current version %1 is the latest, nothing needs to be updated!"),
                 QStringLiteral("Версия %1 — самая свежая, обновлений не требуется!"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_DOWNLOAD_COMPLETE"), {
+                QStringLiteral("Download completed successfully!"),
+                QStringLiteral("Загрузка успешно завершена!"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_DOWNLOAD_ERROR"), {
+                QStringLiteral("Failed to download update"),
+                QStringLiteral("Не удалось загрузить обновление"),
             });
 
 
@@ -472,7 +506,8 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     <span style=" font-weight:700;">The idea behind the app</span> came from personal experience: a dedicated key on the <span style=" font-weight:700;">MacBook</span>, features of <span style=" font-weight:700;">BetterTouchTool</span>, and the visual layout indicator from <span style=" font-weight:700;">Input Source Pro</span> inspired the creation of this solution for Windows.
                     </p>
                     </body></html>
-            )").arg(AppSettings::APP_NAME),
+            )")
+                .arg(AppSettings::APP_NAME),
                 QString::fromUtf8(R"(
                     <html><head/><body>
                     <p align="justify">
@@ -504,7 +539,8 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     <span style=" font-weight:700;">Идея приложения</span> возникла из личного опыта: удобная отдельная клавиша на <span style=" font-weight:700;">MacBook</span>, возможности <span style=" font-weight:700;">BetterTouchTool</span> и индикация из <span style=" font-weight:700;">Input Source Pro</span> вдохновили на создание этого решения для Windows.
                     </p>
                     </body></html>
-            )").arg(AppSettings::APP_NAME),
+            )")
+                .arg(AppSettings::APP_NAME),
             });
 
         t.insert(
