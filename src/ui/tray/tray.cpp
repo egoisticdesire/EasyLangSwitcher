@@ -25,15 +25,6 @@ TrayManager::TrayManager(QWidget *parent)
     settingsWindow->setUpdateManager(updateManager);
     updateManager->start();
 
-    // Обработка обновлений
-    connect(updateManager, &UpdateManager::updateAvailable, this, [this](const QString &tag, const QString &url) {
-        trayIcon.showMessage(
-            Lang::tr("SETTINGS_APP_UPD_AVAILABLE_TITLE"),
-            Lang::tr("SETTINGS_APP_UPD_AVAILABLE_MSG").arg(tag),
-            QSystemTrayIcon::Information,
-            0
-        );
-    });
 
     setupAnimations();
 

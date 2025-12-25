@@ -2,6 +2,7 @@
 #include "../../core/config/appSettings.h"
 #include "../../core/config/logger.h"
 #include <QCoreApplication>
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QVersionNumber>
 
@@ -55,49 +56,44 @@ void UpdateManager::performCheck() {
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, true);
 
     QNetworkReply *reply = networkManager->get(request);
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        onGithubResponse(reply);
-    });
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() { onGithubResponse(reply); });
 }
 
 void UpdateManager::onGithubResponse(QNetworkReply *reply) {
-    reply->deleteLater(); // Удаляем объект после выхода из функции
+    reply->deleteLater();
 
     if (reply->error() != QNetworkReply::NoError) {
-        LOG_DEBUG() << "Update check network error: " << reply->errorString();
         emit updateError(reply->errorString());
         return;
     }
 
-    const QByteArray data = reply->readAll();
-    const QJsonDocument doc = QJsonDocument::fromJson(data);
-    const QJsonObject obj = doc.object();
-
-    // Получаем версию с GitHub
+    const QJsonObject obj = QJsonDocument::fromJson(reply->readAll()).object();
     const QString remoteTag = obj.value("tag_name").toString();
-    const QString htmlUrl = obj.value("html_url").toString(); // Ссылка на страницу релиза
 
-    if (remoteTag.isEmpty()) {
-        LOG_DEBUG() << "Update check failed: tag_name is empty in response.";
-        return;
+    // Ищем прямую ссылку на EXE в ассетах
+    QString downloadUrl = "";
+    for (QJsonArray assets = obj.value("assets").toArray(); const QJsonValue &assetValue: assets) {
+        QJsonObject assetObj = assetValue.toObject();
+        if (QString fileName = assetObj.value("name").toString(); fileName.endsWith(".exe", Qt::CaseInsensitive)) {
+            downloadUrl = assetObj.value("browser_download_url").toString();
+            break;
+        }
     }
 
-    // Текущая версия приложения
+    // Если EXE не нашли, откатываемся на ссылку страницы релиза
+    if (downloadUrl.isEmpty()) downloadUrl = obj.value("html_url").toString();
+
     const QString currentVersion = QCoreApplication::applicationVersion();
 
-    LOG_DEBUG() << "Update check: Current=" << currentVersion << "; Remote=" << remoteTag;
-
-    // Обновляем дату последней успешной проверки
     AppSettings::lastUpdateCheckDate = QDate::currentDate();
     AppSettings::save();
 
-    // Сравниваем версии
     if (isNewerVersion(currentVersion, remoteTag)) {
-        LOG_DEBUG() << "New update found!";
-        emit updateAvailable(remoteTag, htmlUrl);
+        LOG_DEBUG() << "Update found:" << remoteTag;
+        emit updateAvailable(remoteTag, downloadUrl);
     } else {
-        LOG_DEBUG() << "No updates available.";
-        emit noUpdateAvailable();
+        LOG_DEBUG() << "No updates available";
+        emit noUpdateAvailable(currentVersion);
     }
 }
 

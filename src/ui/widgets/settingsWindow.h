@@ -2,6 +2,7 @@
 #include "ui_EasyLangSwitcher_settings.h"
 #include "hoverWarning.h"
 #include "animatedSelector.h"
+#include "../helpers/updateNotification.h"
 #include "customToolTip.h"
 #include "updateManager.h"
 #include "updFrequencyPopup.h"
@@ -53,6 +54,7 @@ private:
     CustomToolTip *updateBtnToolTip = nullptr;
     UpdateManager *updateManager = nullptr;
     QGraphicsDropShadowEffect *m_shadow = nullptr;
+    QPointer<UpdateNotification> m_currentUpdateNotif;
 
     // Логика и состояние
     QTimer autosaveTimer;

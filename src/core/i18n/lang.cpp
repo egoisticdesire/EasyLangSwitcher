@@ -97,16 +97,6 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                 QStringLiteral("Проверить обновления сейчас"),
             });
         t.insert(
-            QStringLiteral("SETTINGS_APP_UPD_AVAILABLE_TITLE"), {
-                QStringLiteral("Update available"),
-                QStringLiteral("Доступно обновление"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_APP_UPD_AVAILABLE_MSG"), {
-                QStringLiteral("Version %1 is out!"),
-                QStringLiteral("Версия %1 вышла!"),
-            });
-        t.insert(
             QStringLiteral("SETTINGS_APP_UPD_CHECK_NEVER"), {
                 QStringLiteral("Never"),
                 QStringLiteral("Никогда"),
@@ -170,6 +160,28 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
             QStringLiteral("SETTINGS_DISABLE_STARTUP_LABEL"), {
                 QStringLiteral("Disable"),
                 QStringLiteral("Выключить"),
+            });
+
+
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_AVAILABLE_TITLE"), {
+                QStringLiteral("A new version of EasyLangSwitcher is ready"),
+                QStringLiteral("Доступна новая версия EasyLangSwitcher"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_AVAILABLE_DESC"), {
+                QStringLiteral("Download v%1 now or view the changes on the release page!"),
+                QStringLiteral("Загрузите v%1 прямо сейчас или посмотрите список изменений в описании релиза!"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_NOT_AVAILABLE_TITLE"), {
+                QStringLiteral("The latest version of EasyLangSwitcher is installed"),
+                QStringLiteral("У вас установлена последняя версия EasyLangSwitcher"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_NOT_AVAILABLE_DESC"), {
+                QStringLiteral("The current version v%1 is the latest, nothing needs to be updated!"),
+                QStringLiteral("Версия v%1 — самая свежая, обновлений не требуется!"),
             });
 
 

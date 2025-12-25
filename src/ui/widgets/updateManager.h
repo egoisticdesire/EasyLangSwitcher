@@ -22,7 +22,7 @@ signals:
     // Сигнал, что обновление найдено (передаем ссылку на скачивание или версию)
     void updateAvailable(const QString &tagName, const QString &url);
 
-    void noUpdateAvailable();
+    void noUpdateAvailable(const QString &version);
 
     // Сигнал об ошибке (опционально)
     void updateError(const QString &errorText);

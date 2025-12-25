@@ -51,7 +51,7 @@ void SettingsWindow::initVisuals() {
     ui.btn_info_top_sider->hide();
     ui.app_theme_frame->hide();
     ui.app_theme_label->hide();
-    //-----------------------------
+    // ---------------
 
     // Селекторы
     addSelectorForFrame(ui.key_select_frame);
@@ -331,10 +331,29 @@ void SettingsWindow::markChanged() {
 void SettingsWindow::setUpdateManager(UpdateManager *manager) {
     if (!manager) return;
     this->updateManager = manager;
-    connect(ui.btn_upd_manually, &QPushButton::clicked, updateManager, &UpdateManager::checkForUpdatesForce);
-    connect(updPopup, &UpdFrequencyPopup::selected, this, [this](const AppSettings::UpdateFrequency) {
-        if (updateManager) updateManager->checkForUpdatesIfDue();
+
+    // 1. Если обновление найдено
+    connect(updateManager, &UpdateManager::updateAvailable, this, [this](const QString &ver, const QString &url) {
+        if (m_currentUpdateNotif) m_currentUpdateNotif->deleteLater();
+
+        m_currentUpdateNotif = new UpdateNotification(UpdateNotification::UpdateAvailable, ver, url);
+        // Тут добавим логику позиционирования позже
+        m_currentUpdateNotif->show();
     });
+
+    // 2. Если обновлений нет (ручная проверка)
+    connect(updateManager, &UpdateManager::noUpdateAvailable, this, [this](const QString &ver) {
+        // Показываем уведомление "У вас последняя версия" только если окно настроек активно
+        // (чтобы не спамить при фоновой проверке)
+        if (this->isActiveWindow()) {
+            if (m_currentUpdateNotif) m_currentUpdateNotif->deleteLater();
+            m_currentUpdateNotif = new UpdateNotification(UpdateNotification::UpToDate, ver, "");
+            m_currentUpdateNotif->show();
+        }
+    });
+
+    // Коннекты для кнопок
+    connect(ui.btn_upd_manually, &QPushButton::clicked, updateManager, &UpdateManager::checkForUpdatesForce);
 }
 
 SettingsWindow::~SettingsWindow() = default;
@@ -514,6 +533,7 @@ void SettingsWindow::refreshTranslations() const {
     ui.btn_upd_frequency->setText(AppSettings::updateFrequencyToString(AppSettings::updateFrequency));
     if (updPopup) updPopup->refreshTranslations();
     if (updateBtnToolTip) updateBtnToolTip->refreshTranslations();
+    if (m_currentUpdateNotif) m_currentUpdateNotif->refreshTranslations();
     keyHoverWarning->setText(Lang::tr("SETTINGS_KEY_HOVER_WARNING_POPUP"));
     if (const auto *seq = findChild<QKeySequenceEdit *>("btn_sequence"))
         if (auto *le = seq->findChild<QLineEdit *>()) le->setPlaceholderText(Lang::tr("SETTINGS_KEY_SEQUENCE"));
