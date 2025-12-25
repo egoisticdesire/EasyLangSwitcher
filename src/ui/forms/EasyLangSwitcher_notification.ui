@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>notification_main_widget</class>
+ <widget class="QWidget" name="notification_main_widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>380</width>
+    <height>188</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <layout class="QHBoxLayout" name="hlayout_notification_main_widget">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QFrame" name="background_frame">
+     <property name="styleSheet">
+      <string notr="true">QFrame#background_frame {
+border: 1px solid rgb(60, 60, 60);
+background: rgba(32, 32, 32, 10);
+}
+QFrame#background_frame QLabel#info_title_label {
+color: rgba(255, 255, 255, 225);
+}
+QFrame#background_frame QLabel#info_desc_label {
+color: rgba(255, 255, 255, 175);
+}
+QFrame#background_frame QPushButton#info_icon,
+QFrame#background_frame QPushButton#info_icon:hover,
+QFrame#background_frame QPushButton#info_icon:pressed,
+QFrame#background_frame QPushButton#info_icon:checked,
+QFrame#background_frame QPushButton#info_icon:focus {
+padding: 0;
+border: 1px solid transparent;
+color: rgba(255, 255, 255, 225);
+background: transparent;
+}
+QFrame#btn_frame QPushButton {
+color: rgba(255, 255, 255, 200);
+background: rgba(255, 255, 255, 10);
+}
+QFrame#btn_frame QPushButton:hover {
+color: rgba(255, 255, 255, 255);
+background: rgba(255, 255, 255, 15);
+}
+QFrame#btn_frame QPushButton:pressed {
+background: rgba(255, 255, 255, 7);
+}
+QFrame#btn_frame QPushButton#btn_download,
+QFrame#btn_frame QPushButton#btn_releases  {
+padding: 5px 10px;
+}
+QFrame#btn_frame QPushButton#btn_download {
+border-top-left-radius: 6px;
+border-bottom-left-radius: 6px;
+}
+QFrame#btn_frame QPushButton#btn_save_as {
+padding: 5px;
+border-top-right-radius: 6px;
+border-bottom-right-radius: 6px;
+}
+QFrame#btn_frame QPushButton#btn_releases {
+border-radius: 6px;
+}
+QFrame#btn_frame QLabel#separator_label {
+background: rgba(255, 255, 255, 15);
+}
+QFrame#background_frame QProgressBar {
+text-align: center;
+height: 4px;
+margin-top: 10px;
+margin-bottom: 10px;
+border: none;
+border-radius: 2px;
+background: rgba(255, 255, 255, 20);
+}
+QFrame#background_frame QProgressBar::chunk {
+border-radius: 2px;
+background: rgb(0, 120, 212);
+}
+QFrame#background_frame QPushButton#cancel_process {
+padding: 4px 2px;
+border-radius: 6px;
+border: 1px solid transparent;
+color: rgba(255, 255, 255, 225);
+background: transparent;
+}
+QFrame#background_frame QPushButton#cancel_process:hover {
+color: rgba(255, 255, 255, 255);
+background: rgba(255, 255, 255, 15);
+}
+QFrame#background_frame QPushButton#cancel_process:pressed {
+background: rgba(255, 255, 255, 7);
+}</string>
+     </property>
+     <layout class="QVBoxLayout" name="vlayout_background_frame" stretch="1,0,0">
+      <property name="spacing">
+       <number>20</number>
+      </property>
+      <property name="leftMargin">
+       <number>10</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>10</number>
+      </property>
+      <property name="bottomMargin">
+       <number>10</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="info_hlayout" stretch="0,1">
+        <property name="spacing">
+         <number>20</number>
+        </property>
+        <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
+         <widget class="QPushButton" name="info_icon">
+          <property name="focusPolicy">
+           <enum>Qt::FocusPolicy::NoFocus</enum>
+          </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
+          </property>
+          <property name="icon">
+           <iconset resource="../../../resources/resources.qrc">
+            <normaloff>:/icons/icons/FlashSparkleFilled2.png</normaloff>:/icons/icons/FlashSparkleFilled2.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>42</width>
+            <height>42</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="info_msg_vlayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="info_title_label">
+            <property name="font">
+             <font>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>A new version of EasyLangSwitcher is ready</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="info_desc_label">
+            <property name="text">
+             <string>Download v1.2.3 now or view the changes on the release page!</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QFrame" name="btn_frame">
+        <layout class="QHBoxLayout" name="btn_hlayout" stretch="1,1">
+         <property name="spacing">
+          <number>20</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <layout class="QHBoxLayout" name="btn_dl_hlayout" stretch="1,0,0">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QPushButton" name="btn_download">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>  Download</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../../../resources/resources.qrc">
+               <normaloff>:/icons/icons/DownloadFilled.svg</normaloff>:/icons/icons/DownloadFilled.svg</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="separator_label">
+             <property name="minimumSize">
+              <size>
+               <width>1</width>
+               <height>16</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>1</width>
+               <height>16777215</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btn_save_as">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="icon">
+              <iconset resource="../../../resources/resources.qrc">
+               <normaloff>:/icons/icons/MoreFilled.svg</normaloff>:/icons/icons/MoreFilled.svg</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_releases">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>  Release notes</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../../../resources/resources.qrc">
+             <normaloff>:/icons/icons/OpenFilled.svg</normaloff>:/icons/icons/OpenFilled.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>18</width>
+             <height>18</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QFrame" name="progress_frame">
+        <layout class="QHBoxLayout" name="hlayout_progress_frame" stretch="1,0">
+         <property name="spacing">
+          <number>20</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QProgressBar" name="progress_bar">
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="value">
+            <number>88</number>
+           </property>
+           <property name="textVisible">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="cancel_process">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="icon">
+            <iconset resource="../../../resources/resources.qrc">
+             <normaloff>:/icons/icons/DownloadOffFilled.svg</normaloff>:/icons/icons/DownloadOffFilled.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="../../../resources/resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>
