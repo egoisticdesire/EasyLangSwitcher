@@ -134,6 +134,9 @@ background: rgba(255, 255, 255, 7);
         <property name="spacing">
          <number>20</number>
         </property>
+        <property name="leftMargin">
+         <number>10</number>
+        </property>
         <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
          <widget class="QPushButton" name="info_icon">
           <property name="focusPolicy">

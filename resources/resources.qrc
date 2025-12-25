@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>icons/DismissCircleFilled.svg</file>
     <file>icons/DownloadOffFilled.svg</file>
     <file>icons/OpenRegular.svg</file>
     <file>icons/DownloadFilled.svg</file>
