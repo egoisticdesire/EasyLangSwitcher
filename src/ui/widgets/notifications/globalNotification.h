@@ -17,13 +17,15 @@ class GlobalNotification final : public QWidget {
     Q_OBJECT
 
 public:
+    enum class UiState { Buttons, Progress, Hidden };
+
     enum Mode { UpdateAvailable, UpToDate, Error };
 
     explicit GlobalNotification(Mode mode, const QString &version, const QString &url = "", QWidget *parent = nullptr);
 
     ~GlobalNotification() override;
 
-    void toggleInterface(bool downloading);
+    void toggleInterface(UiState state);
 
     void startShowAnimation();
 
@@ -33,10 +35,6 @@ public:
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
-
-    void enterEvent(QEnterEvent *event) override;
-
-    void leaveEvent(QEvent *event) override;
 
     bool event(QEvent *event) override;
 

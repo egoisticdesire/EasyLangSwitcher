@@ -15,6 +15,8 @@ public:
 
     void hideAnimated();
 
+    void hideNow();
+
     void refreshTranslations();
 
 private:

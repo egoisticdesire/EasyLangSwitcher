@@ -49,8 +49,8 @@ InAppNotification::InAppNotification(SettingsWindow *settings, const QString &te
             iconColor = QColor(91, 239, 91);
             break;
         case Error:
-            iconPath = ":/icons/icons/DismissCircleFilled.svg";
-            iconColor = QColor(255, 70, 70);
+            iconPath = ":/icons/icons/CancelRounded.svg";
+            iconColor = QColor(200, 70, 70);
             break;
         case Warning:
             iconPath = ":/icons/icons/WarningFilled.svg";
@@ -59,7 +59,7 @@ InAppNotification::InAppNotification(SettingsWindow *settings, const QString &te
         case Info:
         default:
             iconPath = ":/icons/icons/InfoFilled.svg";
-            iconColor = QColor(80, 160, 255);
+            iconColor = QColor(50, 114, 191);
             break;
     }
 

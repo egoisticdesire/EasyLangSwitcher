@@ -97,6 +97,13 @@ void CustomToolTip::hideAnimated() {
     animGroup->start();
 }
 
+void CustomToolTip::hideNow() {
+    animGroup->stop();
+    isClosing = false;
+    this->setWindowOpacity(0.0);
+    this->hide();
+}
+
 void CustomToolTip::refreshTranslations() {
     if (!currentLangKey.isEmpty()) {
         ui.tooltip_label->setText(Lang::tr(currentLangKey));

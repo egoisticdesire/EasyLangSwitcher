@@ -50,25 +50,62 @@ void UpdateManager::performCheck() {
             .arg(AppSettings::GITHUB_REPO);
 
     QNetworkRequest request((QUrl(apiUrl)));
-
-    // GitHub API требует User-Agent
     request.setRawHeader("User-Agent", AppSettings::APP_NAME);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, true);
 
     QNetworkReply *reply = networkManager->get(request);
+
+    // Создаем таймер, который «убьет» запрос, если он затянется
+    const auto timeoutTimer = new QTimer(reply);
+    timeoutTimer->setSingleShot(true);
+
+    connect(timeoutTimer, &QTimer::timeout, reply, [reply]() {
+        if (reply->isRunning()) {
+            LOG_DEBUG() << "UpdateManager: Request timed out (15s). Aborting...";
+            reply->abort();
+        }
+    });
+
+    timeoutTimer->start(15000);
+
     connect(reply, &QNetworkReply::finished, this, [this, reply]() { onGithubResponse(reply); });
 }
 
 void UpdateManager::onGithubResponse(QNetworkReply *reply) {
     reply->deleteLater();
 
+    // Проверка сетевых ошибок (тайм-аут, нет интернета)
     if (reply->error() != QNetworkReply::NoError) {
+        LOG_ERROR() << "Update check failed: " << reply->errorString();
         emit updateError(reply->errorString());
         return;
     }
 
-    const QJsonObject obj = QJsonDocument::fromJson(reply->readAll()).object();
+    // Проверка HTTP кодов (403 - лимит, 404 - репо не найден)
+    const int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    if (statusCode == 403) {
+        emit updateError("GitHub API rate limit exceeded. Try again later.");
+        return;
+    }
+    if (statusCode != 200) {
+        emit updateError(QString("Server returned error code: %1").arg(statusCode));
+        return;
+    }
+
+    QJsonParseError parseError;
+    const QJsonDocument doc = QJsonDocument::fromJson(reply->readAll(), &parseError);
+    if (parseError.error != QJsonParseError::NoError) {
+        emit updateError("Failed to parse update information");
+        return;
+    }
+
+    const QJsonObject obj = doc.object();
     const QString remoteTag = obj.value("tag_name").toString();
+
+    if (remoteTag.isEmpty()) {
+        emit updateError("No version information found in response");
+        return;
+    }
 
     // Ищем прямую ссылку на EXE в ассетах
     QString downloadUrl = "";

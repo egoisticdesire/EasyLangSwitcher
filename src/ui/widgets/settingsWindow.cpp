@@ -91,6 +91,22 @@ void SettingsWindow::initVisuals() {
     ui.key_delay_slider->setTickInterval(10);
     ui.key_delay_slider->setTracking(true);
     ui.key_delay_spinbox->setSingleStep(10);
+
+    // Ручной запуск проверки
+    m_syncRotationAnim = new QVariantAnimation(this);
+    m_syncRotationAnim->setStartValue(0);
+    m_syncRotationAnim->setEndValue(360);
+    m_syncRotationAnim->setDuration(1000);
+    m_syncRotationAnim->setLoopCount(-1); // Бесконечно
+
+    connect(m_syncRotationAnim, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) {
+        updateSyncIconRotation(value.toInt());
+    });
+
+    connect(m_syncRotationAnim, &QVariantAnimation::finished, this, [this]() {
+        ui.btn_upd_manually->setIcon(IconHelper::loadIcon(
+            ":/icons/icons/SyncFilled.svg", QColor(175, 175, 175), QSize(18, 18)));
+    });
 }
 
 void SettingsWindow::initHotkeyLogic() {
@@ -268,6 +284,9 @@ void SettingsWindow::initAutosaveLogic() {
     });
 
     connect(this, &SettingsWindow::settingsSaved, this, [this]() {
+        if (updateBtnToolTip) {
+            updateBtnToolTip->hideNow();
+        }
         InAppNotification::showFor(this, Lang::tr("SETTINGS_ALL_CHANGES_SAVED"));
         QTimer::singleShot(50, this, [this]() { refreshTranslations(); });
     });
@@ -332,28 +351,43 @@ void SettingsWindow::setUpdateManager(UpdateManager *manager) {
     if (!manager) return;
     this->updateManager = manager;
 
-    // 1. Если обновление найдено
-    connect(updateManager, &UpdateManager::updateAvailable, this, [this](const QString &ver, const QString &url) {
-        if (m_currentGlobalNotif) m_currentGlobalNotif->deleteLater();
+    // Общая лямбда для сброса состояния анимации
+    auto finishChecking = [this]() {
+        stopSyncAnimation();
+        if (m_currentGlobalNotif) {
+            m_currentGlobalNotif->close();
+            m_currentGlobalNotif = nullptr;
+        }
+    };
 
-        m_currentGlobalNotif = new GlobalNotification(GlobalNotification::UpdateAvailable, ver, url);
-        // Тут добавим логику позиционирования позже
+    connect(updateManager, &UpdateManager::updateAvailable, this,
+            [this, finishChecking](const QString &ver, const QString &url) {
+                finishChecking();
+                m_currentGlobalNotif = new GlobalNotification(GlobalNotification::UpdateAvailable, ver, url);
+                // Тут добавим логику позиционирования позже
+                m_currentGlobalNotif->show();
+            });
+
+    connect(updateManager, &UpdateManager::noUpdateAvailable, this, [this, finishChecking](const QString &ver) {
+        finishChecking();
+        m_currentGlobalNotif = new GlobalNotification(GlobalNotification::UpToDate, ver, "");
         m_currentGlobalNotif->show();
     });
 
-    // 2. Если обновлений нет (ручная проверка)
-    connect(updateManager, &UpdateManager::noUpdateAvailable, this, [this](const QString &ver) {
-        // Показываем уведомление "У вас последняя версия" только если окно настроек активно
-        // (чтобы не спамить при фоновой проверке)
-        if (this->isActiveWindow()) {
-            if (m_currentGlobalNotif) m_currentGlobalNotif->deleteLater();
-            m_currentGlobalNotif = new GlobalNotification(GlobalNotification::UpToDate, ver, "");
-            m_currentGlobalNotif->show();
-        }
+    connect(updateManager, &UpdateManager::updateError, this, [this, finishChecking](const QString &errorMsg) {
+        finishChecking();
+        InAppNotification::showFor(this, errorMsg, InAppNotification::Error);
+        LOG_ERROR() << "Update error: " << errorMsg;
     });
 
-    // Коннекты для кнопок
-    connect(ui.btn_upd_manually, &QPushButton::clicked, updateManager, &UpdateManager::checkForUpdatesForce);
+    connect(ui.btn_upd_manually, &QPushButton::clicked, this, [this]() {
+        if (m_syncRotationAnim->state() != QAbstractAnimation::Running) {
+            m_syncRotationAnim->setLoopCount(-1);
+            m_syncRotationAnim->start();
+
+            updateManager->checkForUpdatesForce();
+        }
+    });
 }
 
 SettingsWindow::~SettingsWindow() = default;
@@ -390,13 +424,28 @@ bool SettingsWindow::event(QEvent *ev) {
 }
 
 bool SettingsWindow::eventFilter(QObject *watched, QEvent *event) {
+    // Логика для предупреждения о клавишах
     if (watched == ui.key_select_label_img && keyHoverWarning) {
-        if (event->type() == QEvent::Enter) keyHoverWarning->showNear(ui.key_select_label_img);
-        else if (event->type() == QEvent::Leave) keyHoverWarning->hideNow();
-    } else if (watched == ui.btn_upd_manually && updateBtnToolTip && InAppNotification::stack.isEmpty()) {
-        if (event->type() == QEvent::Enter) updateBtnToolTip->showAt(ui.btn_upd_manually, "SETTINGS_TOOLTIP_CHECK_NOW");
-        else if (event->type() == QEvent::Leave) updateBtnToolTip->hideAnimated();
+        if (event->type() == QEvent::Enter) {
+            keyHoverWarning->showNear(ui.key_select_label_img);
+        } else if (event->type() == QEvent::Leave) {
+            keyHoverWarning->hideNow();
+        }
     }
+    // Логика для тултипа кнопки обновления
+    else if (watched == ui.btn_upd_manually && updateBtnToolTip) {
+        if (event->type() == QEvent::Enter) {
+            // Показываем только если стек уведомлений пуст
+            if (InAppNotification::stack.isEmpty()) {
+                updateBtnToolTip->showAt(ui.btn_upd_manually, "SETTINGS_TOOLTIP_CHECK_NOW");
+            }
+        } else if (event->type() == QEvent::Leave) {
+            // Скрываем всегда. Если мышь ушла, тултип не должен оставаться,
+            // даже если в этот момент появилось уведомление.
+            updateBtnToolTip->hideAnimated();
+        }
+    }
+
     return QWidget::eventFilter(watched, event);
 }
 
@@ -515,6 +564,45 @@ void SettingsWindow::restoreDefaults_General() {
             break;
         }
     }
+}
+
+void SettingsWindow::updateSyncIconRotation(const int angle) const {
+    // Определяем размеры
+    constexpr int canvasSize = 24;
+    constexpr int iconSize = 18;
+
+    // Создаем прозрачный холст
+    QPixmap canvas(canvasSize, canvasSize);
+    canvas.fill(Qt::transparent);
+
+    // Загружаем исходную иконку
+    const QPixmap pix = IconHelper::loadIcon(
+        ":/icons/icons/SyncFilled.svg", QColor(175, 175, 175), QSize(iconSize, iconSize)).pixmap(iconSize, iconSize);
+
+    // Рисуем вращение
+    QPainter painter(&canvas);
+    // Включаем качественное сглаживание
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+
+    // Смещаем центр координат в центр холста
+    painter.translate(canvasSize / 2.0, canvasSize / 2.0);
+    // Вращаем
+    painter.rotate(angle);
+    // Рисуем иконку так, чтобы её центр совпал с центром координат
+    painter.drawPixmap(-iconSize / 2.0, -iconSize / 2.0, pix);
+    painter.end();
+
+    // Устанавливаем результат в кнопку
+    ui.btn_upd_manually->setIconSize(QSize(canvasSize, canvasSize));
+    ui.btn_upd_manually->setIcon(QIcon(canvas));
+}
+
+void SettingsWindow::stopSyncAnimation() const {
+    if (!m_syncRotationAnim) return;
+
+    // Вместо мгновенной остановки (stop) завершить текущий цикл
+    m_syncRotationAnim->setLoopCount(1);
 }
 
 void SettingsWindow::refreshTranslations() const {

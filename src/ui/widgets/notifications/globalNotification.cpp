@@ -53,7 +53,16 @@ GlobalNotification::GlobalNotification(const Mode mode, const QString &version, 
     connect(ui->btn_save_as, &QPushButton::clicked, this, &GlobalNotification::startCustomDownload);
     connect(ui->btn_cancel_process, &QPushButton::clicked, this, &GlobalNotification::cancelDownload);
     connect(ui->btn_releases, &QPushButton::clicked, this, [this]() {
-        if (!m_downloadUrl.isEmpty()) QDesktopServices::openUrl(QUrl(m_downloadUrl));
+        if (m_downloadUrl.isEmpty()) return;
+        QString releasePage = m_downloadUrl;
+
+        if (const int downloadIdx = releasePage.indexOf("/download/"); downloadIdx != -1) {
+            releasePage = releasePage.left(downloadIdx);
+            releasePage += "/latest";
+        }
+
+        LOG_DEBUG() << "Opening release page: " << releasePage;
+        QDesktopServices::openUrl(QUrl(releasePage));
     });
     connect(m_externalCloseBtn, &QPushButton::clicked, this, &GlobalNotification::startExitAnimation);
 
@@ -69,11 +78,11 @@ GlobalNotification::GlobalNotification(const Mode mode, const QString &version, 
     // }
 
     moveToBottomRight();
-    LOG_DEBUG() << "UpdateNotification CREATED:" << this;
+    LOG_DEBUG() << "GlobalNotification CREATED: " << this;
 }
 
 GlobalNotification::~GlobalNotification() {
-    LOG_DEBUG() << "UpdateNotification DESTROYED:" << this;
+    LOG_DEBUG() << "GlobalNotification DESTROYED: " << this;
     delete ui;
 }
 
@@ -136,101 +145,51 @@ void GlobalNotification::startExitAnimation() {
 }
 
 // Плавное переключение между кнопками и прогрессом
-void GlobalNotification::toggleInterface(const bool downloading) {
+void GlobalNotification::toggleInterface(const UiState state) {
     this->setUpdatesEnabled(false);
 
-    // Если включаем загрузку, обнуляем бар сразу
-    if (downloading) ui->progress_bar->setValue(0);
+    // Сначала СБРАСЫВАЕМ все фиксации высоты, которые я советовал раньше (они ломают логику Qt)
+    this->setMinimumHeight(0);
+    this->setMaximumHeight(16777215);
 
-    ui->btn_frame->hide();
-    ui->progress_frame->hide();
+    // 1. Управляем видимостью
+    ui->btn_frame->setVisible(state == UiState::Buttons);
+    ui->progress_frame->setVisible(state == UiState::Progress);
 
-    this->layout()->invalidate();
-    this->layout()->activate();
+    // 2. Исключаем скрытые фреймы из расчета Layout (это самое важное)
+    // Когда Visibility = false и Policy = Ignored, Layout ведет себя так, будто их нет
+    constexpr auto hidePolicy = QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Ignored);
+    constexpr auto showPolicy = QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 
-    if (downloading) ui->progress_frame->show();
-    else ui->btn_frame->show();
+    ui->btn_frame->setSizePolicy(state == UiState::Buttons ? showPolicy : hidePolicy);
+    ui->progress_frame->setSizePolicy(state == UiState::Progress ? showPolicy : hidePolicy);
 
+    // 3. Убираем лишние отступы в скрытом режиме
+    if (state == UiState::Hidden) {
+        this->layout()->setSpacing(0);
+    } else {
+        this->layout()->setSpacing(20); // Твой стандартный спейсинг
+    }
+
+    // 4. Просим окно пересчитать идеальный размер под контент
     this->adjustSize();
 
+    // 5. Двигаем окно
     if (const QScreen *screen = QGuiApplication::primaryScreen()) {
         const QRect desktop = screen->availableGeometry();
         constexpr int margin = 20;
         const int newY = desktop.bottom() - this->height() - margin;
-        this->move(this->x(), newY);
+        const int newX = desktop.right() - this->width() - margin;
+        this->move(newX, newY);
     }
 
     this->setUpdatesEnabled(true);
-    this->style()->unpolish(this);
-    this->style()->polish(this);
-    ui->background_frame->update();
-
-    QWidget *activeFrame = downloading ? ui->progress_frame : ui->btn_frame;
-    auto *fadeAnim = new QPropertyAnimation(activeFrame, "windowOpacity");
-    fadeAnim->setDuration(250);
-    fadeAnim->setStartValue(0.0);
-    fadeAnim->setEndValue(1.0);
-    fadeAnim->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
-void GlobalNotification::refreshTranslations() {
-    // Сохраняем текущую нижнюю точку, чтобы виджет не прыгал вниз
-    const int anchorY = this->frameGeometry().bottom();
-
-    if (m_mode == UpToDate) {
-        ui->info_title_label->setText(Lang::tr("NOTIFICATION_UPD_NOT_AVAILABLE_TITLE"));
-        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_NOT_AVAILABLE_DESC").arg(m_version));
-        ui->btn_frame->hide();
-        ui->progress_frame->hide();
-    } else if (m_mode == UpdateAvailable) {
-        ui->info_title_label->setText(Lang::tr("NOTIFICATION_UPD_AVAILABLE_TITLE"));
-        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_AVAILABLE_DESC").arg(m_version));
-        ui->btn_download->setText(Lang::tr("NOTIFICATION_UPD_BTN_DOWNLOAD"));
-        ui->btn_releases->setText(Lang::tr("NOTIFICATION_UPD_BTN_RELEASES"));
-
-        toggleInterface(m_reply != nullptr);
-    }
-
-    ui->info_icon->setIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png", QColor(), QSize(42, 42)));
-    ui->btn_download->setIcon(
-        IconHelper::loadIcon(":/icons/icons/DownloadFilled.svg", QColor(175, 175, 175), QSize(20, 20)));
-    ui->btn_cancel_process->setIcon(
-        IconHelper::loadIcon(":/icons/icons/DownloadOffFilled.svg", QColor(175, 175, 175), QSize(20, 20)));
-    ui->btn_save_as->setIcon(
-        IconHelper::loadIcon(":/icons/icons/MoreFilled.svg", QColor(175, 175, 175), QSize(20, 20)));
-    ui->btn_releases->setIcon(
-        IconHelper::loadIcon(":/icons/icons/OpenFilled.svg", QColor(175, 175, 175), QSize(20, 20)));
-
-    this->adjustSize();
-
-    // Фикс дрейфа: вычисляем новый Y так, чтобы НИЗ (anchorY) остался на той же линии
-    if (this->isVisible()) {
-        const int newY = anchorY - (this->height() - 1);
-        this->move(this->x(), newY);
-        AcrylicHelper::updateRegion(this);
-    }
+    AcrylicHelper::updateRegion(this);
 }
 
 void GlobalNotification::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::MiddleButton) startExitAnimation();
     QWidget::mousePressEvent(event);
-}
-
-void GlobalNotification::enterEvent(QEnterEvent *event) {
-    if (m_externalCloseBtn && !m_isExiting) m_externalCloseBtn->setFade(true);
-    QWidget::enterEvent(event);
-}
-
-void GlobalNotification::leaveEvent(QEvent *event) {
-    if (m_externalCloseBtn.isNull() || m_isExiting) return;
-
-    const QPoint globalPos = QCursor::pos();
-    const bool overMe = this->geometry().contains(globalPos);
-
-    if (const bool overBtn = m_externalCloseBtn->geometry().contains(globalPos); !overMe && !overBtn) {
-        m_externalCloseBtn->setFade(false);
-    }
-    QWidget::leaveEvent(event);
 }
 
 bool GlobalNotification::event(QEvent *event) {
@@ -300,7 +259,7 @@ void GlobalNotification::startCustomDownload() {
 void GlobalNotification::executeDownload(const QString &filePath) {
     ui->progress_bar->setValue(0);
 
-    toggleInterface(true);
+    toggleInterface(UiState::Progress);
 
     if (m_file) {
         m_file->close();
@@ -309,14 +268,15 @@ void GlobalNotification::executeDownload(const QString &filePath) {
 
     m_file = new QFile(filePath);
     if (!m_file->open(QIODevice::WriteOnly)) {
-        toggleInterface(false);
+        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_ERROR"));
+        toggleInterface(UiState::Buttons);
         delete m_file;
         m_file = nullptr;
         return;
     }
 
     auto *manager = new QNetworkAccessManager(this);
-    m_reply = manager->get(QNetworkRequest(QUrl(m_downloadUrl)));
+    m_reply = manager->get(QNetworkRequest(QUrl(m_downloadUrl))); //"https://api.github.coms/repos/%1/releases/latest"
 
     connect(m_reply, &QNetworkReply::readyRead, this, [this]() {
         if (m_file && m_reply && m_reply->error() == QNetworkReply::NoError)
@@ -334,45 +294,38 @@ void GlobalNotification::executeDownload(const QString &filePath) {
 }
 
 void GlobalNotification::onDownloadFinished() {
-    // Проверяем наличие reply (защита от повторных вызовов)
     if (!m_reply) return;
 
     const bool isCanceled = (m_reply->error() == QNetworkReply::OperationCanceledError);
     const bool hasError = (m_reply->error() != QNetworkReply::NoError && !isCanceled);
 
-    // Закрываем и удаляем файл безопасно
     if (m_file) {
         m_file->close();
-        if (hasError || isCanceled) m_file->remove(); // Удаляем недокачанный мусор
+        if (hasError || isCanceled) m_file->remove();
         delete m_file;
         m_file = nullptr;
     }
 
-    // Обработка текста
     if (hasError) {
-        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_ERROR"));
+        // При ошибке: пишем текст и ВОЗВРАЩАЕМ кнопки, чтобы юзер мог перекачать
+        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_ERROR") + ": " + m_reply->errorString());
+        toggleInterface(UiState::Buttons);
     } else if (!isCanceled) {
+        // При успехе: пишем текст и ПРЯЧЕМ ВСЁ
         ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_COMPLETE"));
+        toggleInterface(UiState::Hidden);
         QTimer::singleShot(5000, this, &GlobalNotification::startExitAnimation);
     }
 
-    // Очистка сетевого ответа
     m_reply->deleteLater();
     m_reply = nullptr;
 
-    // Если это была отмена — возвращаем кнопки
-    if (isCanceled) toggleInterface(false);
+    if (isCanceled) toggleInterface(UiState::Buttons);
 }
 
 void GlobalNotification::cancelDownload() {
-    if (m_reply && m_reply->isRunning()) {
-        // Просто прерываем. Это вызовет сигнал finished(),
-        // который перейдет в onDownloadFinished, где всё корректно почистится.
-        m_reply->abort();
-    } else {
-        // Если загрузка даже не началась, но мы в режиме прогресса — просто вернем кнопки
-        toggleInterface(false);
-    }
+    if (m_reply && m_reply->isRunning()) m_reply->abort();
+    else toggleInterface(UiState::Buttons);
 }
 
 void GlobalNotification::applySystemAccentColor() const {
@@ -407,4 +360,46 @@ void GlobalNotification::moveToBottomRight() {
     const int y = desktopRect.bottom() - this->height() - margin;
 
     this->move(x, y);
+}
+
+void GlobalNotification::refreshTranslations() {
+    // Сохраняем текущую нижнюю точку, чтобы виджет не прыгал вниз
+    const int anchorY = this->frameGeometry().bottom();
+
+    if (m_mode == UpToDate) {
+        ui->info_title_label->setText(Lang::tr("NOTIFICATION_UPD_NOT_AVAILABLE_TITLE"));
+        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_NOT_AVAILABLE_DESC").arg(m_version));
+        ui->btn_frame->hide();
+        ui->progress_frame->hide();
+    } else if (m_mode == UpdateAvailable) {
+        ui->info_title_label->setText(Lang::tr("NOTIFICATION_UPD_AVAILABLE_TITLE"));
+        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_AVAILABLE_DESC").arg(m_version));
+        ui->btn_download->setText(Lang::tr("NOTIFICATION_UPD_BTN_DOWNLOAD"));
+        ui->btn_releases->setText(Lang::tr("NOTIFICATION_UPD_BTN_RELEASES"));
+
+        if (m_reply) {
+            toggleInterface(UiState::Progress);
+        } else {
+            toggleInterface(UiState::Buttons);
+        }
+    }
+
+    ui->info_icon->setIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png", QColor(), QSize(42, 42)));
+    ui->btn_download->setIcon(
+        IconHelper::loadIcon(":/icons/icons/DownloadFilled.svg", QColor(175, 175, 175), QSize(20, 20)));
+    ui->btn_cancel_process->setIcon(
+        IconHelper::loadIcon(":/icons/icons/DownloadOffFilled.svg", QColor(175, 175, 175), QSize(20, 20)));
+    ui->btn_save_as->setIcon(
+        IconHelper::loadIcon(":/icons/icons/MoreFilled.svg", QColor(175, 175, 175), QSize(20, 20)));
+    ui->btn_releases->setIcon(
+        IconHelper::loadIcon(":/icons/icons/OpenFilled.svg", QColor(175, 175, 175), QSize(20, 20)));
+
+    this->adjustSize();
+
+    // Фикс дрейфа: вычисляем новый Y так, чтобы НИЗ (anchorY) остался на той же линии
+    if (this->isVisible()) {
+        const int newY = anchorY - (this->height() - 1);
+        this->move(this->x(), newY);
+        AcrylicHelper::updateRegion(this);
+    }
 }

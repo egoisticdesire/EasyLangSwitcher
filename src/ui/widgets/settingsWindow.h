@@ -55,6 +55,9 @@ private:
     UpdateManager *updateManager = nullptr;
     QGraphicsDropShadowEffect *m_shadow = nullptr;
     QPointer<GlobalNotification> m_currentGlobalNotif;
+    QVariantAnimation* m_syncRotationAnim = nullptr;
+    void updateSyncIconRotation(int angle) const;
+    void stopSyncAnimation() const;
 
     // Логика и состояние
     QTimer autosaveTimer;
