@@ -442,7 +442,8 @@ color: rgba(255, 255, 255, 255);
 background: rgba(255, 255, 255, 10);
 }
 QFrame#app_check_upd_frame QToolButton {
-padding: 4px 3px 3px 4px;
+/*padding: 4px 3px 3px 4px;*/
+padding: 0;
 }
 QFrame#app_check_upd_frame QPushButton:hover,
 QFrame#app_check_upd_frame QToolButton:hover {
@@ -1301,7 +1302,7 @@ background: transparent;
             </item>
             <item row="6" column="1">
              <widget class="QFrame" name="app_check_upd_frame">
-              <layout class="QHBoxLayout" name="hlayout_app_check_upd_frame" stretch="0,0">
+              <layout class="QHBoxLayout" name="hlayout_app_check_upd_frame" stretch="1,0">
                <property name="spacing">
                 <number>20</number>
                </property>
@@ -1319,6 +1320,12 @@ background: transparent;
                </property>
                <item>
                 <widget class="QPushButton" name="btn_upd_frequency">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
                  <property name="text">
                   <string>Never</string>
                  </property>
@@ -1326,6 +1333,24 @@ background: transparent;
                </item>
                <item>
                 <widget class="QToolButton" name="btn_upd_manually">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>30</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>30</width>
+                   <height>30</height>
+                  </size>
+                 </property>
                  <property name="icon">
                   <iconset resource="../../../resources/resources.qrc">
                    <normaloff>:/icons/icons/SyncFilled.svg</normaloff>:/icons/icons/SyncFilled.svg</iconset>

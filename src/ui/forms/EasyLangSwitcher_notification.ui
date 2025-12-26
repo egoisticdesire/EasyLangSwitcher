@@ -183,7 +183,7 @@ background: rgba(255, 255, 255, 7);
             </property>
            </widget>
           </item>
-          <item>
+          <item alignment="Qt::AlignmentFlag::AlignTop">
            <widget class="QLabel" name="info_desc_label">
             <property name="text">
              <string>Download v1.2.3 now or view the changes on the release page!</string>
