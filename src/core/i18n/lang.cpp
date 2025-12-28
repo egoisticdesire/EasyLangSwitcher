@@ -199,7 +199,7 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
             QStringLiteral("NOTIFICATION_UPD_NOT_AVAILABLE_TITLE"), {
                 QStringLiteral("The latest version of %1 is installed")
                 .arg(AppSettings::APP_NAME),
-                QStringLiteral("У вас установлена последняя версия %1")
+                QStringLiteral("Уже установлена последняя версия %1")
                 .arg(AppSettings::APP_NAME),
             });
         t.insert(
@@ -211,6 +211,11 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
             QStringLiteral("NOTIFICATION_UPD_DOWNLOAD_COMPLETE"), {
                 QStringLiteral("Download completed successfully!"),
                 QStringLiteral("Загрузка успешно завершена!"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_DOWNLOAD_PROGRESS"), {
+                QStringLiteral("Downloading update..."),
+                QStringLiteral("Загрузка обновления..."),
             });
         t.insert(
             QStringLiteral("NOTIFICATION_UPD_DOWNLOAD_ERROR"), {

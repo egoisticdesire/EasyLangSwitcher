@@ -2,6 +2,7 @@
 #include "ui_EasyLangSwitcher_notification.h"
 #include "../../helpers/closeButton.h"
 #include <QWidget>
+#include <QGraphicsOpacityEffect>
 #include <QPointer>
 #include <QString>
 
@@ -72,4 +73,12 @@ private:
     QFile *m_file = nullptr;
     QPointer<NotificationCloseButton> m_externalCloseBtn;
     bool m_isExiting = false;
+    UiState m_currentState = UiState::Buttons;
+    QGraphicsOpacityEffect *m_stackOpacityEffect = nullptr;
+
+    void animateStackTransition(int nextIndex);
+
+    void updateContentOnly() const;
+
+    void animateHeightChange();
 };

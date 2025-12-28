@@ -4,7 +4,6 @@
 #include "../../../core/i18n/lang.h"
 #include <QScreen>
 #include <QGuiApplication>
-#include <QNetworkAccessManager>
 #include <QSettings>
 #include <QNetworkReply>
 #include <QFile>
@@ -16,6 +15,7 @@
 #include <QMouseEvent>
 #include <QPropertyAnimation>
 #include <QParallelAnimationGroup>
+#include <QSequentialAnimationGroup>
 #include <QStyle>
 
 GlobalNotification::GlobalNotification(const Mode mode, const QString &version, const QString &url, QWidget *parent)
@@ -25,28 +25,39 @@ GlobalNotification::GlobalNotification(const Mode mode, const QString &version, 
       m_version(version),
       m_downloadUrl(url) {
     ui->setupUi(this);
-    this->setFixedWidth(400);
+    this->setFixedWidth(420);
+
+    ui->btn_stack->setCurrentIndex(0);
+    ui->btn_stack->layout()->activate();
 
     setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setAttribute(Qt::WA_DeleteOnClose);
     setMouseTracking(true);
+
     ui->background_frame->setMouseTracking(true);
     ui->background_frame->setAttribute(Qt::WA_Hover);
     ui->info_title_label->setAttribute(Qt::WA_TransparentForMouseEvents);
     ui->info_desc_label->setAttribute(Qt::WA_TransparentForMouseEvents);
     ui->info_icon->setAttribute(Qt::WA_TransparentForMouseEvents);
 
-    QTimer::singleShot(0, this, [this]() {
-        AcrylicHelper::enableAcrylic(this);
-        AcrylicHelper::updateRegion(this);
-    });
+    m_externalCloseBtn = new NotificationCloseButton(this);
+    m_stackOpacityEffect = new QGraphicsOpacityEffect(ui->btn_stack);
+    ui->btn_stack->setGraphicsEffect(m_stackOpacityEffect);
+
+    if (m_mode == UpToDate) {
+        m_currentState = UiState::Hidden;
+        ui->btn_stack->hide();
+        ui->vlayout_background_frame->setSpacing(0);
+    } else {
+        m_currentState = UiState::Buttons;
+        ui->btn_stack->show();
+        ui->vlayout_background_frame->setSpacing(20);
+    }
 
     refreshTranslations();
     applySystemAccentColor();
-
-    m_externalCloseBtn = new NotificationCloseButton(this);
 
     // Коннекты
     connect(ui->btn_download, &QPushButton::clicked, this, &GlobalNotification::startFastDownload);
@@ -56,10 +67,8 @@ GlobalNotification::GlobalNotification(const Mode mode, const QString &version, 
         if (m_downloadUrl.isEmpty()) return;
         QString releasePage = m_downloadUrl;
 
-        if (const int downloadIdx = releasePage.indexOf("/download/"); downloadIdx != -1) {
-            releasePage = releasePage.left(downloadIdx);
-            releasePage += "/latest";
-        }
+        if (const int downloadIdx = releasePage.indexOf("/download/"); downloadIdx != -1)
+            releasePage = releasePage.left(downloadIdx) + "/latest";
 
         LOG_DEBUG() << "Opening release page: " << releasePage;
         QDesktopServices::openUrl(QUrl(releasePage));
@@ -77,6 +86,12 @@ GlobalNotification::GlobalNotification(const Mode mode, const QString &version, 
     //     });
     // }
 
+    this->adjustSize();
+    QTimer::singleShot(0, this, [this]() {
+        AcrylicHelper::enableAcrylic(this);
+        AcrylicHelper::updateRegion(this);
+    });
+
     moveToBottomRight();
     LOG_DEBUG() << "GlobalNotification CREATED: " << this;
 }
@@ -88,7 +103,6 @@ GlobalNotification::~GlobalNotification() {
 
 void GlobalNotification::startShowAnimation() {
     this->setWindowOpacity(0.0);
-
     const QScreen *screen = QGuiApplication::primaryScreen();
     const QRect desktop = screen->availableGeometry();
 
@@ -98,18 +112,18 @@ void GlobalNotification::startShowAnimation() {
 
     this->move(startPos);
 
-    const auto posAnim = new QPropertyAnimation(this, "pos");
+    auto *posAnim = new QPropertyAnimation(this, "pos");
     posAnim->setDuration(500);
     posAnim->setStartValue(startPos);
     posAnim->setEndValue(endPos);
     posAnim->setEasingCurve(QEasingCurve::OutBack);
 
-    const auto opacityAnim = new QPropertyAnimation(this, "windowOpacity");
+    auto *opacityAnim = new QPropertyAnimation(this, "windowOpacity");
     opacityAnim->setDuration(400);
     opacityAnim->setStartValue(0.0);
     opacityAnim->setEndValue(1.0);
 
-    const auto group = new QParallelAnimationGroup(this);
+    auto *group = new QParallelAnimationGroup(this);
     group->addAnimation(posAnim);
     group->addAnimation(opacityAnim);
 
@@ -123,20 +137,22 @@ void GlobalNotification::startShowAnimation() {
 
 void GlobalNotification::startExitAnimation() {
     if (m_isExiting) return;
+    if (m_reply && m_reply->isRunning()) m_reply->abort();
+
     m_isExiting = true;
 
     if (m_externalCloseBtn) m_externalCloseBtn->setFade(false);
 
-    const auto posAnim = new QPropertyAnimation(this, "pos");
+    auto *posAnim = new QPropertyAnimation(this, "pos");
     posAnim->setDuration(350);
     posAnim->setEndValue(this->pos() + QPoint(0, 100));
     posAnim->setEasingCurve(QEasingCurve::InBack);
 
-    const auto opacityAnim = new QPropertyAnimation(this, "windowOpacity");
+    auto *opacityAnim = new QPropertyAnimation(this, "windowOpacity");
     opacityAnim->setDuration(250);
     opacityAnim->setEndValue(0.0);
 
-    const auto group = new QParallelAnimationGroup(this);
+    auto *group = new QParallelAnimationGroup(this);
     group->addAnimation(posAnim);
     group->addAnimation(opacityAnim);
 
@@ -144,47 +160,75 @@ void GlobalNotification::startExitAnimation() {
     group->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
-// Плавное переключение между кнопками и прогрессом
 void GlobalNotification::toggleInterface(const UiState state) {
-    this->setUpdatesEnabled(false);
+    if (m_currentState == state) return;
+    const UiState oldState = m_currentState;
+    m_currentState = state;
 
-    // Сначала СБРАСЫВАЕМ все фиксации высоты, которые я советовал раньше (они ломают логику Qt)
-    this->setMinimumHeight(0);
-    this->setMaximumHeight(16777215);
+    // Обновляем текст сразу, чтобы sizeHint в анимации высоты был верным
+    updateContentOnly();
 
-    // 1. Управляем видимостью
-    ui->btn_frame->setVisible(state == UiState::Buttons);
-    ui->progress_frame->setVisible(state == UiState::Progress);
-
-    // 2. Исключаем скрытые фреймы из расчета Layout (это самое важное)
-    // Когда Visibility = false и Policy = Ignored, Layout ведет себя так, будто их нет
-    constexpr auto hidePolicy = QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Ignored);
-    constexpr auto showPolicy = QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-
-    ui->btn_frame->setSizePolicy(state == UiState::Buttons ? showPolicy : hidePolicy);
-    ui->progress_frame->setSizePolicy(state == UiState::Progress ? showPolicy : hidePolicy);
-
-    // 3. Убираем лишние отступы в скрытом режиме
-    if (state == UiState::Hidden) {
-        this->layout()->setSpacing(0);
-    } else {
-        this->layout()->setSpacing(20); // Твой стандартный спейсинг
+    // Если это переход между Buttons <-> Progress — крутим слайд
+    if (oldState != UiState::Hidden && state != UiState::Hidden) {
+        const int nextIdx = (state == UiState::Buttons) ? 0 : (state == UiState::Progress ? 1 : 2);
+        animateStackTransition(nextIdx);
     }
 
-    // 4. Просим окно пересчитать идеальный размер под контент
-    this->adjustSize();
+    // Всегда запускаем анимацию высоты
+    animateHeightChange();
+}
 
-    // 5. Двигаем окно
-    if (const QScreen *screen = QGuiApplication::primaryScreen()) {
-        const QRect desktop = screen->availableGeometry();
-        constexpr int margin = 20;
-        const int newY = desktop.bottom() - this->height() - margin;
-        const int newX = desktop.right() - this->width() - margin;
-        this->move(newX, newY);
-    }
+void GlobalNotification::animateStackTransition(int nextIndex) {
+    const int currentIndex = ui->btn_stack->currentIndex();
+    if (currentIndex == nextIndex) return;
 
-    this->setUpdatesEnabled(true);
-    AcrylicHelper::updateRegion(this);
+    QWidget *currentWrap = (currentIndex == 0) ? ui->btn_wrap : ui->progress_wrap;
+    QWidget *nextWrap = (nextIndex == 0) ? ui->btn_wrap : ui->progress_wrap;
+
+    const int dir = (nextIndex > currentIndex) ? 1 : -1;
+    const int offset = 80 * dir;
+    constexpr int buffer = 15;
+
+    auto *seq = new QSequentialAnimationGroup(this);
+
+    // EXIT
+    auto *exitGroup = new QParallelAnimationGroup(this);
+    auto *slideOut = new QPropertyAnimation(currentWrap, "pos");
+    slideOut->setDuration(350);
+    slideOut->setStartValue(QPoint(buffer, 0));
+    slideOut->setEndValue(QPoint(buffer - offset, 0));
+    slideOut->setEasingCurve(QEasingCurve::InBack);
+
+    auto *fadeOut = new QPropertyAnimation(m_stackOpacityEffect, "opacity");
+    fadeOut->setDuration(300);
+    fadeOut->setEndValue(0.0);
+
+    exitGroup->addAnimation(slideOut);
+    exitGroup->addAnimation(fadeOut);
+
+    connect(exitGroup, &QParallelAnimationGroup::finished, this, [this, nextIndex, nextWrap, offset]() {
+        ui->btn_stack->setCurrentIndex(nextIndex);
+        nextWrap->move(buffer + offset, 0);
+    });
+
+    // ENTER
+    auto *enterGroup = new QParallelAnimationGroup(this);
+    auto *slideIn = new QPropertyAnimation(nextWrap, "pos");
+    slideIn->setDuration(350);
+    slideIn->setStartValue(QPoint(buffer + offset, 0));
+    slideIn->setEndValue(QPoint(buffer, 0));
+    slideIn->setEasingCurve(QEasingCurve::OutBack);
+
+    auto *fadeIn = new QPropertyAnimation(m_stackOpacityEffect, "opacity");
+    fadeIn->setDuration(300);
+    fadeIn->setEndValue(1.0);
+
+    enterGroup->addAnimation(slideIn);
+    enterGroup->addAnimation(fadeIn);
+
+    seq->addAnimation(exitGroup);
+    seq->addAnimation(enterGroup);
+    seq->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 void GlobalNotification::mousePressEvent(QMouseEvent *event) {
@@ -193,9 +237,8 @@ void GlobalNotification::mousePressEvent(QMouseEvent *event) {
 }
 
 bool GlobalNotification::event(QEvent *event) {
-    if (event->type() == QEvent::WindowActivate) {
+    if (event->type() == QEvent::WindowActivate)
         if (m_externalCloseBtn) m_externalCloseBtn->raise();
-    }
     return QWidget::event(event);
 }
 
@@ -213,7 +256,6 @@ void GlobalNotification::showEvent(QShowEvent *event) {
     if (!this->property("shown").toBool()) {
         this->setProperty("shown", true);
         this->adjustSize();
-
         startShowAnimation();
     }
 
@@ -226,8 +268,8 @@ void GlobalNotification::showEvent(QShowEvent *event) {
 }
 
 void GlobalNotification::hideEvent(QHideEvent *event) {
-    QWidget::hideEvent(event);
     if (m_externalCloseBtn) m_externalCloseBtn->hide();
+    QWidget::hideEvent(event);
 }
 
 void GlobalNotification::closeEvent(QCloseEvent *event) {
@@ -240,7 +282,8 @@ void GlobalNotification::closeEvent(QCloseEvent *event) {
 
 void GlobalNotification::startFastDownload() {
     QString fileName = QFileInfo(m_downloadUrl).fileName();
-    if (!fileName.endsWith(".exe", Qt::CaseInsensitive)) fileName = QString("%1.exe").arg(AppSettings::APP_NAME);
+    if (!fileName.endsWith(".exe", Qt::CaseInsensitive))
+        fileName = QString("%1.exe").arg(AppSettings::APP_NAME);
 
     const QString path = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation) + "/" + fileName;
     executeDownload(path);
@@ -248,7 +291,8 @@ void GlobalNotification::startFastDownload() {
 
 void GlobalNotification::startCustomDownload() {
     QString fileName = QFileInfo(m_downloadUrl).fileName();
-    if (!fileName.endsWith(".exe", Qt::CaseInsensitive)) fileName = QString("%1.exe").arg(AppSettings::APP_NAME);
+    if (!fileName.endsWith(".exe", Qt::CaseInsensitive))
+        fileName = QString("%1.exe").arg(AppSettings::APP_NAME);
 
     if (const QString path = QFileDialog::getSaveFileName(
         this, Lang::tr("NOTIFICATION_UPD_SAVE_FILE_TITLE"), fileName,
@@ -260,6 +304,7 @@ void GlobalNotification::executeDownload(const QString &filePath) {
     ui->progress_bar->setValue(0);
 
     toggleInterface(UiState::Progress);
+    ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_PROGRESS"));
 
     if (m_file) {
         m_file->close();
@@ -307,14 +352,12 @@ void GlobalNotification::onDownloadFinished() {
     }
 
     if (hasError) {
-        // При ошибке: пишем текст и ВОЗВРАЩАЕМ кнопки, чтобы юзер мог перекачать
         ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_ERROR") + ": " + m_reply->errorString());
         toggleInterface(UiState::Buttons);
     } else if (!isCanceled) {
-        // При успехе: пишем текст и ПРЯЧЕМ ВСЁ
         ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_COMPLETE"));
         toggleInterface(UiState::Hidden);
-        QTimer::singleShot(5000, this, &GlobalNotification::startExitAnimation);
+        // QTimer::singleShot(5000, this, &GlobalNotification::startExitAnimation);
     }
 
     m_reply->deleteLater();
@@ -325,24 +368,18 @@ void GlobalNotification::onDownloadFinished() {
 
 void GlobalNotification::cancelDownload() {
     if (m_reply && m_reply->isRunning()) m_reply->abort();
-    else toggleInterface(UiState::Buttons);
+    toggleInterface(UiState::Buttons);
+    animateHeightChange();
 }
 
 void GlobalNotification::applySystemAccentColor() const {
     const QSettings dwmSettings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\DWM", QSettings::NativeFormat);
     bool ok;
     const unsigned int rgba = dwmSettings.value("AccentColor").toUInt(&ok);
-
     if (ok) {
-        const int r = rgba & 0xFF;
-        const int g = (rgba >> 8) & 0xFF;
-        const int b = (rgba >> 16) & 0xFF;
-        const QColor accent(r, g, b);
-
-        const QString style = QString("QProgressBar::chunk { background-color: %1; border-radius: 2px; }")
-                .arg(accent.name());
-
-        ui->progress_bar->setStyleSheet(style);
+        const QColor accent(rgba & 0xFF, (rgba >> 8) & 0xFF, (rgba >> 16) & 0xFF);
+        ui->progress_bar->setStyleSheet(
+            QString("QProgressBar::chunk { background-color: %1; border-radius: 2px; }").arg(accent.name()));
     }
 }
 
@@ -350,12 +387,8 @@ void GlobalNotification::moveToBottomRight() {
     const QScreen *screen = QGuiApplication::primaryScreen();
     if (!screen) return;
 
-    const QRect desktopRect = screen->availableGeometry();
-
-    this->ensurePolished();
-    this->adjustSize();
-
     constexpr int margin = 20;
+    const QRect desktopRect = screen->availableGeometry();
     const int x = desktopRect.right() - this->width() - margin;
     const int y = desktopRect.bottom() - this->height() - margin;
 
@@ -363,28 +396,45 @@ void GlobalNotification::moveToBottomRight() {
 }
 
 void GlobalNotification::refreshTranslations() {
-    // Сохраняем текущую нижнюю точку, чтобы виджет не прыгал вниз
-    const int anchorY = this->frameGeometry().bottom();
+    // Просто обновляем все данные (текст, иконки)
+    updateContentOnly();
 
-    if (m_mode == UpToDate) {
-        ui->info_title_label->setText(Lang::tr("NOTIFICATION_UPD_NOT_AVAILABLE_TITLE"));
-        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_NOT_AVAILABLE_DESC").arg(m_version));
-        ui->btn_frame->hide();
-        ui->progress_frame->hide();
-    } else if (m_mode == UpdateAvailable) {
-        ui->info_title_label->setText(Lang::tr("NOTIFICATION_UPD_AVAILABLE_TITLE"));
+    // Логика изменения размера
+    if (!this->isVisible()) {
+        // Если окно еще не показано (в момент создания), просто подгоняем размер без анимаций
+        this->setMinimumHeight(0);
+        this->setMaximumHeight(16777215);
+        ui->background_frame->layout()->activate();
+        this->adjustSize();
+    } else {
+        // Если окно уже на экране и язык сменился — запускаем пересчет
+        animateHeightChange();
+    }
+}
+
+void GlobalNotification::updateContentOnly() const {
+    // Обновляем заголовки
+    if (m_mode == UpToDate) ui->info_title_label->setText(Lang::tr("NOTIFICATION_UPD_NOT_AVAILABLE_TITLE"));
+    else ui->info_title_label->setText(Lang::tr("NOTIFICATION_UPD_AVAILABLE_TITLE"));
+
+    // Если мы уже скачали файл, не даем сбросить текст на исходный
+    if (m_currentState == UiState::Progress) {
+        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_PROGRESS"));
+    } else if (m_currentState == UiState::Hidden) {
+        // Если мы перешли в Hidden после загрузки
+        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_COMPLETE"));
+    } else {
+        // Исходное состояние (Buttons)
         ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_AVAILABLE_DESC").arg(m_version));
-        ui->btn_download->setText(Lang::tr("NOTIFICATION_UPD_BTN_DOWNLOAD"));
-        ui->btn_releases->setText(Lang::tr("NOTIFICATION_UPD_BTN_RELEASES"));
-
-        if (m_reply) {
-            toggleInterface(UiState::Progress);
-        } else {
-            toggleInterface(UiState::Buttons);
-        }
     }
 
-    ui->info_icon->setIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png", QColor(), QSize(42, 42)));
+    // Обновляем кнопки
+    ui->btn_download->setText(Lang::tr("NOTIFICATION_UPD_BTN_DOWNLOAD"));
+    ui->btn_releases->setText(Lang::tr("NOTIFICATION_UPD_BTN_RELEASES"));
+
+    // Иконки
+    ui->info_icon->setIcon(
+        IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png", QColor(), QSize(42, 42)));
     ui->btn_download->setIcon(
         IconHelper::loadIcon(":/icons/icons/DownloadFilled.svg", QColor(175, 175, 175), QSize(20, 20)));
     ui->btn_cancel_process->setIcon(
@@ -393,13 +443,65 @@ void GlobalNotification::refreshTranslations() {
         IconHelper::loadIcon(":/icons/icons/MoreFilled.svg", QColor(175, 175, 175), QSize(20, 20)));
     ui->btn_releases->setIcon(
         IconHelper::loadIcon(":/icons/icons/OpenFilled.svg", QColor(175, 175, 175), QSize(20, 20)));
+}
 
-    this->adjustSize();
+void GlobalNotification::animateHeightChange() {
+    this->setMinimumHeight(0);
+    this->setMaximumHeight(16777215);
 
-    // Фикс дрейфа: вычисляем новый Y так, чтобы НИЗ (anchorY) остался на той же линии
-    if (this->isVisible()) {
-        const int newY = anchorY - (this->height() - 1);
-        this->move(this->x(), newY);
-        AcrylicHelper::updateRegion(this);
+    if (m_currentState == UiState::Hidden) {
+        ui->btn_stack->hide();
+        ui->vlayout_background_frame->setSpacing(0);
+    } else {
+        ui->btn_stack->show();
+        ui->vlayout_background_frame->setSpacing(20);
+
+        if (!ui->btn_stack->isVisible()) {
+            const int pageIndex = (m_currentState == UiState::Buttons)
+                                      ? 0
+                                      : (m_currentState == UiState::Progress ? 1 : 2);
+            ui->btn_stack->setCurrentIndex(pageIndex);
+        }
     }
+
+    // Просчитываем новый размер
+    ui->info_title_label->updateGeometry();
+    ui->info_desc_label->updateGeometry();
+    ui->background_frame->layout()->invalidate();
+    ui->background_frame->layout()->activate();
+    QCoreApplication::processEvents();
+
+    const int startHeight = this->height();
+    const int targetHeight = this->sizeHint().height();
+
+    const int anchorY = this->geometry().bottom();
+    const int windowX = this->x();
+    const int windowWidth = this->width();
+
+    if (qAbs(startHeight - targetHeight) < 2) {
+        this->setFixedHeight(targetHeight);
+        return;
+    }
+
+    auto *geoAnim = new QVariantAnimation(this);
+    geoAnim->setDuration(500);
+    geoAnim->setStartValue(startHeight);
+    geoAnim->setEndValue(targetHeight);
+    geoAnim->setEasingCurve(QEasingCurve::OutBack);
+
+    connect(geoAnim, &QVariantAnimation::valueChanged, this,
+            [this, anchorY, windowX, windowWidth](const QVariant &value) {
+                const int h = value.toInt();
+                // Временно разрешаем окну быть любого размера в процессе анимации
+                this->setMinimumHeight(qMin(h, this->minimumHeight()));
+                this->setGeometry(windowX, anchorY - h + 1, windowWidth, h);
+                AcrylicHelper::updateRegion(this);
+            });
+
+    connect(geoAnim, &QVariantAnimation::finished, this, [this, targetHeight]() {
+        this->setFixedHeight(targetHeight);
+        if (m_externalCloseBtn) m_externalCloseBtn->updatePosition();
+    });
+
+    geoAnim->start(QAbstractAnimation::DeleteWhenStopped);
 }
