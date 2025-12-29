@@ -49,11 +49,9 @@ GlobalNotification::GlobalNotification(const Mode mode, const QString &version, 
     if (m_mode == UpToDate) {
         m_currentState = UiState::Hidden;
         ui->btn_stack->hide();
-        ui->vlayout_background_frame->setSpacing(0);
     } else {
         m_currentState = UiState::Buttons;
         ui->btn_stack->show();
-        ui->vlayout_background_frame->setSpacing(20);
     }
 
     refreshTranslations();
@@ -86,12 +84,12 @@ GlobalNotification::GlobalNotification(const Mode mode, const QString &version, 
     //     });
     // }
 
-    this->adjustSize();
     QTimer::singleShot(0, this, [this]() {
         AcrylicHelper::enableAcrylic(this);
         AcrylicHelper::updateRegion(this);
     });
 
+    this->setFixedHeight(this->QWidget::sizeHint().height());
     moveToBottomRight();
     LOG_DEBUG() << "GlobalNotification CREATED: " << this;
 }
@@ -102,6 +100,9 @@ GlobalNotification::~GlobalNotification() {
 }
 
 void GlobalNotification::startShowAnimation() {
+    updateContentOnly();
+    this->setFixedHeight(this->sizeHint().height());
+
     this->setWindowOpacity(0.0);
     const QScreen *screen = QGuiApplication::primaryScreen();
     const QRect desktop = screen->availableGeometry();
@@ -170,12 +171,9 @@ void GlobalNotification::toggleInterface(const UiState state) {
 
     // Если это переход между Buttons <-> Progress — крутим слайд
     if (oldState != UiState::Hidden && state != UiState::Hidden) {
-        const int nextIdx = (state == UiState::Buttons) ? 0 : (state == UiState::Progress ? 1 : 2);
+        const int nextIdx = (state == UiState::Buttons) ? 0 : 1;
         animateStackTransition(nextIdx);
-    }
-
-    // Всегда запускаем анимацию высоты
-    animateHeightChange();
+    } else animateHeightChange();
 }
 
 void GlobalNotification::animateStackTransition(int nextIndex) {
@@ -385,14 +383,16 @@ void GlobalNotification::applySystemAccentColor() const {
 
 void GlobalNotification::moveToBottomRight() {
     const QScreen *screen = QGuiApplication::primaryScreen();
-    if (!screen) return;
-
+    const QRect desktop = screen->availableGeometry();
     constexpr int margin = 20;
-    const QRect desktopRect = screen->availableGeometry();
-    const int x = desktopRect.right() - this->width() - margin;
-    const int y = desktopRect.bottom() - this->height() - margin;
 
-    this->move(x, y);
+    // Используем sizeHint, так как он точнее отражает реальность до отрисовки
+    const int h = this->sizeHint().height();
+    const int w = this->width();
+
+    this->setGeometry(desktop.right() - w - margin,
+                      desktop.bottom() - h - margin,
+                      w, h);
 }
 
 void GlobalNotification::refreshTranslations() {
@@ -413,26 +413,62 @@ void GlobalNotification::refreshTranslations() {
 }
 
 void GlobalNotification::updateContentOnly() const {
-    // Обновляем заголовки
-    if (m_mode == UpToDate) ui->info_title_label->setText(Lang::tr("NOTIFICATION_UPD_NOT_AVAILABLE_TITLE"));
-    else ui->info_title_label->setText(Lang::tr("NOTIFICATION_UPD_AVAILABLE_TITLE"));
+    // Обновляем заголовок
+    if (m_mode == UpToDate) {
+        ui->info_title_label->setText(Lang::tr("NOTIFICATION_UPD_NOT_AVAILABLE_TITLE"));
+    } else if (m_currentState == UiState::Hidden) {
+        // Если обновление скачано (Hidden для режима обновления)
+        ui->info_title_label->setText(AppSettings::APP_NAME);
+    } else {
+        ui->info_title_label->setText(Lang::tr("NOTIFICATION_UPD_AVAILABLE_TITLE"));
+    }
 
-    // Если мы уже скачали файл, не даем сбросить текст на исходный
+    // Обновляем описание
     if (m_currentState == UiState::Progress) {
         ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_PROGRESS"));
+    } else if (m_mode == UpToDate) {
+        // Если обновлений нет, пишем текст для "все ок"
+        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_NOT_AVAILABLE_DESC").arg(m_version));
     } else if (m_currentState == UiState::Hidden) {
-        // Если мы перешли в Hidden после загрузки
+        // Сюда попадем только если m_mode != UpToDate (обнова скачана)
         ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_COMPLETE"));
     } else {
-        // Исходное состояние (Buttons)
+        // Обычное состояние: обновление доступно, кнопки показаны
         ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_AVAILABLE_DESC").arg(m_version));
     }
+
+    auto recalculateLabel = [&](QLabel *label) {
+        if (!label) return;
+
+        label->setWordWrap(true);
+        label->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+
+        constexpr QMargins margins(20, 0, 20, 0);
+
+        QTextDocument doc;
+        doc.setDefaultFont(label->font());
+        doc.setPlainText(label->text());
+        doc.setDocumentMargin(0);
+        doc.setTextWidth(this->width() - margins.left() - margins.right()
+                         - ui->info_icon->width() - ui->hlayout_message_frame->spacing());
+
+        const int textHeight = qCeil(doc.size().height());
+
+        constexpr int extraPadding = 3;
+        label->setFixedHeight(textHeight + extraPadding);
+    };
+
+    ui->background_frame->layout()->activate();
+    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    recalculateLabel(ui->info_title_label);
+    recalculateLabel(ui->info_desc_label);
 
     // Обновляем кнопки
     ui->btn_download->setText(Lang::tr("NOTIFICATION_UPD_BTN_DOWNLOAD"));
     ui->btn_releases->setText(Lang::tr("NOTIFICATION_UPD_BTN_RELEASES"));
 
-    // Иконки
+    // Обновляем иконки
     ui->info_icon->setIcon(
         IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png", QColor(), QSize(42, 42)));
     ui->btn_download->setIcon(
@@ -454,12 +490,10 @@ void GlobalNotification::animateHeightChange() {
         ui->vlayout_background_frame->setSpacing(0);
     } else {
         ui->btn_stack->show();
-        ui->vlayout_background_frame->setSpacing(20);
+        ui->vlayout_background_frame->setSpacing(21);
 
         if (!ui->btn_stack->isVisible()) {
-            const int pageIndex = (m_currentState == UiState::Buttons)
-                                      ? 0
-                                      : (m_currentState == UiState::Progress ? 1 : 2);
+            const int pageIndex = (m_currentState == UiState::Buttons) ? 0 : 1;
             ui->btn_stack->setCurrentIndex(pageIndex);
         }
     }
