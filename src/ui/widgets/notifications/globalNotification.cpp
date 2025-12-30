@@ -306,8 +306,25 @@ void GlobalNotification::moveEvent(QMoveEvent *event) {
 void GlobalNotification::showEvent(QShowEvent *event) {
     if (!this->property("shown").toBool()) {
         this->setProperty("shown", true);
+
+        // Сначала считаем размеры
         this->adjustSize();
+
+        // WinAPI Хак: "Промигиваем" окно для системы
+        // SWP_NOACTIVATE - не ворует фокус (важно!)
+        // SWP_SHOWWINDOW - форсирует регистрацию окна в DWM
+        const auto hwnd = reinterpret_cast<HWND>(this->winId());
+        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+
+        // Запускаем анимацию
         startShowAnimation();
+
+        QTimer::singleShot(100, this, [this]() {
+            // Это заставит Windows пересчитать, под каким окном находится мышь,
+            // и уберет спиннер, так как поток ответит на запрос.
+            PostMessage(reinterpret_cast<HWND>(this->winId()), WM_SETCURSOR, this->winId(), HTCLIENT);
+        });
     }
 
     if (m_externalCloseBtn) {
