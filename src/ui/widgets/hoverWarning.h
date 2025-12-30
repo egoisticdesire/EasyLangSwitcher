@@ -23,8 +23,6 @@ protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
-    void setupAnimations();
-
     Ui_settings_warning_main_widget ui{};
     QWidget *owner = nullptr;
     QWidget *m_content = nullptr;
@@ -34,10 +32,4 @@ private:
 
     QParallelAnimationGroup *animGroupIn = nullptr;
     QParallelAnimationGroup *animGroupOut = nullptr;
-
-    QPropertyAnimation *animPosIn = nullptr;
-    QPropertyAnimation *animOpacityIn = nullptr;
-
-    QPropertyAnimation *animPosOut = nullptr;
-    QPropertyAnimation *animOpacityOut = nullptr;
 };

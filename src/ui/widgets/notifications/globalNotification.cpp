@@ -122,11 +122,19 @@ void GlobalNotification::startShowAnimation() {
 
     this->move(startPos);
 
-    auto *posAnim = new QPropertyAnimation(this, "pos");
+    // Вместо обычного posAnim используем QVariantAnimation для контроля каждого кадра
+    auto *posAnim = new QVariantAnimation(this);
     posAnim->setDuration(500);
     posAnim->setStartValue(startPos);
     posAnim->setEndValue(endPos);
     posAnim->setEasingCurve(QEasingCurve::OutBack);
+
+    connect(posAnim, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) {
+        this->move(value.toPoint());
+        // ПРИНУДИТЕЛЬНО: перерисовываем и обновляем регион акрила
+        this->update();
+        AcrylicHelper::updateRegion(this);
+    });
 
     auto *opacityAnim = new QPropertyAnimation(this, "windowOpacity");
     opacityAnim->setDuration(400);
@@ -138,6 +146,8 @@ void GlobalNotification::startShowAnimation() {
     group->addAnimation(opacityAnim);
 
     connect(group, &QParallelAnimationGroup::finished, this, [this]() {
+        // Финальная доводка
+        this->update();
         AcrylicHelper::enableAcrylic(this);
         AcrylicHelper::updateRegion(this);
     });
@@ -317,6 +327,7 @@ void GlobalNotification::enterEvent(QEnterEvent *event) {
             setProgress(0.0);
         }
     }
+    this->update();
     QWidget::enterEvent(event);
 }
 

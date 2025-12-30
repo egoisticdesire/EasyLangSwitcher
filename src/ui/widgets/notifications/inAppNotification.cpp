@@ -75,45 +75,12 @@ InAppNotification::InAppNotification(SettingsWindow *settings, const QString &te
     const int finalHeight = qMax(static_cast<int>(iconSize), qCeil(doc.size().height())) + (paddingH * 2) + 2;
     setFixedHeight(finalHeight);
 
-    setupAnimations();
     installEventFilter(this);
-
     if (settings) settings->installEventFilter(this);
 
     hideTimer.setSingleShot(true);
     hideTimer.setInterval(3000);
     connect(&hideTimer, &QTimer::timeout, this, [this]() { startHideAnimation(true); });
-}
-
-void InAppNotification::setupAnimations() {
-    animGroupIn = new QParallelAnimationGroup(this);
-    animInPos = new QPropertyAnimation(this, "pos", this);
-    animInOpacity = new QPropertyAnimation(this, "windowOpacity", this);
-    animInPos->setDuration(200);
-    animInPos->setEasingCurve(QEasingCurve::OutBack);
-    animInOpacity->setDuration(180);
-    animInOpacity->setEasingCurve(QEasingCurve::OutCubic);
-    animGroupIn->addAnimation(animInPos);
-    animGroupIn->addAnimation(animInOpacity);
-
-    animGroupOut = new QParallelAnimationGroup(this);
-    animOutPos = new QPropertyAnimation(this, "pos", this);
-    animOutOpacity = new QPropertyAnimation(this, "windowOpacity", this);
-    animOutPos->setDuration(180);
-    animOutPos->setEasingCurve(QEasingCurve::InBack);
-    animOutOpacity->setDuration(160);
-    animOutOpacity->setEasingCurve(QEasingCurve::InCubic);
-    animGroupOut->addAnimation(animOutPos);
-    animGroupOut->addAnimation(animOutOpacity);
-
-    connect(animOutOpacity, &QPropertyAnimation::finished, this, [this]() {
-        if (m_closing) {
-            this->hide();
-            if (const qsizetype idx = stack.indexOf(this); idx >= 0) stack.removeAt(idx);
-            this->deleteLater();
-            for (int i = 0; i < stack.size(); ++i) { if (stack[i]) stack[i]->animateTo(i); }
-        }
-    });
 }
 
 void InAppNotification::startShowAnimation() {
@@ -128,19 +95,38 @@ void InAppNotification::startShowAnimation() {
     show();
     raise();
 
-    QTimer::singleShot(0, this, [this]() {
-        AcrylicHelper::enableAcrylic(this);
+    AcrylicHelper::enableAcrylic(this);
+    AcrylicHelper::updateRegion(this);
+
+    // Анимация позиции
+    auto *posAnim = new QVariantAnimation(this);
+    posAnim->setDuration(200);
+    posAnim->setStartValue(startP);
+    posAnim->setEndValue(endP);
+    posAnim->setEasingCurve(QEasingCurve::OutBack);
+    connect(posAnim, &QVariantAnimation::valueChanged, this, [this](const QVariant &v) {
+        this->move(v.toPoint());
+        this->update();
         AcrylicHelper::updateRegion(this);
     });
 
-    animInPos->setStartValue(startP);
-    animInPos->setEndValue(endP);
-    animInOpacity->setStartValue(0.0);
-    animInOpacity->setEndValue(1.0);
+    // Анимация прозрачности
+    auto *opacityAnim = new QPropertyAnimation(this, "windowOpacity", this);
+    opacityAnim->setDuration(180);
+    opacityAnim->setStartValue(0.0);
+    opacityAnim->setEndValue(1.0);
+    opacityAnim->setEasingCurve(QEasingCurve::OutCubic);
 
-    animGroupIn->start();
+    // Группа
+    auto *group = new QParallelAnimationGroup(this);
+    group->addAnimation(posAnim);
+    group->addAnimation(opacityAnim);
+    group->start(QAbstractAnimation::DeleteWhenStopped);
 
-    progressAnim = new QPropertyAnimation(this, "progress", this);
+    // Полоска прогресса
+    if (progressAnim) progressAnim->stop();
+    else progressAnim = new QPropertyAnimation(this, "progress", this);
+
     progressAnim->setDuration(hideTimer.interval());
     progressAnim->setStartValue(0.0);
     progressAnim->setEndValue(1.0);
@@ -153,24 +139,61 @@ void InAppNotification::startHideAnimation(const bool removeFromStack) {
     if (m_closing) return;
     m_closing = removeFromStack;
 
+    // Останавливаем прогресс и таймер
     if (progressAnim) progressAnim->stop();
-    animGroupIn->stop();
     hideTimer.stop();
 
-    animOutPos->setStartValue(pos());
-    animOutPos->setEndValue(pos() + QPoint(0, 15));
-    animOutOpacity->setStartValue(windowOpacity());
-    animOutOpacity->setEndValue(0.0);
+    // Создаем анимации "на лету"
+    auto *outPos = new QPropertyAnimation(this, "pos", this);
+    outPos->setDuration(180);
+    outPos->setStartValue(this->pos());
+    outPos->setEndValue(this->pos() + QPoint(0, 15));
+    outPos->setEasingCurve(QEasingCurve::InBack);
 
-    animGroupOut->start();
+    auto *outOpacity = new QPropertyAnimation(this, "windowOpacity", this);
+    outOpacity->setDuration(160);
+    outOpacity->setStartValue(this->windowOpacity());
+    outOpacity->setEndValue(0.0);
+    outOpacity->setEasingCurve(QEasingCurve::InCubic);
+
+    auto *group = new QParallelAnimationGroup(this);
+    group->addAnimation(outPos);
+    group->addAnimation(outOpacity);
+
+    // Важно: логика удаления после завершения анимации
+    connect(group, &QParallelAnimationGroup::finished, this, [this]() {
+        if (m_closing) {
+            this->hide();
+            if (const qsizetype idx = stack.indexOf(this); idx >= 0)
+                stack.removeAt(idx);
+
+            this->deleteLater();
+
+            // Сдвигаем оставшиеся уведомления
+            for (int i = 0; i < stack.size(); ++i) {
+                if (stack[i]) stack[i]->animateTo(i);
+            }
+        }
+    });
+
+    group->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 void InAppNotification::animateTo(const int newIndex) {
     if (m_closing) return;
-    auto *a = new QPropertyAnimation(this, "pos", this);
+
+    auto *a = new QVariantAnimation(this);
     a->setDuration(200);
+    a->setStartValue(this->pos());
     a->setEndValue(basePosition(newIndex));
     a->setEasingCurve(QEasingCurve::OutBack);
+
+    connect(a, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) {
+        this->move(value.toPoint());
+        this->update();
+        AcrylicHelper::updateRegion(this);
+    });
+
     a->start(QAbstractAnimation::DeleteWhenStopped);
 }
 

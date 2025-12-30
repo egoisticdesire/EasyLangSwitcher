@@ -35,8 +35,6 @@ protected:
     void paintEvent(QPaintEvent *e) override;
 
 private:
-    void setupAnimations();
-
     void startShowAnimation();
 
     void startHideAnimation(bool removeFromStack = true);
@@ -52,13 +50,8 @@ private:
     qreal m_progress = 0.0;
     Type m_type;
 
-    // Анимации
     QParallelAnimationGroup *animGroupIn = nullptr;
     QParallelAnimationGroup *animGroupOut = nullptr;
-    QPropertyAnimation *animInPos = nullptr;
-    QPropertyAnimation *animInOpacity = nullptr;
-    QPropertyAnimation *animOutPos = nullptr;
-    QPropertyAnimation *animOutOpacity = nullptr;
     QPropertyAnimation *progressAnim = nullptr;
 
     QTimer hideTimer;

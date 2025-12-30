@@ -20,14 +20,10 @@ public:
     void refreshTranslations();
 
 private:
-    void updateSize();
-
     Ui::tooltip_main_widget ui{};
-    QString currentLangKey;
-
-    QParallelAnimationGroup *animGroup;
-    QPropertyAnimation *posAnim;
-    QPropertyAnimation *opAnim;
-
     bool isClosing = false;
+    QString currentLangKey;
+    QParallelAnimationGroup *animGroup;
+
+    void updateSize();
 };

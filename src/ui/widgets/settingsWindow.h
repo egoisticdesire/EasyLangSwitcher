@@ -68,7 +68,7 @@ private:
     QString previousPresetName;
     QHash<QString, int> presetMap;
 
-    // Методы инициализации (Рефакторинг)
+    // Методы инициализации
     void initVisuals(); // Иконки, тени, драггер, скрытие лишнего
     void initHotkeyLogic(); // PresetMap, KeySequenceHelper и кнопки клавиш
     void initUpdateLogic(); // Тултипы, попапы частоты обновлений
