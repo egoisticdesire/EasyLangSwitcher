@@ -16,9 +16,10 @@ class QFile;
 
 class GlobalNotification final : public QWidget {
     Q_OBJECT
+    Q_PROPERTY(double progress READ progress WRITE setProgress)
 
 public:
-    enum class UiState { Buttons, Progress, Hidden };
+    enum class UiState { Buttons, Progress, Finish, Hidden };
 
     enum Mode { UpdateAvailable, UpToDate, Error };
 
@@ -37,6 +38,8 @@ public:
 protected:
     void mousePressEvent(QMouseEvent *event) override;
 
+    void paintEvent(QPaintEvent *event) override;
+
     bool event(QEvent *event) override;
 
     void changeEvent(QEvent *event) override;
@@ -44,6 +47,10 @@ protected:
     void moveEvent(QMoveEvent *event) override;
 
     void showEvent(QShowEvent *event) override;
+
+    void enterEvent(QEnterEvent *event) override;
+
+    void leaveEvent(QEvent *event) override;
 
     void hideEvent(QHideEvent *event) override;
 
@@ -69,12 +76,28 @@ private:
     Mode m_mode;
     QString m_version;
     QString m_downloadUrl;
+    QString m_downloadPath;
     QNetworkReply *m_reply = nullptr;
     QFile *m_file = nullptr;
     QPointer<NotificationCloseButton> m_externalCloseBtn;
     bool m_isExiting = false;
     UiState m_currentState = UiState::Buttons;
     QGraphicsOpacityEffect *m_stackOpacityEffect = nullptr;
+    QTimer *m_hideTimer;
+    const int AUTOHIDE_DELAY = 5000;
+    QPropertyAnimation *m_progressAnim = nullptr;
+    double m_progress = 0.0;
+
+    void startAutohideTimer();
+
+    double progress() const {
+        return m_progress;
+    }
+
+    void setProgress(const double p) {
+        m_progress = p;
+        update();
+    }
 
     void animateStackTransition(int nextIndex);
 

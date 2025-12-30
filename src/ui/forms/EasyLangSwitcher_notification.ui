@@ -43,7 +43,7 @@
      <property name="styleSheet">
       <string notr="true">QFrame#background_frame {
 border: 1px solid rgb(60, 60, 60);
-background: rgba(32, 32, 32, 10);
+background: transparent;
 }
 QFrame#background_frame QLabel#info_title_label {
 color: rgba(255, 255, 255, 225);
@@ -64,18 +64,18 @@ background: transparent;
 QFrame#download_frame QPushButton,
 QFrame#finish_frame QPushButton {
 color: rgba(255, 255, 255, 200);
-background: rgba(255, 255, 255, 10);
+background: rgba(255, 255, 255, 15);
 }
 QFrame#download_frame QPushButton:hover,
 QFrame#background_frame QPushButton#btn_cancel_process:hover,
 QFrame#finish_frame QPushButton:hover {
 color: rgba(255, 255, 255, 255);
-background: rgba(255, 255, 255, 15);
+background: rgba(255, 255, 255, 20);
 }
 QFrame#download_frame QPushButton:pressed,
 QFrame#background_frame QPushButton#btn_cancel_process:pressed,
 QFrame#finish_frame QPushButton:pressed {
-background: rgba(255, 255, 255, 7);
+background: rgba(255, 255, 255, 12);
 }
 QFrame#download_frame QPushButton#btn_download,
 QFrame#download_frame QPushButton#btn_releases,
@@ -96,7 +96,7 @@ QFrame#finish_frame QPushButton {
 border-radius: 6px;
 }
 QFrame#download_frame QLabel#separator_label {
-background: rgba(255, 255, 255, 15);
+background: rgba(255, 255, 255, 20);
 }
 QFrame#background_frame QProgressBar {
 text-align: center;
@@ -230,7 +230,7 @@ outline: none;
               </property>
              </widget>
             </item>
-            <item alignment="Qt::AlignmentFlag::AlignTop">
+            <item>
              <widget class="QLabel" name="info_desc_label">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
@@ -264,7 +264,7 @@ outline: none;
          </sizepolicy>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="stack_page_1">
          <layout class="QHBoxLayout" name="hlayout_stack_page_1" stretch="0">

@@ -169,14 +169,19 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                 QStringLiteral("  Загрузить"),
             });
         t.insert(
-            QStringLiteral("NOTIFICATION_UPD_BTN_SAVE_AS_TOOLTIP"), {
-                QStringLiteral("Save to a specific location..."),
-                QStringLiteral("Сохранить в выбранную папку..."),
-            });
-        t.insert(
             QStringLiteral("NOTIFICATION_UPD_BTN_RELEASES"), {
                 QStringLiteral("  What's new"),
                 QStringLiteral("  Что нового"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_BTN_OPEN_FOLDER"), {
+                QStringLiteral("  Open folder"),
+                QStringLiteral("  Открыть папку"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_BTN_SAVE_AS_TOOLTIP"), {
+                QStringLiteral("Save to a specific location..."),
+                QStringLiteral("Сохранить в выбранную папку..."),
             });
         t.insert(
             QStringLiteral("NOTIFICATION_UPD_SAVE_FILE_TITLE"), {
