@@ -126,6 +126,7 @@ if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
             COMMAND ${CMAKE_COMMAND} -E make_directory "${DIST_DIR}/platforms"
             COMMAND ${CMAKE_COMMAND} -E make_directory "${DIST_DIR}/styles"
             COMMAND ${CMAKE_COMMAND} -E make_directory "${DIST_DIR}/imageformats"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DIST_DIR}/tls"
 
             COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${APP_NAME}>" "${DIST_DIR}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${QT_BIN_DIR}/Qt6Core.dll" "${DIST_DIR}/"
@@ -138,6 +139,8 @@ if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/styles/qmodernwindowsstyle.dll" "${DIST_DIR}/styles/"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/imageformats/qsvg.dll" "${DIST_DIR}/imageformats/"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/imageformats/qjpeg.dll" "${DIST_DIR}/imageformats/"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/tls/qcertonlybackend.dll" "${DIST_DIR}/tls/"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/plugins/tls/qschannelbackend.dll" "${DIST_DIR}/tls/"
 
             COMMENT "Deploying minimal set to ${DIST_DIR}"
     )
