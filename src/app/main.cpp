@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     QApplication::setStyle("Windows11");
     QApplication::setApplicationVersion(APP_VERSION);
+    // QApplication::setApplicationVersion("1.1.1");
 
     FontManager::init(app);
 

@@ -353,10 +353,11 @@ void SettingsWindow::setUpdateManager(UpdateManager *manager) {
     if (!manager) return;
     this->updateManager = manager;
 
-    // Общая лямбда для сброса состояния анимации
-    auto finishChecking = [this]() {
+    // Принимает флаг, нужно ли трогать старое уведомление
+    auto finishChecking = [this](const bool isManual) {
         stopSyncAnimation();
-        if (m_currentGlobalNotif) {
+
+        if (isManual && m_currentGlobalNotif) {
             m_currentGlobalNotif->close();
             m_currentGlobalNotif = nullptr;
         }
@@ -364,14 +365,16 @@ void SettingsWindow::setUpdateManager(UpdateManager *manager) {
 
     connect(updateManager, &UpdateManager::updateAvailable, this,
             [this, finishChecking](const QString &ver, const QString &url) {
-                finishChecking();
+                // При нахождении обновы всегда обновляем окно (isManual = true)
+                finishChecking(true);
                 m_currentGlobalNotif = new GlobalNotification(GlobalNotification::UpdateAvailable, ver, url);
                 m_currentGlobalNotif->show();
             });
 
     connect(updateManager, &UpdateManager::noUpdateAvailable, this, [this, finishChecking](const QString &ver) {
         const bool isManual = isManualCheckActive();
-        finishChecking();
+        finishChecking(isManual);
+
         if (!isManual) return;
 
         m_currentGlobalNotif = new GlobalNotification(GlobalNotification::UpToDate, ver, "");
@@ -380,7 +383,7 @@ void SettingsWindow::setUpdateManager(UpdateManager *manager) {
 
     connect(updateManager, &UpdateManager::updateError, this, [this, finishChecking](const QString &errorMsg) {
         const bool isManual = isManualCheckActive();
-        finishChecking();
+        finishChecking(isManual);
 
         if (isManual) InAppNotification::showFor(this, errorMsg, InAppNotification::Error);
         LOG_ERROR() << "Update error: " << errorMsg;

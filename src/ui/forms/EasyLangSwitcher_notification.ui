@@ -264,7 +264,7 @@ outline: none;
          </sizepolicy>
         </property>
         <property name="currentIndex">
-         <number>2</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="stack_page_1">
          <layout class="QHBoxLayout" name="hlayout_stack_page_1" stretch="0">
