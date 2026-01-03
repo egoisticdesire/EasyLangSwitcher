@@ -108,6 +108,203 @@ GlobalNotification::~GlobalNotification() {
     delete ui;
 }
 
+void GlobalNotification::mousePressEvent(QMouseEvent *event) {
+    if (event->button() == Qt::MiddleButton) startExitAnimation();
+    QWidget::mousePressEvent(event);
+}
+
+void GlobalNotification::paintEvent(QPaintEvent *event) {
+    QWidget::paintEvent(event);
+    if (m_progress <= 0.0) return;
+
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+
+    QRectF r = rect();
+    r.setWidth(r.width() * m_progress);
+
+    QLinearGradient grad(r.topLeft(), r.topRight());
+    grad.setColorAt(1.0, QColor(255, 255, 255, 0));
+    grad.setColorAt(0.98, QColor(255, 255, 255, 6));
+    grad.setColorAt(0.0, QColor(255, 255, 255, 3));
+
+    p.setPen(Qt::NoPen);
+    p.setBrush(grad);
+    p.drawRect(r);
+}
+
+bool GlobalNotification::event(QEvent *event) {
+    if (event->type() == QEvent::WindowActivate)
+        if (m_externalCloseBtn) m_externalCloseBtn->raise();
+    return QWidget::event(event);
+}
+
+void GlobalNotification::changeEvent(QEvent *event) {
+    if (event->type() == QEvent::LanguageChange) refreshTranslations();
+    QWidget::changeEvent(event);
+}
+
+void GlobalNotification::moveEvent(QMoveEvent *event) {
+    if (m_externalCloseBtn) m_externalCloseBtn->updatePosition();
+    QWidget::moveEvent(event);
+}
+
+void GlobalNotification::showEvent(QShowEvent *event) {
+    if (!this->property("shown").toBool()) {
+        this->setProperty("shown", true);
+        this->adjustSize();
+        startShowAnimation();
+    }
+
+    if (m_externalCloseBtn) {
+        m_externalCloseBtn->show();
+        m_externalCloseBtn->updatePosition();
+        m_externalCloseBtn->raise();
+    }
+    QWidget::showEvent(event);
+}
+
+void GlobalNotification::enterEvent(QEnterEvent *event) {
+    // Если курсор зашел — убиваем таймер и сбрасываем полоску в ноль
+    if (m_hideTimer->isActive() || (m_progressAnim && m_progressAnim->state() == QAbstractAnimation::Running)) {
+        m_hideTimer->stop();
+        if (m_progressAnim) {
+            m_progressAnim->stop();
+            setProgress(0.0);
+        }
+    }
+    this->update();
+    QWidget::enterEvent(event);
+}
+
+void GlobalNotification::leaveEvent(QEvent *event) {
+    // Когда ушли — запускаем новый цикл отсчета с нуля
+    if (m_currentState == UiState::Finish || m_mode == UpToDate) startAutohideTimer();
+    QWidget::leaveEvent(event);
+}
+
+void GlobalNotification::hideEvent(QHideEvent *event) {
+    if (m_externalCloseBtn) m_externalCloseBtn->hide();
+    QWidget::hideEvent(event);
+}
+
+void GlobalNotification::closeEvent(QCloseEvent *event) {
+    if (m_externalCloseBtn) {
+        m_externalCloseBtn->hide();
+        m_externalCloseBtn->deleteLater();
+    }
+    QWidget::closeEvent(event);
+}
+
+void GlobalNotification::startFastDownload() {
+    QString fileName = QFileInfo(m_downloadUrl).fileName();
+    if (!fileName.endsWith(".exe", Qt::CaseInsensitive))
+        fileName = QString("%1.exe").arg(AppSettings::APP_NAME);
+
+    const QString path = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation) + "/" + fileName;
+    executeDownload(path);
+}
+
+void GlobalNotification::startCustomDownload() {
+    QString fileName = QFileInfo(m_downloadUrl).fileName();
+    if (!fileName.endsWith(".exe", Qt::CaseInsensitive))
+        fileName = QString("%1.exe").arg(AppSettings::APP_NAME);
+
+    if (const QString path = QFileDialog::getSaveFileName(
+        this, Lang::tr("NOTIFICATION_UPD_SAVE_FILE_TITLE"), fileName,
+        "Executable (*.exe)"); !path.isEmpty())
+        executeDownload(path);
+}
+
+void GlobalNotification::executeDownload(const QString &filePath) {
+    m_downloadPath = filePath;
+    ui->progress_bar->setValue(0);
+
+    toggleInterface(UiState::Progress);
+    ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_PROGRESS"));
+
+    if (m_file) {
+        m_file->close();
+        delete m_file;
+    }
+
+    m_file = new QFile(filePath);
+    if (!m_file->open(QIODevice::WriteOnly)) {
+        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_ERROR"));
+        toggleInterface(UiState::Buttons);
+        delete m_file;
+        m_file = nullptr;
+        return;
+    }
+
+    auto *manager = new QNetworkAccessManager(this);
+    m_reply = manager->get(QNetworkRequest(QUrl(m_downloadUrl))); //"https://api.github.coms/repos/%1/releases/latest"
+
+    connect(m_reply, &QNetworkReply::readyRead, this, [this]() {
+        if (m_file && m_reply && m_reply->error() == QNetworkReply::NoError)
+            m_file->write(m_reply->readAll());
+    });
+
+    connect(m_reply, &QNetworkReply::downloadProgress, this, [this](const qint64 rec, const qint64 total) {
+        if (total > 0) {
+            const int percent = static_cast<int>((rec * 100) / total);
+            ui->progress_bar->setValue(percent);
+        }
+    });
+
+    connect(m_reply, &QNetworkReply::finished, this, &GlobalNotification::onDownloadFinished);
+}
+
+void GlobalNotification::onDownloadFinished() {
+    if (!m_reply) return;
+
+    const bool isCanceled = (m_reply->error() == QNetworkReply::OperationCanceledError);
+    const bool hasError = (m_reply->error() != QNetworkReply::NoError && !isCanceled);
+
+    if (m_file) {
+        m_file->close();
+        if (hasError || isCanceled) m_file->remove();
+        delete m_file;
+        m_file = nullptr;
+    }
+
+    if (hasError) {
+        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_ERROR") + ": " + m_reply->errorString());
+        toggleInterface(UiState::Buttons);
+    } else if (!isCanceled) {
+        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_COMPLETE"));
+        toggleInterface(UiState::Finish);
+        startAutohideTimer();
+    }
+
+    m_reply->deleteLater();
+    m_reply = nullptr;
+
+    if (isCanceled) toggleInterface(UiState::Buttons);
+}
+
+void GlobalNotification::cancelDownload() {
+    if (m_reply && m_reply->isRunning()) m_reply->abort();
+
+    if (m_progressAnim) m_progressAnim->stop();
+    m_hideTimer->stop();
+    setProgress(0.0);
+
+    toggleInterface(UiState::Buttons);
+    animateHeightChange();
+}
+
+void GlobalNotification::applySystemAccentColor() const {
+    const QSettings dwmSettings(R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\DWM)", QSettings::NativeFormat);
+    bool ok;
+    const unsigned int rgba = dwmSettings.value("AccentColor").toUInt(&ok);
+    if (ok) {
+        const QColor accent(rgba & 0xFF, (rgba >> 8) & 0xFF, (rgba >> 16) & 0xFF);
+        ui->progress_bar->setStyleSheet(
+            QString("QProgressBar::chunk { background-color: %1; border-radius: 2px; }").arg(accent.name()));
+    }
+}
+
 void GlobalNotification::startShowAnimation() {
     updateContentOnly();
     this->setFixedHeight(this->sizeHint().height());
@@ -260,220 +457,6 @@ void GlobalNotification::animateStackTransition(int nextIndex) {
     seq->addAnimation(exitGroup);
     seq->addAnimation(enterGroup);
     seq->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
-void GlobalNotification::mousePressEvent(QMouseEvent *event) {
-    if (event->button() == Qt::MiddleButton) startExitAnimation();
-    QWidget::mousePressEvent(event);
-}
-
-void GlobalNotification::paintEvent(QPaintEvent *event) {
-    QWidget::paintEvent(event);
-    if (m_progress <= 0.0) return;
-
-    QPainter p(this);
-    p.setRenderHint(QPainter::Antialiasing);
-
-    QRectF r = rect();
-    r.setWidth(r.width() * m_progress);
-
-    QLinearGradient grad(r.topLeft(), r.topRight());
-    grad.setColorAt(1.0, QColor(255, 255, 255, 0));
-    grad.setColorAt(0.98, QColor(255, 255, 255, 6));
-    grad.setColorAt(0.0, QColor(255, 255, 255, 3));
-
-    p.setPen(Qt::NoPen);
-    p.setBrush(grad);
-    p.drawRect(r);
-}
-
-bool GlobalNotification::event(QEvent *event) {
-    if (event->type() == QEvent::WindowActivate)
-        if (m_externalCloseBtn) m_externalCloseBtn->raise();
-    return QWidget::event(event);
-}
-
-void GlobalNotification::changeEvent(QEvent *event) {
-    if (event->type() == QEvent::LanguageChange) refreshTranslations();
-    QWidget::changeEvent(event);
-}
-
-void GlobalNotification::moveEvent(QMoveEvent *event) {
-    if (m_externalCloseBtn) m_externalCloseBtn->updatePosition();
-    QWidget::moveEvent(event);
-}
-
-void GlobalNotification::showEvent(QShowEvent *event) {
-    if (!this->property("shown").toBool()) {
-        this->setProperty("shown", true);
-
-        // Сначала считаем размеры
-        this->adjustSize();
-
-        // WinAPI Хак: "Промигиваем" окно для системы
-        // SWP_NOACTIVATE - не ворует фокус (важно!)
-        // SWP_SHOWWINDOW - форсирует регистрацию окна в DWM
-        const auto hwnd = reinterpret_cast<HWND>(this->winId());
-        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
-                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
-
-        // Запускаем анимацию
-        startShowAnimation();
-
-        QTimer::singleShot(100, this, [this]() {
-            // Это заставит Windows пересчитать, под каким окном находится мышь,
-            // и уберет спиннер, так как поток ответит на запрос.
-            PostMessage(reinterpret_cast<HWND>(this->winId()), WM_SETCURSOR, this->winId(), HTCLIENT);
-        });
-    }
-
-    if (m_externalCloseBtn) {
-        m_externalCloseBtn->show();
-        m_externalCloseBtn->updatePosition();
-        m_externalCloseBtn->raise();
-    }
-    QWidget::showEvent(event);
-}
-
-void GlobalNotification::enterEvent(QEnterEvent *event) {
-    // Если курсор зашел — убиваем таймер и сбрасываем полоску в ноль
-    if (m_hideTimer->isActive() || (m_progressAnim && m_progressAnim->state() == QAbstractAnimation::Running)) {
-        m_hideTimer->stop();
-        if (m_progressAnim) {
-            m_progressAnim->stop();
-            setProgress(0.0);
-        }
-    }
-    this->update();
-    QWidget::enterEvent(event);
-}
-
-void GlobalNotification::leaveEvent(QEvent *event) {
-    // Когда ушли — запускаем новый цикл отсчета с нуля
-    if (m_currentState == UiState::Finish || m_mode == UpToDate) startAutohideTimer();
-    QWidget::leaveEvent(event);
-}
-
-void GlobalNotification::hideEvent(QHideEvent *event) {
-    if (m_externalCloseBtn) m_externalCloseBtn->hide();
-    QWidget::hideEvent(event);
-}
-
-void GlobalNotification::closeEvent(QCloseEvent *event) {
-    if (m_externalCloseBtn) {
-        m_externalCloseBtn->hide();
-        m_externalCloseBtn->deleteLater();
-    }
-    QWidget::closeEvent(event);
-}
-
-void GlobalNotification::startFastDownload() {
-    QString fileName = QFileInfo(m_downloadUrl).fileName();
-    if (!fileName.endsWith(".exe", Qt::CaseInsensitive))
-        fileName = QString("%1.exe").arg(AppSettings::APP_NAME);
-
-    const QString path = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation) + "/" + fileName;
-    executeDownload(path);
-}
-
-void GlobalNotification::startCustomDownload() {
-    QString fileName = QFileInfo(m_downloadUrl).fileName();
-    if (!fileName.endsWith(".exe", Qt::CaseInsensitive))
-        fileName = QString("%1.exe").arg(AppSettings::APP_NAME);
-
-    if (const QString path = QFileDialog::getSaveFileName(
-        this, Lang::tr("NOTIFICATION_UPD_SAVE_FILE_TITLE"), fileName,
-        "Executable (*.exe)"); !path.isEmpty())
-        executeDownload(path);
-}
-
-void GlobalNotification::executeDownload(const QString &filePath) {
-    m_downloadPath = filePath;
-    ui->progress_bar->setValue(0);
-
-    toggleInterface(UiState::Progress);
-    ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_PROGRESS"));
-
-    if (m_file) {
-        m_file->close();
-        delete m_file;
-    }
-
-    m_file = new QFile(filePath);
-    if (!m_file->open(QIODevice::WriteOnly)) {
-        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_ERROR"));
-        toggleInterface(UiState::Buttons);
-        delete m_file;
-        m_file = nullptr;
-        return;
-    }
-
-    auto *manager = new QNetworkAccessManager(this);
-    m_reply = manager->get(QNetworkRequest(QUrl(m_downloadUrl))); //"https://api.github.coms/repos/%1/releases/latest"
-
-    connect(m_reply, &QNetworkReply::readyRead, this, [this]() {
-        if (m_file && m_reply && m_reply->error() == QNetworkReply::NoError)
-            m_file->write(m_reply->readAll());
-    });
-
-    connect(m_reply, &QNetworkReply::downloadProgress, this, [this](const qint64 rec, const qint64 total) {
-        if (total > 0) {
-            const int percent = static_cast<int>((rec * 100) / total);
-            ui->progress_bar->setValue(percent);
-        }
-    });
-
-    connect(m_reply, &QNetworkReply::finished, this, &GlobalNotification::onDownloadFinished);
-}
-
-void GlobalNotification::onDownloadFinished() {
-    if (!m_reply) return;
-
-    const bool isCanceled = (m_reply->error() == QNetworkReply::OperationCanceledError);
-    const bool hasError = (m_reply->error() != QNetworkReply::NoError && !isCanceled);
-
-    if (m_file) {
-        m_file->close();
-        if (hasError || isCanceled) m_file->remove();
-        delete m_file;
-        m_file = nullptr;
-    }
-
-    if (hasError) {
-        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_ERROR") + ": " + m_reply->errorString());
-        toggleInterface(UiState::Buttons);
-    } else if (!isCanceled) {
-        ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_COMPLETE"));
-        toggleInterface(UiState::Finish);
-        startAutohideTimer();
-    }
-
-    m_reply->deleteLater();
-    m_reply = nullptr;
-
-    if (isCanceled) toggleInterface(UiState::Buttons);
-}
-
-void GlobalNotification::cancelDownload() {
-    if (m_reply && m_reply->isRunning()) m_reply->abort();
-
-    if (m_progressAnim) m_progressAnim->stop();
-    m_hideTimer->stop();
-    setProgress(0.0);
-
-    toggleInterface(UiState::Buttons);
-    animateHeightChange();
-}
-
-void GlobalNotification::applySystemAccentColor() const {
-    const QSettings dwmSettings(R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\DWM)", QSettings::NativeFormat);
-    bool ok;
-    const unsigned int rgba = dwmSettings.value("AccentColor").toUInt(&ok);
-    if (ok) {
-        const QColor accent(rgba & 0xFF, (rgba >> 8) & 0xFF, (rgba >> 16) & 0xFF);
-        ui->progress_bar->setStyleSheet(
-            QString("QProgressBar::chunk { background-color: %1; border-radius: 2px; }").arg(accent.name()));
-    }
 }
 
 void GlobalNotification::moveToBottomRight() {

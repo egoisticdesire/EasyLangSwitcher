@@ -78,6 +78,10 @@ private:
     // Вспомогательные методы
     void addSelectorForFrame(QFrame *frame, const QString &extraStyle = QString());
 
+    [[nodiscard]] bool isManualCheckActive() const {
+        return m_syncRotationAnim && m_syncRotationAnim->state() == QAbstractAnimation::Running;
+    }
+
     void buildPresetMap();
 
     [[nodiscard]] int vkFromPresetObjectName(const QString &obj) const;

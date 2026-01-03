@@ -44,6 +44,8 @@ SettingsWindow::SettingsWindow(QWidget *parent) : QWidget(parent) {
     LOG_DEBUG() << "SettingsWindow initialized";
 }
 
+SettingsWindow::~SettingsWindow() = default;
+
 void SettingsWindow::initVisuals() {
     // Временно скрываем элементы
     ui.btn_exclusions_top_sider->hide();
@@ -364,24 +366,28 @@ void SettingsWindow::setUpdateManager(UpdateManager *manager) {
             [this, finishChecking](const QString &ver, const QString &url) {
                 finishChecking();
                 m_currentGlobalNotif = new GlobalNotification(GlobalNotification::UpdateAvailable, ver, url);
-                // Тут добавим логику позиционирования позже
                 m_currentGlobalNotif->show();
             });
 
     connect(updateManager, &UpdateManager::noUpdateAvailable, this, [this, finishChecking](const QString &ver) {
+        const bool isManual = isManualCheckActive();
         finishChecking();
+        if (!isManual) return;
+
         m_currentGlobalNotif = new GlobalNotification(GlobalNotification::UpToDate, ver, "");
         m_currentGlobalNotif->show();
     });
 
     connect(updateManager, &UpdateManager::updateError, this, [this, finishChecking](const QString &errorMsg) {
+        const bool isManual = isManualCheckActive();
         finishChecking();
-        InAppNotification::showFor(this, errorMsg, InAppNotification::Error);
+
+        if (isManual) InAppNotification::showFor(this, errorMsg, InAppNotification::Error);
         LOG_ERROR() << "Update error: " << errorMsg;
     });
 
     connect(ui.btn_upd_manually, &QPushButton::clicked, this, [this]() {
-        if (m_syncRotationAnim->state() != QAbstractAnimation::Running) {
+        if (!isManualCheckActive()) {
             m_syncRotationAnim->setLoopCount(-1);
             m_syncRotationAnim->start();
 
@@ -389,8 +395,6 @@ void SettingsWindow::setUpdateManager(UpdateManager *manager) {
         }
     });
 }
-
-SettingsWindow::~SettingsWindow() = default;
 
 void SettingsWindow::addSelectorForFrame(QFrame *frame, const QString &extraStyle) {
     if (!frame) return;

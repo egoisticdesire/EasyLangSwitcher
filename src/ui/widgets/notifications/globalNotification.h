@@ -90,7 +90,7 @@ private:
 
     void startAutohideTimer();
 
-    double progress() const {
+    [[nodiscard]] double progress() const {
         return m_progress;
     }
 
