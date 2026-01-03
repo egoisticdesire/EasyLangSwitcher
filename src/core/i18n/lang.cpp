@@ -87,6 +87,36 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                 QStringLiteral("Язык приложения"),
             });
         t.insert(
+            QStringLiteral("SETTINGS_APP_UPD_CHECK_LABEL"), {
+                QStringLiteral("Automatically check for updates"),
+                QStringLiteral("Автоматически проверять обновления"),
+            });
+        t.insert(
+            QStringLiteral("SETTINGS_TOOLTIP_CHECK_NOW"), {
+                QStringLiteral("Check for updates now"),
+                QStringLiteral("Проверить обновления сейчас"),
+            });
+        t.insert(
+            QStringLiteral("SETTINGS_APP_UPD_CHECK_NEVER"), {
+                QStringLiteral("Never"),
+                QStringLiteral("Никогда"),
+            });
+        t.insert(
+            QStringLiteral("SETTINGS_APP_UPD_CHECK_DAILY"), {
+                QStringLiteral("Daily"),
+                QStringLiteral("Ежедневно"),
+            });
+        t.insert(
+            QStringLiteral("SETTINGS_APP_UPD_CHECK_WEEKLY"), {
+                QStringLiteral("Weekly"),
+                QStringLiteral("Еженедельно"),
+            });
+        t.insert(
+            QStringLiteral("SETTINGS_APP_UPD_CHECK_MONTHLY"), {
+                QStringLiteral("Monthly"),
+                QStringLiteral("Ежемесячно"),
+            });
+        t.insert(
             QStringLiteral("SETTINGS_RESTORE_DEFAULT_LABEL"), {
                 QStringLiteral("Restore default settings"),
                 QStringLiteral("Восстановить настройки по умолчанию"),
@@ -130,6 +160,72 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
             QStringLiteral("SETTINGS_DISABLE_STARTUP_LABEL"), {
                 QStringLiteral("Disable"),
                 QStringLiteral("Выключить"),
+            });
+
+
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_BTN_DOWNLOAD"), {
+                QStringLiteral("  Download"),
+                QStringLiteral("  Загрузить"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_BTN_RELEASES"), {
+                QStringLiteral("  What's new"),
+                QStringLiteral("  Что нового"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_BTN_OPEN_FOLDER"), {
+                QStringLiteral("  Open folder"),
+                QStringLiteral("  Открыть папку"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_BTN_SAVE_AS_TOOLTIP"), {
+                QStringLiteral("Save to a specific location..."),
+                QStringLiteral("Сохранить в выбранную папку..."),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_SAVE_FILE_TITLE"), {
+                QStringLiteral("Save Installer"),
+                QStringLiteral("Сохранить файл установки"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_AVAILABLE_TITLE"), {
+                QStringLiteral("A new version of %1 is ready")
+                .arg(AppSettings::APP_NAME),
+                QStringLiteral("Доступна новая версия %1")
+                .arg(AppSettings::APP_NAME),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_AVAILABLE_DESC"), {
+                QStringLiteral("Download version %1 now or view the changes on the release page!"),
+                QStringLiteral("Загрузите версию %1 прямо сейчас или посмотрите список изменений в описании релиза!"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_NOT_AVAILABLE_TITLE"), {
+                QStringLiteral("The latest version of %1 is installed")
+                .arg(AppSettings::APP_NAME),
+                QStringLiteral("Уже установлена последняя версия %1")
+                .arg(AppSettings::APP_NAME),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_NOT_AVAILABLE_DESC"), {
+                QStringLiteral("The current version %1 is the latest, nothing needs to be updated!"),
+                QStringLiteral("Версия %1 — самая свежая, обновлений не требуется!"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_DOWNLOAD_COMPLETE"), {
+                QStringLiteral("Download completed successfully!"),
+                QStringLiteral("Загрузка успешно завершена!"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_DOWNLOAD_PROGRESS"), {
+                QStringLiteral("Downloading update..."),
+                QStringLiteral("Загрузка обновления..."),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_DOWNLOAD_ERROR"), {
+                QStringLiteral("Failed to download update"),
+                QStringLiteral("Не удалось загрузить обновление"),
             });
 
 
@@ -352,14 +448,10 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     </ul>
                     </body></html>
             )")
-                .arg("font-family: 'Inter', 'Segoe UI', sans-serif;")
-                .arg("padding-top: 12px;")
-                .arg("line-height: 1.2;")
+                .arg("font-family: 'Inter', 'Segoe UI', sans-serif;", "padding-top: 12px;", "line-height: 1.2;")
                 .arg(FontManager::Small().pixelSize())
                 .arg(FontManager::Default().pixelSize())
-                .arg("color:rgba(255, 255, 255, 175);")
-                .arg("color:rgba(255, 255, 255, 200);")
-                .arg("font-weight: 600;"),
+                .arg("color:rgba(255, 255, 255, 175);", "color:rgba(255, 255, 255, 200);", "font-weight: 600;"),
                 QString::fromUtf8(R"(
                     <html><head/><body style="%1 margin: 0; padding: 0;">
                     <div style="%1 %3 font-size: %5pt;">
@@ -385,14 +477,10 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     </ul>
                     </body></html>
             )")
-                .arg("font-family: 'Inter', 'Segoe UI', sans-serif;")
-                .arg("padding-top: 12px;")
-                .arg("line-height: 1.2;")
+                .arg("font-family: 'Inter', 'Segoe UI', sans-serif;", "padding-top: 12px;", "line-height: 1.2;")
                 .arg(FontManager::Small().pixelSize())
                 .arg(FontManager::Default().pixelSize())
-                .arg("color:rgba(255, 255, 255, 175);")
-                .arg("color:rgba(255, 255, 255, 200);")
-                .arg("font-weight: 600;"),
+                .arg("color:rgba(255, 255, 255, 175);", "color:rgba(255, 255, 255, 200);", "font-weight: 600;"),
             });
 
         t.insert(
@@ -400,7 +488,7 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                 QString::fromUtf8(R"(
                     <html><head/><body>
                     <p align="justify">
-                    <span style=" font-weight:700;">EasyLangSwitcher</span> is a simple and lightweight Windows application that allows you to switch keyboard layouts using <span style=" font-weight:700;">a single key</span>. Switching cycles through all languages added in the system:
+                    <span style=" font-weight:700;">%1</span> is a simple and lightweight Windows application that allows you to switch keyboard layouts using <span style=" font-weight:700;">a single key</span>. Switching cycles through all languages added in the system:
                     </p>
                     <ul style="margin: 0; -qt-list-indent: 1;">
                     <li align="justify" style="margin: 12px 0;">
@@ -428,11 +516,12 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     <span style=" font-weight:700;">The idea behind the app</span> came from personal experience: a dedicated key on the <span style=" font-weight:700;">MacBook</span>, features of <span style=" font-weight:700;">BetterTouchTool</span>, and the visual layout indicator from <span style=" font-weight:700;">Input Source Pro</span> inspired the creation of this solution for Windows.
                     </p>
                     </body></html>
-            )"),
+            )")
+                .arg(AppSettings::APP_NAME),
                 QString::fromUtf8(R"(
                     <html><head/><body>
                     <p align="justify">
-                    <span style=" font-weight:700;">EasyLangSwitcher</span> — простое и лёгкое приложение для Windows, которое позволяет переключать раскладку клавиатуры <span style=" font-weight:700;">одной клавишей</span>. Переключение происходит циклично по всем языкам, добавленным в системе:
+                    <span style=" font-weight:700;">%1</span> — простое и лёгкое приложение для Windows, которое позволяет переключать раскладку клавиатуры <span style=" font-weight:700;">одной клавишей</span>. Переключение происходит циклично по всем языкам, добавленным в системе:
                     </p>
                     <ul style="margin: 0; -qt-list-indent: 1;">
                     <li align="justify" style="margin: 12px 0;">
@@ -460,7 +549,8 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     <span style=" font-weight:700;">Идея приложения</span> возникла из личного опыта: удобная отдельная клавиша на <span style=" font-weight:700;">MacBook</span>, возможности <span style=" font-weight:700;">BetterTouchTool</span> и индикация из <span style=" font-weight:700;">Input Source Pro</span> вдохновили на создание этого решения для Windows.
                     </p>
                     </body></html>
-            )"),
+            )")
+                .arg(AppSettings::APP_NAME),
             });
 
         t.insert(

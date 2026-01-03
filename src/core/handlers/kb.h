@@ -3,11 +3,6 @@
 #include <QTimer>
 #include <Windows.h>
 
-/*
-KeyboardHandler
-— обработчик нажатий клавиш
-*/
-
 class KeyboardHandler final : public QObject {
     Q_OBJECT
 

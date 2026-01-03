@@ -21,9 +21,9 @@ public:
 
     void animateToCurrentState();
 
-    QFrame *boundFrame() const;
+    [[nodiscard]] QFrame *boundFrame() const;
 
-    QFrame *indicator() const { return m_indicator; }
+    [[nodiscard]] QFrame *indicator() const { return m_indicator; }
 
 private:
     QFrame *m_indicator = nullptr;

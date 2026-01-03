@@ -150,12 +150,12 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
         constexpr double yOffsetFactor = 0.33;
         center.setY(center.y() - delta.y() * yOffsetFactor * std::sin(t * M_PI));
 
-        // ----- Коэффициенты -----
+        // Коэффициенты
         constexpr double squashMidX = 0.6; // Сжатие по X
         constexpr double squashMidY = 0.6; // Сжатие по Y
         constexpr double stretchMidX = 0.8; // Растяжение по X
         constexpr double stretchMidY = 0.6; // Растяжение по Y
-        // ------------------------------------
+        // ---------------
 
         const double sinTerm = std::sin(t * M_PI);
         const double arcTerm = (1.0 - std::abs(2.0 * t - 1.0));
@@ -291,12 +291,12 @@ void AnimatedSelector::animateToCustomEdit() {
                 const double baseW = startGeom.width() + (frameGeom.width() - startGeom.width()) * smoothT;
                 const double baseH = startGeom.height() + (frameGeom.height() - startGeom.height()) * smoothT;
 
-                // ----- Коэффициенты -----
+                // Коэффициенты
                 constexpr double squashMidX = 0.125; // сжатие по X
                 constexpr double squashMidY = 0.15; // сжатие по Y
                 constexpr double stretchMidX = 0.275; // растяжение по X
                 constexpr double stretchMidY = 0.2; // растяжение по Y
-                // --------------------------------------------------
+                // ---------------
 
                 // Независимые squash
                 const double squashX = 1.0 - (1.0 - squashMidX) * sinTerm;

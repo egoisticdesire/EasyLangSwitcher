@@ -1,6 +1,4 @@
 #pragma once
-
-#include <QString>
 #include <QHash>
 
 class TranslationEntry {

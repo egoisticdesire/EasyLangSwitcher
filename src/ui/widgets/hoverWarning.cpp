@@ -2,54 +2,34 @@
 #include "../helpers/acrylicHelper.h"
 #include <QScreen>
 #include <QTimer>
+#include <QTextDocument>
+#include <QtMath>
 
 KeyHoverWarning::KeyHoverWarning(QWidget *owner)
-    : QWidget(owner), owner(owner) {
+    : QWidget(nullptr), owner(owner) {
     ui.setupUi(this);
 
-    QTimer::singleShot(0, this, [this] { AcrylicHelper::enableAcrylic(this); });
-
-    m_content = ui.background_frame ? ui.background_frame : static_cast<QWidget *>(this);
-
-    setFixedWidth(380);
-
-    setWindowFlags(Qt::Tool
-                   | Qt::FramelessWindowHint
-                   | Qt::WindowDoesNotAcceptFocus
-                   | Qt::BypassWindowManagerHint);
-
+    setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setFocusPolicy(Qt::NoFocus);
 
-    fx = new QGraphicsOpacityEffect(this);
-    fx->setOpacity(0.0);
-    setGraphicsEffect(fx);
+    m_content = ui.background_frame ? ui.background_frame : static_cast<QWidget *>(this);
+    setFixedWidth(380);
 
-    animOpacity = new QPropertyAnimation(fx, "opacity", this);
-    animOpacity->setDuration(160);
-    animOpacity->setStartValue(0.0);
-    animOpacity->setEndValue(1.0);
+    QTimer::singleShot(0, this, [this] { AcrylicHelper::enableAcrylic(this); });
 
-    animPos = new QPropertyAnimation(this, "pos", this);
-    animPos->setDuration(180);
-    animPos->setEasingCurve(QEasingCurve::OutCubic);
+    // Инициализируем только группы
+    animGroupIn = new QParallelAnimationGroup(this);
+    animGroupOut = new QParallelAnimationGroup(this);
 
-    animOpacityOut = new QPropertyAnimation(fx, "opacity", this);
-    animOpacityOut->setDuration(140);
-    animOpacityOut->setStartValue(1.0);
-    animOpacityOut->setEndValue(0.0);
-
-    animPosOut = new QPropertyAnimation(this, "pos", this);
-    animPosOut->setDuration(160);
-    animPosOut->setEasingCurve(QEasingCurve::InCubic);
-
-    connect(animOpacityOut, &QPropertyAnimation::finished, this, [this] {
-        hide();
-        m_visible = false;
+    connect(animGroupOut, &QParallelAnimationGroup::finished, this, [this] {
+        if (m_isClosing) {
+            hide();
+            m_visible = false;
+        }
     });
 
-    // Устанавливаем фильтр событий на родителя
     if (owner) {
         owner->installEventFilter(this);
     }
@@ -65,19 +45,16 @@ bool KeyHoverWarning::eventFilter(QObject *obj, QEvent *event) {
 }
 
 void KeyHoverWarning::hideImmediately() {
-    animOpacity->stop();
-    animPos->stop();
-    animOpacityOut->stop();
-    animPosOut->stop();
-
+    animGroupIn->stop();
+    animGroupOut->stop();
     hide();
     m_visible = false;
+    m_isClosing = false;
 }
 
 void KeyHoverWarning::setText(const QString &text) {
     ui.label_warning->setText(text);
     ui.label_warning->setWordWrap(true);
-    ui.label_warning->setMargin(0);
 
     auto *layout = m_content->layout();
     if (!layout) return;
@@ -86,65 +63,97 @@ void KeyHoverWarning::setText(const QString &text) {
     layout->setContentsMargins(margins);
     layout->setSpacing(0);
 
-    // Вычисления высоты
     QTextDocument doc;
     doc.setDefaultFont(ui.label_warning->font());
     doc.setHtml(text);
     doc.setDocumentMargin(0);
-
-    const int textWidth = width() - margins.left() - margins.right();
-    doc.setTextWidth(textWidth);
+    doc.setTextWidth(width() - margins.left() - margins.right());
 
     const QFontMetricsF fm(ui.label_warning->font());
     const int textHeight = qCeil(doc.size().height() + fm.descent());
 
     constexpr int extraPadding = 3;
-    const int newHeight = textHeight + margins.top() + margins.bottom() + extraPadding;
-
-    setFixedHeight(newHeight);
+    setFixedHeight(textHeight + margins.top() + margins.bottom() + extraPadding);
 
     AcrylicHelper::updateRegion(this);
-
-    this->repaint();
 }
 
 void KeyHoverWarning::showNear(const QWidget *anchor) {
     if (!anchor || m_visible) return;
-    m_visible = true;
 
-    const QPoint endPos =
-            anchor->mapToGlobal(QPoint(anchor->width() + 12, 0));
+    animGroupIn->stop();
+    animGroupIn->clear();
+    animGroupOut->stop();
+
+    m_visible = true;
+    m_isClosing = false;
+
+    const QPoint endPos = anchor->mapToGlobal(QPoint(anchor->width() + 12, 0));
     const QPoint startPos = endPos - QPoint(12, 0);
 
-    animOpacity->stop();
-    animPos->stop();
-    animOpacityOut->stop();
-    animPosOut->stop();
+    // Анимация позиции с поддержкой Акрила
+    auto *posAnim = new QVariantAnimation(this);
+    posAnim->setDuration(200);
+    posAnim->setStartValue(startPos);
+    posAnim->setEndValue(endPos);
+    posAnim->setEasingCurve(QEasingCurve::OutBack);
 
-    move(startPos);
-    fx->setOpacity(0.0);
-    show();
-    raise();
+    connect(posAnim, &QVariantAnimation::valueChanged, this, [this](const QVariant &v) {
+        this->move(v.toPoint());
+        AcrylicHelper::updateRegion(this);
+    });
 
-    animPos->setStartValue(startPos);
-    animPos->setEndValue(endPos);
+    // Анимация прозрачности
+    auto *opacityAnim = new QPropertyAnimation(this, "windowOpacity", this);
+    opacityAnim->setDuration(140);
+    opacityAnim->setStartValue(0.0);
+    opacityAnim->setEndValue(1.0);
+    opacityAnim->setEasingCurve(QEasingCurve::OutCubic);
 
-    animOpacity->start();
-    animPos->start();
+    animGroupIn->addAnimation(posAnim);
+    animGroupIn->addAnimation(opacityAnim);
+
+    // Правильный порядок появления
+    this->move(startPos);
+    this->setWindowOpacity(0.0);
+    this->show();
+
+    AcrylicHelper::updateRegion(this);
+
+    animGroupIn->start();
 }
 
-void KeyHoverWarning::hideNow() const {
-    if (!m_visible) return;
+void KeyHoverWarning::hideNow() {
+    if (!m_visible || m_isClosing) return;
 
-    animOpacity->stop();
-    animPos->stop();
+    animGroupIn->stop();
+    animGroupOut->stop();
+    animGroupOut->clear();
+
+    m_isClosing = true;
 
     const QPoint startPos = pos();
     const QPoint endPos = startPos - QPoint(12, 0);
 
-    animPosOut->setStartValue(startPos);
-    animPosOut->setEndValue(endPos);
+    auto *posAnim = new QVariantAnimation(this);
+    posAnim->setDuration(180);
+    posAnim->setStartValue(startPos);
+    posAnim->setEndValue(endPos);
+    posAnim->setEasingCurve(QEasingCurve::InBack);
 
-    animOpacityOut->start();
-    animPosOut->start();
+    connect(posAnim, &QVariantAnimation::valueChanged, this, [this](const QVariant &v) {
+        this->move(v.toPoint());
+        AcrylicHelper::updateRegion(this);
+    });
+
+    auto *opacityAnim = new QPropertyAnimation(this, "windowOpacity", this);
+    opacityAnim->setDuration(140);
+    opacityAnim->setStartValue(this->windowOpacity());
+    opacityAnim->setEndValue(0.0);
+    opacityAnim->setEasingCurve(QEasingCurve::InCubic);
+
+    animGroupOut->addAnimation(posAnim);
+    animGroupOut->addAnimation(opacityAnim);
+
+    animGroupOut->start();
 }

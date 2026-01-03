@@ -1,17 +1,17 @@
 #pragma once
 #include <QSettings>
 #include <QString>
-
-/*
-AppSettings
-— централизованное хранение настроек (runtime + defaults)
-*/
+#include <QDate>
 
 class AppSettings {
 public:
     static constexpr auto APP_NAME = "EasyLangSwitcher";
 
     static void logger(const QString &action);
+
+    enum class UpdateFrequency { Never, Daily, Weekly, Monthly };
+
+    static QString updateFrequencyToString(UpdateFrequency value, bool localized = true);
 
     static void load();
 
@@ -44,6 +44,16 @@ public:
     static QString appLang;
 
     static QString defaultAppLang;
+
+    static UpdateFrequency defaultUpdateFrequency;
+
+    static UpdateFrequency updateFrequency;
+
+    static QDate lastUpdateCheckDate;
+
+    static QDate defaultLastUpdateCheckDate;
+
+    static constexpr auto GITHUB_REPO = "egoisticdesire/EasyLangSwitcher";
 
 private:
     static inline QSettings settings{APP_NAME, APP_NAME};

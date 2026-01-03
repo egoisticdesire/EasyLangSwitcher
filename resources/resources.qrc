@@ -1,5 +1,14 @@
 <RCC>
   <qresource prefix="icons">
+    <file>icons/FolderSearchRegular.svg</file>
+    <file>icons/CancelRounded.svg</file>
+    <file>icons/DismissCircleFilled.svg</file>
+    <file>icons/DownloadOffFilled.svg</file>
+    <file>icons/OpenRegular.svg</file>
+    <file>icons/DownloadFilled.svg</file>
+    <file>icons/MoreFilled.svg</file>
+    <file>icons/OpenFilled.svg</file>
+    <file>icons/SyncFilled.svg</file>
     <file>icons/checked.svg</file>
     <file>icons/CaretDownFilledDark.svg</file>
     <file>icons/CaretDownFilledLight.svg</file>

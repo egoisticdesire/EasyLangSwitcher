@@ -8,15 +8,6 @@
 #include <QKeyEvent>
 #include <utility>
 
-/*
-KeySequenceHelper:
-— блокирует модификаторы в отображаемой последовательности (оставляет только основную клавишу)
-— эмитирует signal hotkeySelected(mainVk, modifiersMask, name)
-— при очистке эмитит (0,0,"")
-— защищён от рекурсивных setKeySequence и дублей
-— восстанавливает кастомный placeholder даже при смене фокуса
-*/
-
 class KeySequenceHelper final : public QObject {
     Q_OBJECT
 
@@ -94,12 +85,8 @@ public:
 
             // обрезать модификаторы и извлечь первый элемент
             const QKeyCombination raw = seq[0];
-            const int baseKey = raw.key() & ~(
-                                    Qt::ShiftModifier
-                                    | Qt::ControlModifier
-                                    | Qt::AltModifier
-                                    | Qt::MetaModifier
-                                );
+            const int baseKey = raw.key() &
+                                ~(Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier);
 
             if (blockedKeys.contains(baseKey)) {
                 const int vk = VkMapper::sequenceToVk(QKeySequence(baseKey));
@@ -191,7 +178,7 @@ protected:
                 const auto *ke = dynamic_cast<QKeyEvent *>(ev);
 
 #ifdef _WIN32
-                const int sc = (ke->nativeScanCode() & 0xFF);
+                const int sc = static_cast<int>(ke->nativeScanCode() & 0xFF);
 
                 if (const int qtLatin = VkMapper::scanCodeToQtKey(sc); qtLatin != 0) {
                     m_internalUpdate = true;

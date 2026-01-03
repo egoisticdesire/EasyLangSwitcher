@@ -2,19 +2,17 @@
 #include "ui_EasyLangSwitcher_settings.h"
 #include "hoverWarning.h"
 #include "animatedSelector.h"
+#include "notifications/globalNotification.h"
+#include "customToolTip.h"
+#include "updateManager.h"
+#include "updFrequencyPopup.h"
 #include "windowDragger.h"
 #include <QVector>
 #include <QTimer>
+#include <QGraphicsDropShadowEffect>
 
-/*
-SettingsWindow
-— управление выбором клавишей-триггером
-— автосохранение (1s) при реальных изменениях
-— восстановление предыдущего preset при очистке input-поля
-— единый маппинг preset кнопок
-*/
 class KeySequenceHelper;
-class SaveNotification;
+class InAppNotification;
 
 class SettingsWindow final : public QWidget {
     Q_OBJECT
@@ -25,6 +23,8 @@ public:
     ~SettingsWindow() override;
 
     void openCentered();
+
+    void setUpdateManager(UpdateManager *manager);
 
 signals:
     void settingsChanged();
@@ -40,38 +40,51 @@ protected:
 
     bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override;
 
+    void hideEvent(QHideEvent *event) override;
+
 private:
+    // UI и компоненты
     Ui::settings_main_widget ui{};
-
     KeySequenceHelper *m_keyHelper = nullptr;
-
-    SaveNotification *saveNotif = nullptr;
-
+    InAppNotification *inAppNotif = nullptr;
     QVector<AnimatedSelector *> selectors;
-
     WindowDragger *dragger = nullptr;
-
     KeyHoverWarning *keyHoverWarning = nullptr;
+    UpdFrequencyPopup *updPopup = nullptr;
+    CustomToolTip *updateBtnToolTip = nullptr;
+    UpdateManager *updateManager = nullptr;
+    QGraphicsDropShadowEffect *m_shadow = nullptr;
+    QPointer<GlobalNotification> m_currentGlobalNotif;
+    QVariantAnimation* m_syncRotationAnim = nullptr;
+    void updateSyncIconRotation(int angle) const;
+    void stopSyncAnimation() const;
 
+    // Логика и состояние
     QTimer autosaveTimer;
-
-    QGraphicsDropShadowEffect *m_shadow;
-
     static constexpr int autosaveIntervalMs = 1000;
-
     bool hasPendingChanges = false;
 
     int previousPresetVk = 0;
-
     QString previousPresetName;
-
     QHash<QString, int> presetMap;
 
+    // Методы инициализации
+    void initVisuals(); // Иконки, тени, драггер, скрытие лишнего
+    void initHotkeyLogic(); // PresetMap, KeySequenceHelper и кнопки клавиш
+    void initUpdateLogic(); // Тултипы, попапы частоты обновлений
+    void initLanguageAndStartup(); // Кнопки языка и автозагрузки
+    void initAutosaveLogic(); // Коннекты таймера и логика сохранения
+
+    // Вспомогательные методы
     void addSelectorForFrame(QFrame *frame, const QString &extraStyle = QString());
+
+    [[nodiscard]] bool isManualCheckActive() const {
+        return m_syncRotationAnim && m_syncRotationAnim->state() == QAbstractAnimation::Running;
+    }
 
     void buildPresetMap();
 
-    int vkFromPresetObjectName(const QString &obj) const;
+    [[nodiscard]] int vkFromPresetObjectName(const QString &obj) const;
 
     static QString nameFromVk(int vk);
 

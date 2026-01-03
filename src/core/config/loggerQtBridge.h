@@ -10,7 +10,8 @@ public:
 
 private:
     static void messageHandler(const QtMsgType type, const QMessageLogContext &context, const QString &msg) {
-        Logger::Level lvl = {};
+        auto lvl = Logger::Level::DEBUG;
+
         switch (type) {
             case QtDebugMsg: lvl = Logger::Level::DEBUG;
                 break;
@@ -23,9 +24,13 @@ private:
                 break;
         }
 
+        if (!Logger::_debug && lvl == Logger::Level::DEBUG) return;
+
         // Можно фильтровать конкретную категорию, если нужно
         // if (QString(context.category) != "qt.multimedia.ffmpeg") return;
 
-        Logger(context.file, context.function, context.line, lvl) << msg;
+        Logger(context.file ? context.file : "",
+               context.function ? context.function : "",
+               context.line, lvl) << msg;
     }
 };

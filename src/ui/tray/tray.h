@@ -1,20 +1,22 @@
 #pragma once
 #include "ui_EasyLangSwitcher_tray.h"
 #include "../widgets/settingsWindow.h"
+#include "../widgets/updateManager.h"
+#include <QWidget>
 #include <QSystemTrayIcon>
+#include <QParallelAnimationGroup>
 #include <QPropertyAnimation>
 #include <QSoundEffect>
-
-/*
-TrayManager
-— менеджер трея
-*/
+#include <QTimer>
 
 class TrayManager final : public QWidget {
     Q_OBJECT
+    Q_PROPERTY(QPoint pos READ pos WRITE move)
 
 public:
     explicit TrayManager(QWidget *parent = nullptr);
+
+    ~TrayManager() override;
 
     void showAtCursor();
 
@@ -31,29 +33,36 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
-    Ui::tray_main_widget ui{};
-
-    QSystemTrayIcon trayIcon;
-
-    SettingsWindow *settingsWindow = nullptr;
-
-    bool enabled = true;
-
-    QPropertyAnimation *fadeIn = nullptr;
-    QPropertyAnimation *fadeOut = nullptr;
-
-    QSoundEffect *audioEffectOn = nullptr;
-    QSoundEffect *audioEffectOff = nullptr;
-
-    void updateTrayIcon();
+    void setupAnimations();
 
     void setupTrayIcon();
 
     void setupUiBehavior();
 
+    void updateTrayIcon();
+
     void updateInfo() const;
+
+    void openSettings() const;
+
+    void hideAnimated() const;
 
     void animateToggleButton();
 
-    void hideAnimated() const;
+    Ui::tray_main_widget ui{};
+    QSystemTrayIcon trayIcon;
+    SettingsWindow *settingsWindow = nullptr;
+    UpdateManager *updateManager = nullptr;
+
+    bool enabled = true;
+    mutable bool m_isClosing = false;
+
+    QParallelAnimationGroup *showGroup = nullptr;
+    QPropertyAnimation *fadeIn = nullptr;
+    QPropertyAnimation *posAnim = nullptr;
+    QPropertyAnimation *fadeOut = nullptr;
+
+    QSoundEffect *audioEffectOn = nullptr;
+    QSoundEffect *audioEffectOff = nullptr;
+    QTimer *clickTimer = nullptr;
 };

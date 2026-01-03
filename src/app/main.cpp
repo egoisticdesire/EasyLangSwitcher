@@ -12,6 +12,10 @@
 #include <fcntl.h>
 #include <io.h>
 
+#ifndef APP_VERSION
+#define APP_VERSION "1.0.0"
+#endif
+
 int main(int argc, char *argv[]) {
     Logger::_debug = false;
 
@@ -23,10 +27,14 @@ int main(int argc, char *argv[]) {
 
     QApplication app(argc, argv);
     QApplication::setStyle("Windows11");
+    QApplication::setApplicationVersion(APP_VERSION);
+    // QApplication::setApplicationVersion("1.1.1");
 
     FontManager::init(app);
 
     AppSettings::load();
+    // для тестов
+    // AppSettings::lastUpdateCheckDate = QDate::currentDate().addDays(-7);
 
     // Проверка на уже запущенный экземпляр
     const QString mutexName = QString("MyUnique%1Mutex").arg(AppSettings::APP_NAME);

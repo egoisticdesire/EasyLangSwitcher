@@ -2,9 +2,15 @@
 #include <QHash>
 #include <QKeySequence>
 
-/*
-Модуль для конвертации Virtual-Key ↔ человекочитаемое имя.
-*/
+#ifdef Q_OS_WIN
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
 
 namespace VkMapper {
     inline int scanCodeToLatinVk(const int sc) {
@@ -190,11 +196,11 @@ namespace VkMapper {
 
         // A–Z
         if (vk >= 'A' && vk <= 'Z')
-            return QString(QChar(vk));
+            return {QChar(vk)};
 
         // Цифры 0–9
         if (vk >= '0' && vk <= '9')
-            return QString(QChar(vk));
+            return {QChar(vk)};
 
         // OEM-символы → используем OS-маппинг Qt
         const QKeySequence seq(vk);
@@ -213,10 +219,10 @@ namespace VkMapper {
                 reverse[it.value()] = it.key();
 
             for (char c = 'A'; c <= 'Z'; c++)
-                reverse[QString(c)] = c;
+                reverse[QString(c)] = static_cast<unsigned char>(c);
 
             for (char c = '0'; c <= '9'; c++)
-                reverse[QString(c)] = c;
+                reverse[QString(c)] = static_cast<unsigned char>(c);
         }
 
         return reverse;
@@ -242,8 +248,7 @@ namespace VkMapper {
 
 
         // Если это функциональная или спец-клавиша — сопоставление вручную
-        const QKeySequence ks = seq;
-        const QString text = ks.toString(QKeySequence::NativeText);
+        const QString text = seq.toString(QKeySequence::NativeText);
 
         return nameToVk(text);
     }
