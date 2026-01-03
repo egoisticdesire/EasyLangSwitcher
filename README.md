@@ -21,12 +21,14 @@ Now with more flexible options:
       Lock on/off.
 - App language selection (English / Russian).
 - Auto-start on Windows login.
+- Configurable automatic update checks with built-in update notification window.
 
 ## System Tray Controls
 
 The application starts in the system tray and provides easy actions:
 
 - **Left Click** — toggle on/off (enabled by default)
+- **Double Left Click** — open application settings
 - **Right Click** — open the menu with current configuration details
 
 ## About
