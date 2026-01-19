@@ -17,6 +17,8 @@ public:
 
     static void save();
 
+    static bool isDirty();
+
     static void reset();
 
     static bool autoStartup;
