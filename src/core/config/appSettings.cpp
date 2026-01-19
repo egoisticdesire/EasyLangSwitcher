@@ -96,6 +96,21 @@ void AppSettings::save() {
     logger("Saved");
 }
 
+bool AppSettings::isDirty() {
+    // Сравниваем каждое значение с тем, что сейчас в реестре
+    if (settings.value("hotkey/main_vk", defaultHotkeyMainVk).toInt() != hotkeyMainVk) return true;
+    if (settings.value("hotkey/mods", defaultHotkeyModifiers).toInt() != hotkeyModifiers) return true;
+    if (settings.value("hotkey/name", defaultHotkeyName).toString() != hotkeyName) return true;
+    if (settings.value("delay", defaultSwitchDelayMs).toInt() != switchDelayMs) return true;
+    if (settings.value("auto_startup", autoStartup).toBool() != autoStartup) return true;
+    if (settings.value("app/lang", defaultAppLang).toString() != appLang) return true;
+    if (static_cast<UpdateFrequency>(settings.value("updates/frequency",
+        static_cast<int>(defaultUpdateFrequency)).toInt()) != updateFrequency) return true;
+
+    // Если ничего не подошло
+    return false;
+}
+
 void AppSettings::reset() {
     hotkeyMainVk = defaultHotkeyMainVk;
     hotkeyModifiers = defaultHotkeyModifiers;

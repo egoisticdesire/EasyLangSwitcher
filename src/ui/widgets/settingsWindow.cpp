@@ -276,12 +276,25 @@ void SettingsWindow::initAutosaveLogic() {
     LOG_DEBUG() << "Autosave timer configured, interval=" << autosaveIntervalMs;
 
     connect(&autosaveTimer, &QTimer::timeout, this, [this]() {
-        if (ui.btn_en_lang->isChecked()) AppSettings::appLang = "en";
-        else if (ui.btn_ru_lang->isChecked()) AppSettings::appLang = "ru";
+        // Обновляем временные переменные из UI, которые не обновляются мгновенно
+        const QString pendingLang = ui.btn_en_lang->isChecked() ? "en" : "ru";
 
+        // Временно присваиваем, чтобы проверить dirty-статус
+        const QString oldLang = AppSettings::appLang;
+        AppSettings::appLang = pendingLang;
+
+        // Проверяем, есть ли реальные отличия от сохраненного файла
+        if (!AppSettings::isDirty()) {
+            AppSettings::appLang = oldLang;
+            hasPendingChanges = false;
+            LOG_DEBUG() << "Autosave skipped: no actual changes compared to disk";
+            return;
+        }
+
+        // Если изменения есть — сохраняем
         AppSettings::save();
         hasPendingChanges = false;
-        LOG_DEBUG() << "Autosave successfully";
+        LOG_DEBUG() << "Autosave successfully performed";
         emit settingsSaved();
     });
 
@@ -338,15 +351,32 @@ void SettingsWindow::applyHotkeyIfChanged(const int newVk, const QString &newNam
 }
 
 void SettingsWindow::markChanged() {
-    if (!hasPendingChanges) {
-        hasPendingChanges = true;
-        autosaveTimer.start();
-        LOG_DEBUG() << "Marked changed, autosave scheduled in " << autosaveIntervalMs / 1000 << " sec";
-        emit settingsChanged();
-    } else {
-        autosaveTimer.start();
-        LOG_DEBUG() << "Change already pending - timer restarted";
+    // Если пользователь вернул настройки в исходное состояние (до сохранения)
+    // нам нужно проверить, "грязные" ли данные сейчас.
+    // Но для языка мы берем значение прямо из UI, так как AppSettings::appLang
+    // обновляется только в момент срабатывания таймера
+
+    // Временный замер для точной проверки
+    const QString currentUILang = ui.btn_en_lang->isChecked() ? "en" : "ru";
+    const QString backupLang = AppSettings::appLang;
+    AppSettings::appLang = currentUILang;
+
+    if (!AppSettings::isDirty()) {
+        if (hasPendingChanges) {
+            autosaveTimer.stop();
+            hasPendingChanges = false;
+            LOG_DEBUG() << "Changes reverted to original, timer stopped";
+        }
+        AppSettings::appLang = backupLang;
+        return;
     }
+
+    AppSettings::appLang = backupLang;
+
+    // Стандартная логика запуска таймера
+    hasPendingChanges = true;
+    autosaveTimer.start();
+    LOG_DEBUG() << "Marked changed, autosave scheduled";
 }
 
 void SettingsWindow::setUpdateManager(UpdateManager *manager) {
