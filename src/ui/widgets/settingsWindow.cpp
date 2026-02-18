@@ -498,7 +498,7 @@ bool SettingsWindow::nativeEvent(const QByteArray &eventType, void *message, qin
 
 void SettingsWindow::hideEvent(QHideEvent *event) {
     QWidget::hideEvent(event);
-    if (updateBtnToolTip || !InAppNotification::stack.isEmpty()) updateBtnToolTip->hide();
+    if (updateBtnToolTip) updateBtnToolTip->hide();
     if (keyHoverWarning) keyHoverWarning->hideNow();
     if (updPopup) updPopup->hide();
 }

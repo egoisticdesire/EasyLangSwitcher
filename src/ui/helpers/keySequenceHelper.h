@@ -6,6 +6,7 @@
 #include <QToolButton>
 #include <QLineEdit>
 #include <QKeyEvent>
+#include <QTimer>
 #include <utility>
 
 class KeySequenceHelper final : public QObject {
@@ -21,9 +22,10 @@ public:
     ) : QObject(parent), m_placeholder(std::move(placeholder)) {
         LOG_DEBUG() << "KeySequenceHelper initialized";
 
+        if (!root) return;
         m_edit = root->findChild<QKeySequenceEdit *>(objectName);
-        m_edit->setStyleSheet("color: rgba(255, 255, 255, 225);");
         if (!m_edit) return;
+        m_edit->setStyleSheet("color: rgba(255, 255, 255, 225);");
 
         m_edit->setClearButtonEnabled(false);
 
@@ -174,8 +176,10 @@ signals:
 protected:
     bool eventFilter(QObject *w, QEvent *ev) override {
         if (w == m_edit || w == m_lineEdit) {
+            if (!m_edit) return QObject::eventFilter(w, ev);
             if (ev->type() == QEvent::KeyPress) {
                 const auto *ke = dynamic_cast<QKeyEvent *>(ev);
+                if (!ke) return QObject::eventFilter(w, ev);
 
 #ifdef _WIN32
                 const int sc = static_cast<int>(ke->nativeScanCode() & 0xFF);

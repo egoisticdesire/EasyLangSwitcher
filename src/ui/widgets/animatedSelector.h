@@ -1,7 +1,7 @@
 #pragma once
 #include <QButtonGroup>
 #include <QPropertyAnimation>
-#include <QGraphicsOpacityEffect>
+#include <QGraphicsDropShadowEffect>
 #include <QLineEdit>
 #include <QWidget>
 #include <QFrame>
@@ -32,7 +32,7 @@ private:
 
     QButtonGroup *m_group = nullptr;
 
-    QLineEdit *m_customEdit = nullptr;
+    QPointer<QLineEdit> m_customEdit;
 
     QWidget *m_parent = nullptr;
 
@@ -42,8 +42,6 @@ private:
 
     QPointer<QVariantAnimation> m_runningAnim;
 
-    QGraphicsOpacityEffect *m_opacity = nullptr;
-
     QString m_extraStyle;
 
     bool m_animating = false;
@@ -51,6 +49,8 @@ private:
     bool m_inTextHandler = false;
 
     bool m_forceCustomStartFromFrame = false;
+
+    bool m_customHasText = false;
 
 private slots:
     void animateToButton(QAbstractButton *btn);
