@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
 
     // Проверка на уже запущенный экземпляр
     const QString mutexName = QString("MyUnique%1Mutex").arg(AppSettings::APP_NAME);
-    const HANDLE hMutex = CreateMutex(nullptr, TRUE, mutexName.toStdWString().c_str());
+    const auto hMutex = CreateMutex(nullptr, TRUE, mutexName.toStdWString().c_str());
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         WarningDialog dlg;
         dlg.setTranslations(Lang::tr("SETTINGS_SIDER_MENU_CLOSE"));
