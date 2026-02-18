@@ -3,7 +3,7 @@ add_compile_options(/utf-8)
 
 set(APP_NAME "EasyLangSwitcher")
 
-project(${APP_NAME} VERSION 1.3.1)
+project(${APP_NAME} VERSION 1.3.2)
 
 set(APP_VERSION "${PROJECT_VERSION}")
 
