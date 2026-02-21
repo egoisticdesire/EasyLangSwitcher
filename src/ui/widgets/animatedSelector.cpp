@@ -136,8 +136,9 @@ void AnimatedSelector::initPosition() {
 void AnimatedSelector::animateToButton(QAbstractButton *btn) {
     if (!m_indicator || !btn || !m_parent || !m_frame) return;
 
-    if (m_animating) return;
+    if (m_animating && m_animTargetButton == btn) return;
     m_animating = true;
+    m_animTargetButton = btn;
 
     if (m_customEdit && !m_customEdit->text().trimmed().isEmpty()) {
         m_customEdit->clear();
@@ -243,6 +244,7 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
 
         connect(reclickAnim, &QVariantAnimation::finished, this, [this, indicatorPtr, shadowPtr, btnPtr, endGeom, reclickAnim]() {
             m_animating = false;
+            m_animTargetButton = nullptr;
             if (!indicatorPtr) return;
 
             indicatorPtr->setGeometry(endGeom);
@@ -400,6 +402,7 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
 
     connect(anim, &QVariantAnimation::finished, this, [this, indicatorPtr, shadowPtr, btnPtr, endGeom, anim]() {
         m_animating = false;
+        m_animTargetButton = nullptr;
 
         if (!indicatorPtr) return;
 
@@ -453,6 +456,7 @@ void AnimatedSelector::animateToCustomEdit() {
     // запрет повторного запуска
     if (m_animating) return;
     m_animating = true;
+    m_animTargetButton = nullptr;
 
     if (m_runningAnim) {
         m_runningAnim->stop();
@@ -604,6 +608,7 @@ void AnimatedSelector::animateToCustomEdit() {
 
     connect(anim, &QVariantAnimation::finished, this, [this, indicatorPtr, shadowPtr, targetGeom, anim]() {
         m_animating = false;
+        m_animTargetButton = nullptr;
 
         if (!indicatorPtr) return;
 
@@ -718,6 +723,7 @@ void AnimatedSelector::stopAndResetAnimation() {
     }
     // снять флаги блокировки, чтобы new animation могла стартовать
     m_animating = false;
+    m_animTargetButton = nullptr;
     m_inTextHandler = false;
     m_forceCustomStartFromFrame = false;
 }

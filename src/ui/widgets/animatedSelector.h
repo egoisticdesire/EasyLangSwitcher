@@ -41,6 +41,7 @@ private:
     QRect m_indicatorGeometry;
 
     QPointer<QVariantAnimation> m_runningAnim;
+    QPointer<QAbstractButton> m_animTargetButton;
 
     QString m_extraStyle;
 
