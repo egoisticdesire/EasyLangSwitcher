@@ -274,6 +274,7 @@ bool InAppNotification::eventFilter(QObject *o, QEvent *e) {
 
 void InAppNotification::showFor(SettingsWindow *settings, const QString &text, const Type type) {
     if (!settings) return;
+    if (!settings->isVisible() || settings->isMinimized()) return;
     if (stack.size() >= 3) {
         if (auto *last = stack.last()) last->startHideAnimation(true);
     }
