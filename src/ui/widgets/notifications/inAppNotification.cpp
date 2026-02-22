@@ -200,7 +200,18 @@ void InAppNotification::animateTo(const int newIndex) {
 QPoint InAppNotification::basePosition(const int index) const {
     constexpr int margin = 12;
     constexpr int spacing = 12;
-    const QRect win = settings ? settings->geometry() : QGuiApplication::primaryScreen()->availableGeometry();
+    QRect win;
+    if (settings) {
+        win = settings->geometry();
+    } else if (const QScreen *primary = QGuiApplication::primaryScreen()) {
+        win = primary->availableGeometry();
+    } else {
+        const QList<QScreen *> screens = QGuiApplication::screens();
+        if (!screens.isEmpty() && screens.first()) {
+            win = screens.first()->availableGeometry();
+        }
+    }
+    if (!win.isValid()) return {};
 
     const int x = win.right() - width() - margin;
     const int y = win.bottom() - height() - margin - index * (height() + spacing);

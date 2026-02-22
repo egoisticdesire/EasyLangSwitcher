@@ -7,6 +7,7 @@
 #include <QtCore/QEvent>
 #include <QtCore/QObject>
 #include <QtCore/QCoreApplication>
+#include <cstring>
 #include <Windows.h>
 #include <dwmapi.h>
 
@@ -205,8 +206,11 @@ public:
         const int physW = qRound(widget->width() * dpr);
         const int physH = qRound(widget->height() * dpr);
 
-        if (const HRGN hrgn = CreateRectRgn(0, 0, physW + 1, physH + 1))
-            SetWindowRgn(hwnd, hrgn, TRUE);
+        if (const HRGN hrgn = CreateRectRgn(0, 0, physW + 1, physH + 1)) {
+            if (SetWindowRgn(hwnd, hrgn, TRUE) == 0) {
+                DeleteObject(hrgn);
+            }
+        }
     }
 
     static void disableAcrylic(QWidget *widget) {
@@ -217,6 +221,7 @@ public:
 
         if (!info().setAttribPtr) return;
         const auto hwnd = reinterpret_cast<HWND>(widget->winId());
+        if (!hwnd) return;
 
         ACCENT_POLICY policy{ACCENT_DISABLED, 0, 0, 0};
         WINDOWCOMPOSITIONATTRIBDATA data{19, &policy, sizeof(policy)};
@@ -226,6 +231,7 @@ public:
     static void enableCustomPreview(const QWidget *widget) {
         if (!widget) return;
         const auto hwnd = reinterpret_cast<HWND>(widget->winId());
+        if (!hwnd) return;
         constexpr BOOL fTrue = TRUE;
         (void) DwmSetWindowAttribute(hwnd, 7, &fTrue, sizeof(fTrue)); // FORCE_ICONIC
         (void) DwmSetWindowAttribute(hwnd, 10, &fTrue, sizeof(fTrue)); // HAS_ICONIC_BITMAP

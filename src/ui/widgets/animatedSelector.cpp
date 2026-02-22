@@ -54,7 +54,9 @@ namespace {
 
     void setIndicatorFillOpacity(const QPointer<QFrame> &frame, const qreal opacity) {
         if (!frame) return;
-        dynamic_cast<IndicatorFrame *>(frame.data())->setFillOpacity(opacity);
+        if (auto *indicator = dynamic_cast<IndicatorFrame *>(frame.data())) {
+            indicator->setFillOpacity(opacity);
+        }
     }
 } // namespace
 

@@ -19,7 +19,13 @@ public:
         const int id = QFontDatabase::addApplicationFont(":/fonts/fonts/Inter-Regular.ttf");
         if (id == -1) return;
 
-        const QString family = QFontDatabase::applicationFontFamilies(id).first();
+        const QStringList families = QFontDatabase::applicationFontFamilies(id);
+        if (families.isEmpty()) {
+            LOG_WARNING() << "Application font loaded but no font families resolved";
+            return;
+        }
+
+        const QString family = families.first();
         QFont appFont(family);
         appFont.setPointSize(DefaultSize);
         appFont.setHintingPreference(QFont::PreferNoHinting);

@@ -18,21 +18,30 @@ bool WindowDragger::eventFilter(QObject *obj, QEvent *ev) {
     switch (ev->type()) {
         case QEvent::MouseButtonPress: {
             const auto *e = dynamic_cast<QMouseEvent *>(ev);
+            if (!e) break;
             if (e->button() != Qt::LeftButton) break;
 
-            if (QWidget *child = win->childAt(e->position().toPoint()); child && ignore.contains(child)) {
-                dragging = false;
-                break;
+            QWidget *child = win->childAt(e->position().toPoint());
+            while (child) {
+                if (ignore.contains(child)) {
+                    dragging = false;
+                    break;
+                }
+                child = child->parentWidget();
             }
+            if (!child) dragging = true;
 
-            dragging = true;
-            dragOffset = e->globalPosition().toPoint() - win->frameGeometry().topLeft();
-            return true;
+            if (dragging) {
+                dragOffset = e->globalPosition().toPoint() - win->frameGeometry().topLeft();
+                return true;
+            }
+            break;
         }
 
         case QEvent::MouseMove: {
             if (dragging) {
                 const auto *e = dynamic_cast<QMouseEvent *>(ev);
+                if (!e) break;
                 win->move(e->globalPosition().toPoint() - dragOffset);
                 return true;
             }

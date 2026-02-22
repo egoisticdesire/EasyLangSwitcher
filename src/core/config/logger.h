@@ -9,6 +9,7 @@
 #include <QWaitCondition>
 #include <QTextStream>
 #include <QDebug>
+#include <atomic>
 #include <type_traits>
 #include <utility>
 
@@ -50,14 +51,17 @@ public:
     }
 
     void run() override {
-        while (!m_terminate) {
+        for (;;) {
             QString msg;
             {
                 QMutexLocker locker(&m_mutex);
-                if (m_queue.isEmpty()) {
-                    m_wait.wait(&m_mutex, 100);
+                while (m_queue.isEmpty() && !m_terminate.load()) {
+                    m_wait.wait(&m_mutex);
                 }
-                if (!m_queue.isEmpty()) msg = m_queue.dequeue();
+                if (m_queue.isEmpty() && m_terminate.load()) {
+                    break;
+                }
+                msg = m_queue.dequeue();
             }
             if (!msg.isEmpty()) {
                 const std::wstring wmsg = msg.toStdWString();
@@ -69,9 +73,9 @@ public:
     }
 
     void stop() {
-        m_terminate = true;
-        m_wait.wakeOne();
-        wait();
+        m_terminate.store(true);
+        m_wait.wakeAll();
+        if (isRunning()) wait();
     }
 
 private:
@@ -81,7 +85,7 @@ private:
     QQueue<QString> m_queue;
     QMutex m_mutex;
     QWaitCondition m_wait;
-    bool m_terminate = false;
+    std::atomic_bool m_terminate = false;
 };
 
 class Logger {

@@ -3,6 +3,7 @@
 #include "../../core/config/logger.h"
 #include <QCoreApplication>
 #include <QDir>
+#include <QSettings>
 
 QString AutoStartupManager::getExePath() {
     return QDir::toNativeSeparators(QCoreApplication::applicationFilePath());
