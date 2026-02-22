@@ -4,14 +4,14 @@
 #include <QTimer>
 
 namespace {
-constexpr int kToolTipMinWidth = 220;
-constexpr int kToolTipMaxWidth = 360;
-constexpr int kToolTipHeightPadding = 10;
-constexpr int kToolTipHSpacing = 12;
-constexpr int kToolTipSlideOffset = 10;
+    constexpr int kToolTipMinWidth = 220;
+    constexpr int kToolTipMaxWidth = 360;
+    constexpr int kToolTipHeightPadding = 10;
+    constexpr int kToolTipHSpacing = 12;
+    constexpr int kToolTipSlideOffset = 10;
 }
 
-CustomToolTip::CustomToolTip(QWidget *parent) : QWidget(nullptr) {
+CustomToolTip::CustomToolTip(const QWidget *parent) : QWidget(nullptr) {
     Q_UNUSED(parent);
     ui.setupUi(this);
 
@@ -36,7 +36,7 @@ CustomToolTip::CustomToolTip(QWidget *parent) : QWidget(nullptr) {
 
 void CustomToolTip::updateSize() {
     const QFontMetrics fm(ui.tooltip_label->font());
-    const int maxTextWidth = kToolTipMaxWidth - 16;
+    constexpr int maxTextWidth = kToolTipMaxWidth - 16;
     const QRect textRect = fm.boundingRect(
         QRect(0, 0, maxTextWidth, 4096),
         Qt::AlignLeft | Qt::TextWordWrap,

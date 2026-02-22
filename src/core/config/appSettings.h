@@ -1,7 +1,6 @@
 #pragma once
 #include <QSettings>
 #include <QString>
-#include <QDate>
 #include <QDateTime>
 
 class AppSettings {

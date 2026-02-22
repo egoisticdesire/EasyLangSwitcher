@@ -56,7 +56,7 @@ private:
 
     void animateToggleButton();
 
-    [[nodiscard]] bool shouldDeferPopupNotification() const;
+    [[nodiscard]] static bool shouldDeferPopupNotification();
 
     void handleUpdateAvailable(const QString &version, const QString &url, bool isManualCheck);
 
@@ -77,6 +77,7 @@ private:
     void updateTrayToolTip();
 
     void showSystemUpdateMessage(const QString &version, bool isManualCheck);
+
     void playUpdateAvailableAlert() const;
 
 #ifdef Q_OS_WIN

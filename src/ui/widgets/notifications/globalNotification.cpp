@@ -1,11 +1,10 @@
 #include "globalNotification.h"
 #include "../../helpers/acrylicHelper.h"
+#include "../../helpers/screenResolver.h"
 #include "../../../core/config/appSettings.h"
 #include "../../../core/i18n/lang.h"
 #include <QScreen>
-#include <QGuiApplication>
 #include <QSettings>
-#include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QFile>
 #include <QStandardPaths>
@@ -20,20 +19,7 @@
 #include <QCursor>
 #include <utility>
 
-namespace {
-const QScreen *resolveTargetScreen() {
-    if (const QScreen *cursorScreen = QGuiApplication::screenAt(QCursor::pos())) {
-        return cursorScreen;
-    }
-    if (const QScreen *primary = QGuiApplication::primaryScreen()) {
-        return primary;
-    }
-    const QList<QScreen *> screens = QGuiApplication::screens();
-    return screens.isEmpty() ? nullptr : screens.first();
-}
-}
-
-GlobalNotification::GlobalNotification(const Mode mode, QString version, QString url, QWidget *parent)
+GlobalNotification::GlobalNotification(const Mode mode, QString version, QString url, const QWidget *parent)
     : QWidget(nullptr),
       ui(new Ui::notification_main_widget),
       m_mode(mode),
@@ -254,7 +240,8 @@ void GlobalNotification::executeDownload(const QString &filePath) {
         return;
     }
 
-    m_reply = m_networkManager->get(QNetworkRequest(QUrl(m_downloadUrl))); //"https://api.github.coms/repos/%1/releases/latest"
+    m_reply = m_networkManager->get(QNetworkRequest(QUrl(m_downloadUrl)));
+    //"https://api.github.coms/repos/%1/releases/latest"
 
     connect(m_reply, &QNetworkReply::readyRead, this, [this]() {
         if (m_file && m_reply && m_reply->error() == QNetworkReply::NoError)
@@ -327,7 +314,7 @@ void GlobalNotification::startShowAnimation() {
     this->setFixedHeight(this->sizeHint().height());
 
     this->setWindowOpacity(0.0);
-    const QScreen *screen = resolveTargetScreen();
+    const QScreen *screen = ScreenResolver::atPointOrPrimary(QCursor::pos());
     if (!screen) return;
     const QRect desktop = screen->availableGeometry();
 
@@ -478,7 +465,7 @@ void GlobalNotification::animateStackTransition(int nextIndex) {
 }
 
 void GlobalNotification::moveToBottomRight() {
-    const QScreen *screen = resolveTargetScreen();
+    const QScreen *screen = ScreenResolver::atPointOrPrimary(QCursor::pos());
     if (!screen) return;
     const QRect desktop = screen->availableGeometry();
     constexpr int margin = 20;

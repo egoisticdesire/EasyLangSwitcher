@@ -4,9 +4,8 @@
 #include "../widgets/windowDragger.h"
 #include "iconHelper.h"
 #include "acrylicHelper.h"
+#include "screenResolver.h"
 #include <QDialog>
-#include <QGuiApplication>
-#include <QScreen>
 #include <QSoundEffect>
 #include <QTimer>
 #include <QAction>
@@ -50,13 +49,7 @@ public:
     }
 
     void openCentered() {
-        const QScreen *screen = QGuiApplication::primaryScreen();
-        if (!screen) {
-            const QList<QScreen *> screens = QGuiApplication::screens();
-            if (!screens.isEmpty()) {
-                screen = screens.first();
-            }
-        }
+        const QScreen *screen = ScreenResolver::primaryOrFirst();
         if (!screen) return;
         const QRect geom = screen->availableGeometry();
 

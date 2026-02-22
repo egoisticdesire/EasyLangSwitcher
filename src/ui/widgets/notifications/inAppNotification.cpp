@@ -2,12 +2,12 @@
 #include "../settingsWindow.h"
 #include "../../helpers/iconHelper.h"
 #include "../../helpers/acrylicHelper.h"
+#include "../../helpers/screenResolver.h"
 #include <QTextDocument>
 #include <QtMath>
 #include <QScreen>
 #include <QEvent>
 #include <QPainter>
-#include <QGuiApplication>
 
 QVector<InAppNotification *> InAppNotification::stack;
 
@@ -203,13 +203,8 @@ QPoint InAppNotification::basePosition(const int index) const {
     QRect win;
     if (settings) {
         win = settings->geometry();
-    } else if (const QScreen *primary = QGuiApplication::primaryScreen()) {
-        win = primary->availableGeometry();
-    } else {
-        const QList<QScreen *> screens = QGuiApplication::screens();
-        if (!screens.isEmpty() && screens.first()) {
-            win = screens.first()->availableGeometry();
-        }
+    } else if (const QScreen *screen = ScreenResolver::primaryOrFirst()) {
+        win = screen->availableGeometry();
     }
     if (!win.isValid()) return {};
 

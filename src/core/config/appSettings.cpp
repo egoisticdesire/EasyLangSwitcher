@@ -80,7 +80,8 @@ void AppSettings::load() {
     updateFrequency = static_cast<UpdateFrequency>(settings.value("updates/frequency",
                                                                   static_cast<int>(defaultUpdateFrequency)).toInt());
     lastUpdateCheckDate = settings.value("updates/last_check_date", defaultLastUpdateCheckDate).toDate();
-    lastUpdateCheckDateTime = settings.value("updates/last_check_datetime", defaultLastUpdateCheckDateTime).toDateTime();
+    lastUpdateCheckDateTime = settings.value("updates/last_check_datetime", defaultLastUpdateCheckDateTime)
+            .toDateTime();
 
     logger("Loaded");
 }
@@ -109,8 +110,9 @@ bool AppSettings::isDirty() {
     if (settings.value("delay", defaultSwitchDelayMs).toInt() != switchDelayMs) return true;
     if (settings.value("auto_startup", false).toBool() != autoStartup) return true;
     if (settings.value("app/lang", defaultAppLang).toString() != appLang) return true;
-    if (static_cast<UpdateFrequency>(settings.value("updates/frequency",
-        static_cast<int>(defaultUpdateFrequency)).toInt()) != updateFrequency) return true;
+    if (static_cast<UpdateFrequency>(
+            settings.value("updates/frequency", static_cast<int>(defaultUpdateFrequency)).toInt()) != updateFrequency)
+        return true;
 
     // Если ничего не подошло
     return false;

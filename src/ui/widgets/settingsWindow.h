@@ -8,7 +8,6 @@
 #include "windowDragger.h"
 #include <QVector>
 #include <QTimer>
-#include <QDateTime>
 #include <QGraphicsDropShadowEffect>
 
 class KeySequenceHelper;
@@ -54,12 +53,17 @@ private:
     CustomToolTip *updateBtnToolTip = nullptr;
     UpdateManager *updateManager = nullptr;
     QGraphicsDropShadowEffect *m_shadow = nullptr;
-    QVariantAnimation* m_syncRotationAnim = nullptr;
+    QVariantAnimation *m_syncRotationAnim = nullptr;
+
     void updateSyncIconRotation(int angle) const;
+
     void stopSyncAnimation() const;
+
     void updateManualCheckButtonIcon() const;
+
     void refreshUpdateButtonTooltipLive() const;
-    [[nodiscard]] QString lastUpdateCheckDisplay() const;
+
+    [[nodiscard]] static QString lastUpdateCheckDisplay();
 
     // Логика и состояние
     QTimer autosaveTimer;

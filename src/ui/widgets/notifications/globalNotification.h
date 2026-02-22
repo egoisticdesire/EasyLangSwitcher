@@ -24,7 +24,7 @@ public:
 
     enum Mode { UpdateAvailable, UpToDate, Error };
 
-    explicit GlobalNotification(Mode mode, QString version, QString url = {}, QWidget *parent = nullptr);
+    explicit GlobalNotification(Mode mode, QString version, QString url = {}, const QWidget *parent = nullptr);
 
     ~GlobalNotification() override;
 

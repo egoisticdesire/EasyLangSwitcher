@@ -14,23 +14,24 @@
 #include <utility>
 
 namespace logger_detail {
-template<typename T, typename = void>
-struct has_qtextstream_insertion : std::false_type {
-};
+    template<typename T, typename = void>
+    struct has_qtextstream_insertion : std::false_type {
+    };
 
-template<typename T>
-struct has_qtextstream_insertion<T, std::void_t<decltype(std::declval<QTextStream &>() << std::declval<const T &>())>>
-    : std::true_type {
-};
+    template<typename T>
+    struct has_qtextstream_insertion<T, std::void_t<decltype(std::declval<QTextStream &>() << std::declval<const T &>()
+            )> >
+            : std::true_type {
+    };
 
-template<typename T, typename = void>
-struct has_qdebug_insertion : std::false_type {
-};
+    template<typename T, typename = void>
+    struct has_qdebug_insertion : std::false_type {
+    };
 
-template<typename T>
-struct has_qdebug_insertion<T, std::void_t<decltype(std::declval<QDebug &>() << std::declval<const T &>())>>
-    : std::true_type {
-};
+    template<typename T>
+    struct has_qdebug_insertion<T, std::void_t<decltype(std::declval<QDebug &>() << std::declval<const T &>())> >
+            : std::true_type {
+    };
 }
 
 class ThreadedLogger final : public QThread {

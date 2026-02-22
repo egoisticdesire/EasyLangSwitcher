@@ -48,6 +48,8 @@ file(GLOB_RECURSE UI_FILES "src/ui/forms/*.ui")
 
 add_executable(${APP_NAME}
         src/app/main.cpp
+        src/app/mainBootstrapHelper.cpp
+        src/app/mainBootstrapHelper.h
 
         # core
         src/core/config/appSettings.cpp
@@ -67,9 +69,16 @@ add_executable(${APP_NAME}
         src/ui/helpers/fontHelper.h
         src/ui/helpers/iconHelper.h
         src/ui/helpers/keySequenceHelper.h
+        src/ui/helpers/screenResolver.h
+        src/ui/helpers/syncIconHelper.h
         src/ui/helpers/trayHoverHelper.h
         src/ui/helpers/vkMapper.h
         src/ui/helpers/warningHelper.h
+        src/ui/helpers/windowsNotificationState.cpp
+        src/ui/helpers/windowsNotificationState.h
+        src/ui/helpers/windowsToastIdentity.h
+        src/ui/helpers/windowsToastNotification.cpp
+        src/ui/helpers/windowsToastNotification.h
 
         src/ui/tray/tray.cpp
         src/ui/tray/tray.h

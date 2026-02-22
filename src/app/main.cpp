@@ -1,279 +1,47 @@
+#include "mainBootstrapHelper.h"
 #include "../core/config/logger.h"
 #include "../core/config/loggerQtBridge.h"
 #include "../core/handlers/kb.h"
 #include "../ui/helpers/fontHelper.h"
 #include "../ui/helpers/iconHelper.h"
 #include "../ui/helpers/warningHelper.h"
+#include "../ui/helpers/windowsToastIdentity.h"
 #include "../ui/tray/tray.h"
 #include "../core/config/appSettings.h"
 #include "../core/i18n/lang.h"
 #include <QApplication>
-#include <QDir>
-#include <QFileInfo>
+#include <QDate>
 #include <QLockFile>
-#include <QStandardPaths>
 #include <QTimer>
 #include <Windows.h>
-#include <winreg.h>
 #include <ShObjIdl_core.h>
-#include <KnownFolders.h>
-#include <PropKey.h>
-#include <Propvarutil.h>
-#include <ShlObj_core.h>
-#include <wrl/client.h>
-#include <algorithm>
-#include <array>
 #include <memory>
-#include <string>
 #include <fcntl.h>
 #include <io.h>
 
 #pragma comment(lib, "Shell32.lib")
-#pragma comment(lib, "Ole32.lib")
-
-namespace {
-#ifdef Q_OS_WIN
-    QString currentExePath() {
-        std::array<wchar_t, MAX_PATH> buffer{};
-        const DWORD len = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
-        if (len == 0 || len >= buffer.size()) return {};
-        return QString::fromWCharArray(buffer.data(), static_cast<int>(len));
-    }
-
-    QString appShortcutPath() {
-        PWSTR rawProgramsPath = nullptr;
-        if (const HRESULT hr = SHGetKnownFolderPath(FOLDERID_Programs, KF_FLAG_DEFAULT, nullptr, &rawProgramsPath);
-            FAILED(hr) || !rawProgramsPath) {
-            LOG_WARNING() << "Failed to get Start Menu Programs folder. HRESULT=0x"
-                    << QString::number(static_cast<qulonglong>(hr), 16);
-            return {};
-        }
-
-        const QString programsPath = QString::fromWCharArray(rawProgramsPath);
-        CoTaskMemFree(rawProgramsPath);
-        return QDir(programsPath).filePath(QString("%1.lnk").arg(AppSettings::APP_NAME));
-    }
-
-    bool ensureToastShortcut(const wchar_t *appUserModelId) {
-        const QString exePath = currentExePath();
-        const QString shortcutPath = appShortcutPath();
-        if (exePath.isEmpty() || shortcutPath.isEmpty()) return false;
-
-        const HRESULT coInit = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-        const bool shouldUninit = SUCCEEDED(coInit);
-        if (FAILED(coInit) && coInit != RPC_E_CHANGED_MODE) {
-            LOG_WARNING() << "CoInitializeEx failed for shortcut creation. HRESULT=0x"
-                    << QString::number(static_cast<qulonglong>(coInit), 16);
-            return false;
-        }
-
-        Microsoft::WRL::ComPtr<IShellLinkW> shellLink;
-        HRESULT hr = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&shellLink));
-        if (FAILED(hr) || !shellLink) {
-            LOG_WARNING() << "CoCreateInstance(CLSID_ShellLink) failed. HRESULT=0x"
-                    << QString::number(static_cast<qulonglong>(hr), 16);
-            if (shouldUninit) CoUninitialize();
-            return false;
-        }
-
-        const std::wstring exeWide = QDir::toNativeSeparators(exePath).toStdWString();
-        hr = shellLink->SetPath(exeWide.c_str());
-        if (SUCCEEDED(hr))
-            hr = shellLink->
-                    SetWorkingDirectory(QFileInfo(exePath).absolutePath().toStdWString().c_str());
-        if (SUCCEEDED(hr)) hr = shellLink->SetIconLocation(exeWide.c_str(), 0);
-
-        Microsoft::WRL::ComPtr<IPropertyStore> propertyStore;
-        if (SUCCEEDED(hr)) hr = shellLink.As(&propertyStore);
-
-        PROPVARIANT appIdProp{};
-        if (SUCCEEDED(hr)) hr = InitPropVariantFromString(appUserModelId, &appIdProp);
-        if (SUCCEEDED(hr) && propertyStore) hr = propertyStore->SetValue(PKEY_AppUserModel_ID, appIdProp);
-        if (SUCCEEDED(hr) && propertyStore) hr = propertyStore->Commit();
-        PropVariantClear(&appIdProp);
-
-        Microsoft::WRL::ComPtr<IPersistFile> persistFile;
-        if (SUCCEEDED(hr)) hr = shellLink.As(&persistFile);
-        if (SUCCEEDED(hr) && persistFile)
-            hr = persistFile->Save(QDir::toNativeSeparators(shortcutPath).toStdWString().c_str(), TRUE);
-
-        if (shouldUninit) CoUninitialize();
-
-        if (FAILED(hr)) {
-            LOG_WARNING() << "Failed to create toast shortcut. HRESULT=0x"
-                    << QString::number(static_cast<qulonglong>(hr), 16);
-            return false;
-        }
-
-        LOG_INFO() << "Created Start Menu shortcut for toast notifications at" << shortcutPath;
-        return true;
-    }
-
-    std::wstring appUserModelIdWide() {
-        return QString("%1.Desktop").arg(AppSettings::APP_NAME).toStdWString();
-    }
-
-    QString toastLaunchArgument() {
-        return QString("%1-toast-open-update").arg(QString(AppSettings::APP_NAME).toLower());
-    }
-
-    QString toastProtocolScheme() {
-        return QString(AppSettings::APP_NAME).toLower();
-    }
-
-    QString toastProtocolUri() {
-        return QString("%1://toast/open-update").arg(toastProtocolScheme());
-    }
-
-    std::wstring toastActivationEventNameWide() {
-        return QString("Local\\%1.ToastActivation").arg(AppSettings::APP_NAME).toStdWString();
-    }
-
-    bool writeRegistryDefaultValue(const std::wstring &subKey, const std::wstring &value) {
-        HKEY key = nullptr;
-        const LONG createResult = RegCreateKeyExW(
-            HKEY_CURRENT_USER,
-            subKey.c_str(),
-            0,
-            nullptr,
-            REG_OPTION_NON_VOLATILE,
-            KEY_WRITE,
-            nullptr,
-            &key,
-            nullptr
-        );
-        if (createResult != ERROR_SUCCESS) return false;
-
-        const LONG setResult = RegSetValueExW(
-            key,
-            nullptr,
-            0,
-            REG_SZ,
-            reinterpret_cast<const BYTE *>(value.c_str()),
-            static_cast<DWORD>((value.size() + 1) * sizeof(wchar_t))
-        );
-        RegCloseKey(key);
-        return setResult == ERROR_SUCCESS;
-    }
-
-    bool writeRegistryNamedValue(const std::wstring &subKey, const std::wstring &name, const std::wstring &value) {
-        HKEY key = nullptr;
-        const LONG createResult = RegCreateKeyExW(
-            HKEY_CURRENT_USER,
-            subKey.c_str(),
-            0,
-            nullptr,
-            REG_OPTION_NON_VOLATILE,
-            KEY_WRITE,
-            nullptr,
-            &key,
-            nullptr
-        );
-        if (createResult != ERROR_SUCCESS) return false;
-
-        const LONG setResult = RegSetValueExW(
-            key,
-            name.c_str(),
-            0,
-            REG_SZ,
-            reinterpret_cast<const BYTE *>(value.c_str()),
-            static_cast<DWORD>((value.size() + 1) * sizeof(wchar_t))
-        );
-        RegCloseKey(key);
-        return setResult == ERROR_SUCCESS;
-    }
-
-    void ensureProtocolRegistration() {
-        const QString exePath = currentExePath();
-        if (exePath.isEmpty()) return;
-
-        const QString scheme = toastProtocolScheme();
-        const std::wstring baseKey = QString("Software\\Classes\\%1").arg(scheme).toStdWString();
-        const std::wstring command =
-                QString("\"%1\" \"%2\"").arg(QDir::toNativeSeparators(exePath), "%1").toStdWString();
-
-        bool ok = true;
-        ok = writeRegistryDefaultValue(baseKey, QString("URL:%1 protocol").arg(AppSettings::APP_NAME).toStdWString()) &&
-             ok;
-        ok = writeRegistryNamedValue(baseKey, L"URL Protocol", L"") && ok;
-        ok = writeRegistryDefaultValue(baseKey + L"\\DefaultIcon",
-                                       QDir::toNativeSeparators(exePath).toStdWString() + L",0") && ok;
-        ok = writeRegistryDefaultValue(baseKey + L"\\shell\\open\\command", command) && ok;
-
-        if (!ok) {
-            LOG_WARNING() << "Failed to register protocol handler for toast activation";
-        }
-    }
-#else
-    bool ensureToastShortcut(const wchar_t *) {
-        return false;
-    }
-
-    std::wstring appUserModelIdWide() {
-        return {};
-    }
-
-    QString toastLaunchArgument() {
-        return {};
-    }
-
-    QString toastProtocolScheme() {
-        return {};
-    }
-
-    QString toastProtocolUri() {
-        return {};
-    }
-
-    std::wstring toastActivationEventNameWide() {
-        return {};
-    }
-
-    void ensureProtocolRegistration() {
-    }
-#endif
-
-    QStringList startupArgsFromArgv(const int argc, char *argv[]) {
-        QStringList args;
-        args.reserve(qMax(0, argc - 1));
-        for (int i = 1; i < argc; ++i) {
-            args.push_back(QString::fromLocal8Bit(argv[i]));
-        }
-        return args;
-    }
-
-    QString instanceLockPath() {
-        QString lockDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-        if (lockDir.isEmpty()) lockDir = QDir::tempPath();
-        return QDir(lockDir).filePath(
-            QString("%1.single_instance.lock").arg(QString(AppSettings::APP_NAME).toLower())
-        );
-    }
-
-    bool isToastActivationLaunch(const QStringList &startupArgs) {
-        const QString toastArg = toastLaunchArgument();
-        const QString toastUri = toastProtocolUri();
-        return std::any_of(
-            startupArgs.cbegin(),
-            startupArgs.cend(),
-            [&toastArg, &toastUri](const QString &arg) {
-                const bool hasCustomArg = !toastArg.isEmpty() && arg.contains(toastArg, Qt::CaseInsensitive);
-                const bool hasProtocolArg = !toastUri.isEmpty() && arg.contains(toastUri, Qt::CaseInsensitive);
-                const bool hasDefaultToastArg =
-                        arg.compare("-ToastActivated", Qt::CaseInsensitive) == 0
-                        || arg.compare("/ToastActivated", Qt::CaseInsensitive) == 0
-                        || arg.compare("ToastActivated", Qt::CaseInsensitive) == 0;
-                return hasCustomArg || hasDefaultToastArg || hasProtocolArg;
-            });
-    }
-}
 
 #ifndef APP_VERSION
 #define APP_VERSION "1.0.0"
 #endif
 
+namespace MainRuntimeFlags {
+    constexpr bool kDebugLogsEnabled = false;
+
+    constexpr bool kEnableUpdateCheckTestOverride = false;
+    constexpr auto kForcedAppVersion = "1.1.1";
+    constexpr int kLastUpdateShiftDays = -7;
+}
+
+void applyUpdateCheckTestOverrideAfterSettingsLoad() {
+    if (!MainRuntimeFlags::kEnableUpdateCheckTestOverride) return;
+    // ReSharper disable once CppDFAUnreachableCode
+    QApplication::setApplicationVersion(MainRuntimeFlags::kForcedAppVersion);
+    AppSettings::lastUpdateCheckDate = QDate::currentDate().addDays(MainRuntimeFlags::kLastUpdateShiftDays);
+}
+
 int main(int argc, char *argv[]) {
-    Logger::_debug = false;
+    Logger::_debug = MainRuntimeFlags::kDebugLogsEnabled;
 
     QtLoggerBridge::install();
     LOG_INFO() << "Logger initialized with level: " << (Logger::_debug ? "DEBUG" : "INFO");
@@ -281,11 +49,11 @@ int main(int argc, char *argv[]) {
     SetConsoleOutputCP(CP_UTF8);
     _setmode(_fileno(stdout), _O_U16TEXT);
 
-    const QStringList startupArgs = startupArgsFromArgv(argc, argv);
-    LOG_INFO() << "Startup arguments (pre-Qt):" << startupArgs.join(" | ");
-    const bool isToastLaunch = isToastActivationLaunch(startupArgs);
+    const QStringList startupArgs = MainBootstrapHelper::startupArgsFromArgv(argc, argv);
+    LOG_INFO() << "Startup arguments (pre-Qt): " << startupArgs.join(" | ");
+    const bool isToastLaunch = MainBootstrapHelper::isToastActivationLaunch(startupArgs);
 
-    auto processLock = std::make_unique<QLockFile>(instanceLockPath());
+    auto processLock = std::make_unique<QLockFile>(MainBootstrapHelper::instanceLockPath());
     processLock->setStaleLockTime(0);
     const bool lockAcquired = processLock->tryLock(0);
 
@@ -302,7 +70,7 @@ int main(int argc, char *argv[]) {
     if (hasRunningInstance) {
         if (isToastLaunch) {
 #ifdef Q_OS_WIN
-            const std::wstring eventName = toastActivationEventNameWide();
+            const std::wstring eventName = WindowsToastIdentity::toastActivationEventNameWide();
             if (HANDLE activationEvent = OpenEventW(EVENT_MODIFY_STATE, FALSE, eventName.c_str())) {
                 SetEvent(activationEvent);
                 CloseHandle(activationEvent);
@@ -337,12 +105,17 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    const std::wstring appUserModelId = appUserModelIdWide();
-    const HRESULT appIdResult = SetCurrentProcessExplicitAppUserModelID(appUserModelId.c_str());
-    LOG_INFO() << "SetCurrentProcessExplicitAppUserModelID result=0x"
-            << QString::number(static_cast<qulonglong>(appIdResult), 16);
-    ensureToastShortcut(appUserModelId.c_str());
-    ensureProtocolRegistration();
+    const std::wstring appUserModelId = WindowsToastIdentity::appUserModelIdWide();
+    if (const HRESULT appIdResult = SetCurrentProcessExplicitAppUserModelID(appUserModelId.c_str());
+        FAILED(appIdResult)) {
+        LOG_WARNING() << "SetCurrentProcessExplicitAppUserModelID failed. HRESULT=0x"
+                << QString::number(static_cast<qulonglong>(appIdResult), 16);
+    } else {
+        LOG_INFO() << "SetCurrentProcessExplicitAppUserModelID result=0x"
+                << QString::number(static_cast<qulonglong>(appIdResult), 16);
+    }
+    MainBootstrapHelper::ensureToastShortcut(appUserModelId.c_str());
+    MainBootstrapHelper::ensureProtocolRegistration();
 
     QApplication app(argc, argv);
     QApplication::setStyle("Windows11");
@@ -352,9 +125,7 @@ int main(int argc, char *argv[]) {
 
     AppSettings::load();
 
-    // для тестов
-    // QApplication::setApplicationVersion("1.1.1");
-    // AppSettings::lastUpdateCheckDate = QDate::currentDate().addDays(-7);
+    applyUpdateCheckTestOverrideAfterSettingsLoad();
 
     QApplication::setQuitOnLastWindowClosed(false);
     QApplication::setWindowIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));

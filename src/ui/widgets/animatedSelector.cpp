@@ -244,25 +244,26 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
             }
         });
 
-        connect(reclickAnim, &QVariantAnimation::finished, this, [this, indicatorPtr, shadowPtr, btnPtr, endGeom, reclickAnim]() {
-            m_animating = false;
-            m_animTargetButton = nullptr;
-            if (!indicatorPtr) return;
+        connect(reclickAnim, &QVariantAnimation::finished, this,
+                [this, indicatorPtr, shadowPtr, btnPtr, endGeom, reclickAnim]() {
+                    m_animating = false;
+                    m_animTargetButton = nullptr;
+                    if (!indicatorPtr) return;
 
-            indicatorPtr->setGeometry(endGeom);
-            indicatorPtr->raise();
-            setIndicatorFillOpacity(indicatorPtr, 1.0);
-            if (btnPtr) btnPtr->setChecked(true);
-            updateButtonColors();
-            m_indicatorGeometry = endGeom;
+                    indicatorPtr->setGeometry(endGeom);
+                    indicatorPtr->raise();
+                    setIndicatorFillOpacity(indicatorPtr, 1.0);
+                    if (btnPtr) btnPtr->setChecked(true);
+                    updateButtonColors();
+                    m_indicatorGeometry = endGeom;
 
-            if (shadowPtr) {
-                shadowPtr->setBlurRadius(6);
-                shadowPtr->setOffset(0, 4);
-                shadowPtr->setColor(QColor(0, 0, 0, 0));
-            }
-            if (m_runningAnim == reclickAnim) m_runningAnim = nullptr;
-        });
+                    if (shadowPtr) {
+                        shadowPtr->setBlurRadius(6);
+                        shadowPtr->setOffset(0, 4);
+                        shadowPtr->setColor(QColor(0, 0, 0, 0));
+                    }
+                    if (m_runningAnim == reclickAnim) m_runningAnim = nullptr;
+                });
 
         reclickAnim->start(QAbstractAnimation::DeleteWhenStopped);
         return;

@@ -10,7 +10,7 @@ class CustomToolTip final : public QWidget {
     Q_PROPERTY(QPoint pos READ pos WRITE move)
 
 public:
-    explicit CustomToolTip(QWidget *parent = nullptr);
+    explicit CustomToolTip(const QWidget *parent = nullptr);
 
     void showAt(const QWidget *target, const QString &langKey);
 

@@ -2,7 +2,6 @@
 #include "../../core/config/appSettings.h"
 #include "../../core/config/logger.h"
 #include <QCoreApplication>
-#include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QNetworkAccessManager>
@@ -10,29 +9,28 @@
 #include <QVersionNumber>
 
 namespace {
-QString extractVersionCore(QString value) {
-    value = value.trimmed();
-    static const QRegularExpression versionPattern(
-        R"((?:^|[^0-9])v?(\d+(?:\.\d+)+))",
-        QRegularExpression::CaseInsensitiveOption
-    );
+    QString extractVersionCore(QString value) {
+        value = value.trimmed();
+        static const QRegularExpression versionPattern(
+            R"((?:^|[^0-9])v?(\d+(?:\.\d+)+))",
+            QRegularExpression::CaseInsensitiveOption
+        );
 
-    QString lastMatch;
-    QRegularExpressionMatchIterator it = versionPattern.globalMatch(value);
-    while (it.hasNext()) {
-        const QRegularExpressionMatch match = it.next();
-        if (match.hasMatch()) {
-            lastMatch = match.captured(1);
+        QString lastMatch;
+        QRegularExpressionMatchIterator it = versionPattern.globalMatch(value);
+        while (it.hasNext()) {
+            if (const QRegularExpressionMatch match = it.next(); match.hasMatch()) {
+                lastMatch = match.captured(1);
+            }
         }
-    }
 
-    if (!lastMatch.isEmpty()) return lastMatch;
+        if (!lastMatch.isEmpty()) return lastMatch;
 
-    if (value.startsWith('v', Qt::CaseInsensitive)) {
-        value.remove(0, 1);
+        if (value.startsWith('v', Qt::CaseInsensitive)) {
+            value.remove(0, 1);
+        }
+        return value;
     }
-    return value;
-}
 }
 
 UpdateManager::UpdateManager(QObject *parent)
@@ -216,9 +214,9 @@ bool UpdateManager::isNewerVersion(const QString &currentVer, const QString &rem
 
     if (currentVersionNumber.isNull() || remoteVersionNumber.isNull()) {
         LOG_WARNING() << "Version parsing failed. currentRaw=" << currentVer
-                      << "; currentNorm=" << currentNormalized
-                      << "; remoteRaw=" << remoteVer
-                      << "; remoteNorm=" << remoteNormalized;
+                << "; currentNorm=" << currentNormalized
+                << "; remoteRaw=" << remoteVer
+                << "; remoteNorm=" << remoteNormalized;
         return false;
     }
 

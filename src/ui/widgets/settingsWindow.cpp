@@ -7,9 +7,9 @@
 #include "../helpers/acrylicHelper.h"
 #include "../helpers/iconHelper.h"
 #include "../helpers/keySequenceHelper.h"
+#include "../helpers/screenResolver.h"
+#include "../helpers/syncIconHelper.h"
 #include "../helpers/vkMapper.h"
-#include <QGuiApplication>
-#include <QScreen>
 #include <QAction>
 #include <QPushButton>
 #include <QKeySequenceEdit>
@@ -405,19 +405,21 @@ void SettingsWindow::setUpdateManager(UpdateManager *manager) {
                 Q_UNUSED(isManual);
             });
 
-    connect(updateManager, &UpdateManager::noUpdateAvailable, this, [this, finishChecking](const QString &ver, const bool isManual) {
-        finishChecking();
-        refreshUpdateButtonTooltipLive();
-        Q_UNUSED(ver);
-        Q_UNUSED(isManual);
-    });
+    connect(updateManager, &UpdateManager::noUpdateAvailable, this,
+            [this, finishChecking](const QString &ver, const bool isManual) {
+                finishChecking();
+                refreshUpdateButtonTooltipLive();
+                Q_UNUSED(ver);
+                Q_UNUSED(isManual);
+            });
 
-    connect(updateManager, &UpdateManager::updateError, this, [this, finishChecking](const QString &errorMsg, const bool isManual) {
-        finishChecking();
+    connect(updateManager, &UpdateManager::updateError, this,
+            [this, finishChecking](const QString &errorMsg, const bool isManual) {
+                finishChecking();
 
-        if (isManual) InAppNotification::showFor(this, errorMsg, InAppNotification::Error);
-        LOG_ERROR() << "Update error: " << errorMsg;
-    });
+                if (isManual) InAppNotification::showFor(this, errorMsg, InAppNotification::Error);
+                LOG_ERROR() << "Update error: " << errorMsg;
+            });
 
     connect(ui.btn_upd_manually, &QPushButton::clicked, this, [this]() {
         if (!isManualCheckActive()) {
@@ -504,13 +506,7 @@ void SettingsWindow::hideEvent(QHideEvent *event) {
 }
 
 void SettingsWindow::openCentered() {
-    const QScreen *screen = QGuiApplication::primaryScreen();
-    if (!screen) {
-        const QList<QScreen *> screens = QGuiApplication::screens();
-        if (!screens.isEmpty()) {
-            screen = screens.first();
-        }
-    }
+    const QScreen *screen = ScreenResolver::primaryOrFirst();
     if (!screen) return;
 
     const QRect geom = screen->availableGeometry();
@@ -609,76 +605,18 @@ void SettingsWindow::restoreDefaults_General() {
 }
 
 void SettingsWindow::updateSyncIconRotation(const int angle) const {
-    // Определяем размеры
-    constexpr int canvasSize = 24;
-    constexpr int iconSize = 18;
-
-    // Создаем прозрачный холст
-    QPixmap canvas(canvasSize, canvasSize);
-    canvas.fill(Qt::transparent);
-
-    // Загружаем исходную иконку
-    const QPixmap pix = IconHelper::loadIcon(
-        ":/icons/icons/SyncFilled.svg", QColor(175, 175, 175), QSize(iconSize, iconSize)).pixmap(iconSize, iconSize);
-
-    // Рисуем вращение
-    QPainter painter(&canvas);
-    // Включаем качественное сглаживание
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setRenderHint(QPainter::SmoothPixmapTransform);
-
-    // Смещаем центр координат в центр холста
-    painter.translate(canvasSize / 2.0, canvasSize / 2.0);
-    // Вращаем
-    painter.rotate(angle);
-    // Рисуем иконку так, чтобы её центр совпал с центром координат
-    painter.drawPixmap(-iconSize / 2.0, -iconSize / 2.0, pix);
-
-    if (m_hasPendingUpdate) {
-        painter.resetTransform();
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor(72, 155, 255));
-        constexpr int dot = 7;
-        painter.drawEllipse(QRect(canvasSize - dot - 1, 1, dot, dot));
-    }
-    painter.end();
-
-    // Устанавливаем результат в кнопку
-    ui.btn_upd_manually->setIconSize(QSize(canvasSize, canvasSize));
-    ui.btn_upd_manually->setIcon(QIcon(canvas));
+    ui.btn_upd_manually->setIconSize(QSize(SyncIconHelper::CanvasSize, SyncIconHelper::CanvasSize));
+    ui.btn_upd_manually->setIcon(SyncIconHelper::buildRotated(angle, m_hasPendingUpdate));
 }
 
 void SettingsWindow::updateManualCheckButtonIcon() const {
     if (isManualCheckActive()) return;
 
-    constexpr int canvasSize = 24;
-    constexpr int iconSize = 18;
-
-    QPixmap canvas(canvasSize, canvasSize);
-    canvas.fill(Qt::transparent);
-
-    const QPixmap base = IconHelper::loadIcon(
-        ":/icons/icons/SyncFilled.svg", QColor(175, 175, 175), QSize(iconSize, iconSize)
-    ).pixmap(iconSize, iconSize);
-
-    QPainter painter(&canvas);
-    painter.setRenderHint(QPainter::Antialiasing, true);
-    painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
-    painter.drawPixmap((canvasSize - iconSize) / 2, (canvasSize - iconSize) / 2, base);
-
-    if (m_hasPendingUpdate) {
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor(72, 155, 255));
-        constexpr int dot = 7;
-        painter.drawEllipse(QRect(canvasSize - dot - 1, 1, dot, dot));
-    }
-    painter.end();
-
-    ui.btn_upd_manually->setIconSize(QSize(canvasSize, canvasSize));
-    ui.btn_upd_manually->setIcon(QIcon(canvas));
+    ui.btn_upd_manually->setIconSize(QSize(SyncIconHelper::CanvasSize, SyncIconHelper::CanvasSize));
+    ui.btn_upd_manually->setIcon(SyncIconHelper::buildStatic(m_hasPendingUpdate));
 }
 
-QString SettingsWindow::lastUpdateCheckDisplay() const {
+QString SettingsWindow::lastUpdateCheckDisplay() {
     const QLocale locale = (AppSettings::appLang == "ru")
                                ? QLocale(QLocale::Russian, QLocale::Russia)
                                : QLocale(QLocale::English, QLocale::UnitedStates);
