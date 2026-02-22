@@ -1,11 +1,11 @@
 #pragma once
 #include "ui_EasyLangSwitcher_settings.h"
-#include "hoverWarning.h"
-#include "animatedSelector.h"
-#include "customToolTip.h"
-#include "updateManager.h"
-#include "updFrequencyPopup.h"
-#include "windowDragger.h"
+#include "../hoverWarning.h"
+#include "../animatedSelector.h"
+#include "../customToolTip.h"
+#include "../updateManager.h"
+#include "../updFrequencyPopup.h"
+#include "../windowDragger.h"
 #include <QVector>
 #include <QTimer>
 #include <QGraphicsDropShadowEffect>

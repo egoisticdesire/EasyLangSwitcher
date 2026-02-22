@@ -178,7 +178,7 @@ public:
                 << m_green << "[" << timeStr << "]" << m_reset << " "
                 << m_levelColor << levelStr << m_reset << " "
                 << formattedName
-                << m_levelColor << ":" << m_reset
+                << m_levelColor << "#" << m_reset
                 << m_cyan << lineStr << m_reset
                 << " ";
     }

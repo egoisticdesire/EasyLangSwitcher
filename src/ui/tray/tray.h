@@ -1,6 +1,6 @@
 #pragma once
 #include "ui_EasyLangSwitcher_tray.h"
-#include "../widgets/settingsWindow.h"
+#include "../widgets/settingsWindow/settingsWindow.h"
 #include "../widgets/updateManager.h"
 #include "../widgets/notifications/globalNotification.h"
 #include <QWidget>

@@ -9,7 +9,8 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <winuser.h>
+// ReSharper disable once CppUnusedIncludeDirective
+#include <Windows.h>
 #endif
 
 namespace VkMapper {

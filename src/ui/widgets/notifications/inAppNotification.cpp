@@ -1,5 +1,5 @@
 #include "inAppNotification.h"
-#include "../settingsWindow.h"
+#include "../settingsWindow/settingsWindow.h"
 #include "../../helpers/iconHelper.h"
 #include "../../helpers/acrylicHelper.h"
 #include "../../helpers/screenResolver.h"
@@ -8,8 +8,35 @@
 #include <QScreen>
 #include <QEvent>
 #include <QPainter>
+#include <QApplication>
 
 QVector<InAppNotification *> InAppNotification::stack;
+
+namespace {
+    bool isSettingsWindowContextActive(const SettingsWindow *settings) {
+        if (!settings) return false;
+        if (!settings->isVisible() || settings->isMinimized()) return false;
+        if (settings->isActiveWindow()) return true;
+
+        const QWidget *active = QApplication::activeWindow();
+        while (active) {
+            if (active == settings) return true;
+            active = active->parentWidget();
+        }
+        return false;
+    }
+
+    void clearInAppNotificationStack() {
+        const auto copy = InAppNotification::stack;
+        InAppNotification::stack.clear();
+        for (auto *n: copy) {
+            if (n) {
+                n->hide();
+                n->deleteLater();
+            }
+        }
+    }
+}
 
 InAppNotification::InAppNotification(SettingsWindow *settings, const QString &text, Type type)
     : QWidget(nullptr), settings(settings), m_type(type) {
@@ -264,23 +291,17 @@ bool InAppNotification::eventFilter(QObject *o, QEvent *e) {
                 if (stack[i]) stack[i]->move(stack[i]->basePosition(i));
             }
         }
-        if (e->type() == QEvent::Close || e->type() == QEvent::Hide) {
-            auto copy = stack;
-            stack.clear();
-            for (auto *n: copy) {
-                if (n) {
-                    n->hide();
-                    n->deleteLater();
-                }
-            }
+        if (e->type() == QEvent::Close
+            || e->type() == QEvent::Hide
+            || e->type() == QEvent::WindowDeactivate) {
+            clearInAppNotificationStack();
         }
     }
     return QWidget::eventFilter(o, e);
 }
 
 void InAppNotification::showFor(SettingsWindow *settings, const QString &text, const Type type) {
-    if (!settings) return;
-    if (!settings->isVisible() || settings->isMinimized()) return;
+    if (!isSettingsWindowContextActive(settings)) return;
     if (stack.size() >= 3) {
         if (auto *last = stack.last()) last->startHideAnimation(true);
     }

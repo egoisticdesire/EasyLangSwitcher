@@ -91,12 +91,19 @@ add_executable(${APP_NAME}
         src/ui/widgets/customToolTip.h
         src/ui/widgets/hoverWarning.cpp
         src/ui/widgets/hoverWarning.h
+
         src/ui/widgets/notifications/globalNotification.cpp
         src/ui/widgets/notifications/globalNotification.h
         src/ui/widgets/notifications/inAppNotification.cpp
         src/ui/widgets/notifications/inAppNotification.h
-        src/ui/widgets/settingsWindow.cpp
-        src/ui/widgets/settingsWindow.h
+
+        src/ui/widgets/settingsWindow/settingsWindow.cpp
+        src/ui/widgets/settingsWindow/settingsWindow.h
+        src/ui/widgets/settingsWindow/settingsWindow_hotkey.cpp
+        src/ui/widgets/settingsWindow/settingsWindow_state.cpp
+        src/ui/widgets/settingsWindow/settingsWindow_update.cpp
+        src/ui/widgets/settingsWindow/settingsWindow_visuals.cpp
+
         src/ui/widgets/soundManager.cpp
         src/ui/widgets/soundManager.h
         src/ui/widgets/updateManager.cpp

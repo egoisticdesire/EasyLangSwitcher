@@ -23,6 +23,8 @@ using namespace ABI::Windows::UI::Notifications;
 using ToastActivatedHandler = __FITypedEventHandler_2_Windows__CUI__CNotifications__CToastNotification_IInspectable;
 
 namespace {
+    constexpr HRESULT kToastHistoryNotFoundHr = static_cast<HRESULT>(0x80070490);
+
     ComPtr<IToastNotification> g_activeToast;
     ComPtr<ToastActivatedHandler> g_activeToastActivatedHandler;
     EventRegistrationToken g_activeToastActivatedToken{};
@@ -235,12 +237,16 @@ void WindowsToastNotification::clearToastHistoryForApp() {
     const std::wstring appId = WindowsToastIdentity::appUserModelIdWide();
     if (!appId.empty()) {
         if (const HRESULT clearWithIdHr = history->ClearWithId(HStringReference(appId.c_str()).Get());
-            FAILED(clearWithIdHr)) {
+            SUCCEEDED(clearWithIdHr) || clearWithIdHr == kToastHistoryNotFoundHr) {
+            resetActiveToastHandlers();
+            return;
+        } else {
             LOG_WARNING() << "Toast history ClearWithId failed. HRESULT=0x"
                     << QString::number(static_cast<qulonglong>(clearWithIdHr), 16);
         }
     }
-    if (const HRESULT clearHr = history->Clear(); FAILED(clearHr)) {
+
+    if (const HRESULT clearHr = history->Clear(); FAILED(clearHr) && clearHr != kToastHistoryNotFoundHr) {
         LOG_WARNING() << "Toast history Clear failed. HRESULT=0x"
                 << QString::number(static_cast<qulonglong>(clearHr), 16);
     }
