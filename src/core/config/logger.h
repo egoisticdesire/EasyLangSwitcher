@@ -8,6 +8,29 @@
 #include <QMutex>
 #include <QWaitCondition>
 #include <QTextStream>
+#include <QDebug>
+#include <type_traits>
+#include <utility>
+
+namespace logger_detail {
+template<typename T, typename = void>
+struct has_qtextstream_insertion : std::false_type {
+};
+
+template<typename T>
+struct has_qtextstream_insertion<T, std::void_t<decltype(std::declval<QTextStream &>() << std::declval<const T &>())>>
+    : std::true_type {
+};
+
+template<typename T, typename = void>
+struct has_qdebug_insertion : std::false_type {
+};
+
+template<typename T>
+struct has_qdebug_insertion<T, std::void_t<decltype(std::declval<QDebug &>() << std::declval<const T &>())>>
+    : std::true_type {
+};
+}
 
 class ThreadedLogger final : public QThread {
     Q_OBJECT
@@ -161,7 +184,20 @@ public:
 
     template<typename T>
     Logger &operator<<(const T &value) {
-        if (!m_suppressed) QTextStream(&m_str) << m_levelColor << value << m_reset;
+        if (m_suppressed) return *this;
+
+        if constexpr (logger_detail::has_qtextstream_insertion<T>::value) {
+            QTextStream(&m_str) << m_levelColor << value << m_reset;
+        } else if constexpr (logger_detail::has_qdebug_insertion<T>::value) {
+            QString rendered;
+            {
+                QDebug debugStream(&rendered);
+                debugStream.noquote().nospace() << value;
+            }
+            QTextStream(&m_str) << m_levelColor << rendered << m_reset;
+        } else {
+            QTextStream(&m_str) << m_levelColor << "<unprintable-value>" << m_reset;
+        }
         return *this;
     }
 
