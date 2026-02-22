@@ -32,11 +32,18 @@ GlobalNotification::GlobalNotification(const Mode mode, QString version, QString
     ui->btn_stack->setCurrentIndex(0);
     ui->btn_stack->layout()->activate();
 
-    setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+    setWindowFlags(
+        Qt::ToolTip
+        | Qt::FramelessWindowHint
+        | Qt::NoDropShadowWindowHint
+        | Qt::WindowDoesNotAcceptFocus
+    );
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setAttribute(Qt::WA_DeleteOnClose);
     setMouseTracking(true);
+    setFocusPolicy(Qt::NoFocus);
+    setCursor(Qt::ArrowCursor);
 
     ui->background_frame->setMouseTracking(true);
     ui->background_frame->setAttribute(Qt::WA_Hover);
@@ -161,6 +168,8 @@ void GlobalNotification::showEvent(QShowEvent *event) {
     }
 
     if (m_externalCloseBtn) {
+        m_externalCloseBtn->setWindowOpacity(0.0);
+        m_externalCloseBtn->setAttribute(Qt::WA_TransparentForMouseEvents, true);
         m_externalCloseBtn->show();
         m_externalCloseBtn->updatePosition();
         m_externalCloseBtn->raise();
@@ -177,7 +186,6 @@ void GlobalNotification::enterEvent(QEnterEvent *event) {
             setProgress(0.0);
         }
     }
-    this->update();
     QWidget::enterEvent(event);
 }
 
@@ -333,9 +341,7 @@ void GlobalNotification::startShowAnimation() {
 
     connect(posAnim, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) {
         this->move(value.toPoint());
-        // ПРИНУДИТЕЛЬНО: перерисовываем и обновляем регион акрила
         this->update();
-        AcrylicHelper::updateRegion(this);
     });
 
     auto *opacityAnim = new QPropertyAnimation(this, "windowOpacity");
@@ -539,7 +545,7 @@ void GlobalNotification::updateContentOnly() const {
     };
 
     ui->background_frame->layout()->activate();
-    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    // QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents); // было важно, сейчас под вопросом
 
     recalculateLabel(ui->info_title_label);
     recalculateLabel(ui->info_desc_label);
@@ -588,7 +594,7 @@ void GlobalNotification::animateHeightChange() {
     ui->info_desc_label->updateGeometry();
     ui->background_frame->layout()->invalidate();
     ui->background_frame->layout()->activate();
-    QCoreApplication::processEvents();
+    QCoreApplication::processEvents(); // важно для корректного изменения высоты окна
 
     const int startHeight = this->height();
     const int targetHeight = this->sizeHint().height();

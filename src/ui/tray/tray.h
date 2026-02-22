@@ -52,6 +52,8 @@ private:
 
     void openSettings();
 
+    void ensureSettingsWindow();
+
     void hideAnimated() const;
 
     void animateToggleButton();

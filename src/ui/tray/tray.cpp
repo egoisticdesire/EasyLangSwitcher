@@ -31,9 +31,6 @@ TrayManager::TrayManager(QWidget *parent)
 #endif
 
     updateManager = new UpdateManager(this);
-    settingsWindow = new SettingsWindow(nullptr);
-    settingsWindow->setAttribute(Qt::WA_DeleteOnClose, false);
-    settingsWindow->setUpdateManager(updateManager);
 
     connect(updateManager, &UpdateManager::updateAvailable, this, &TrayManager::handleUpdateAvailable);
     connect(updateManager, &UpdateManager::noUpdateAvailable, this, &TrayManager::handleNoUpdateAvailable);
@@ -186,7 +183,7 @@ void TrayManager::hideAnimated() const {
 
 void TrayManager::openSettings() {
     hideAnimated();
-    if (!settingsWindow) return;
+    ensureSettingsWindow();
     clearPendingUpdate();
 #ifdef Q_OS_WIN
     WindowsToastNotification::clearToastHistoryForApp();
@@ -196,6 +193,21 @@ void TrayManager::openSettings() {
         settingsWindow->openCentered();
         settingsWindow->raise();
         settingsWindow->activateWindow();
+    });
+}
+
+void TrayManager::ensureSettingsWindow() {
+    if (settingsWindow) return;
+
+    settingsWindow = new SettingsWindow(nullptr);
+    settingsWindow->setAttribute(Qt::WA_DeleteOnClose, false);
+    settingsWindow->setUpdateManager(updateManager);
+    settingsWindow->setPendingUpdateHint(m_hasAvailableUpdate, m_availableUpdateVersion);
+
+    connect(settingsWindow, &SettingsWindow::settingsSaved, this, [this]() {
+        updateInfo();
+        updateTrayIcon();
+        if (m_currentGlobalNotif) m_currentGlobalNotif->refreshTranslations();
     });
 }
 
@@ -349,6 +361,7 @@ void TrayManager::showGlobalNotification(const GlobalNotification::Mode mode, co
 
     m_currentGlobalNotif = new GlobalNotification(mode, version, url);
     m_currentGlobalNotif->show();
+    m_currentGlobalNotif->raise();
 }
 
 void TrayManager::setAvailableUpdate(const QString &version, const QString &url) {
@@ -561,14 +574,6 @@ void TrayManager::animateToggleButton() {
 
 void TrayManager::setupUiBehavior() {
     connect(ui.settings_btn, &QPushButton::clicked, this, &TrayManager::openSettings);
-
-    if (settingsWindow) {
-        connect(settingsWindow, &SettingsWindow::settingsSaved, this, [this]() {
-            updateInfo();
-            updateTrayIcon();
-            if (m_currentGlobalNotif) m_currentGlobalNotif->refreshTranslations();
-        });
-    }
 
     connect(ui.exit_btn, &QToolButton::clicked, this, &TrayManager::exitRequested);
 

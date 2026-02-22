@@ -66,7 +66,7 @@ public:
             }
             if (!msg.isEmpty()) {
                 const std::wstring wmsg = msg.toStdWString();
-                std::wcout << wmsg << std::endl;
+                std::wcout << wmsg << L'\n';
                 // QString threadStr = QString("LoggerThread=%1").arg(reinterpret_cast<quintptr>(currentThreadId()));
                 // std::wcout << (threadStr + " " + msg).toStdWString() << std::endl;
             }

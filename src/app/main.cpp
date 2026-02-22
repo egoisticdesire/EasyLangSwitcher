@@ -18,6 +18,7 @@
 #include <memory>
 #include <fcntl.h>
 #include <io.h>
+#include <thread>
 
 #pragma comment(lib, "Shell32.lib")
 
@@ -31,13 +32,25 @@ namespace MainRuntimeFlags {
     constexpr bool kEnableUpdateCheckTestOverride = false;
     constexpr auto kForcedAppVersion = "1.1.1";
     constexpr int kLastUpdateShiftDays = -7;
+    constexpr int kAsyncBootstrapDelayMs = 1500;
 }
 
 void applyUpdateCheckTestOverrideAfterSettingsLoad() {
+    // ReSharper disable once CppDFAUnreachableCode
     if (!MainRuntimeFlags::kEnableUpdateCheckTestOverride) return;
     // ReSharper disable once CppDFAUnreachableCode
     QApplication::setApplicationVersion(MainRuntimeFlags::kForcedAppVersion);
     AppSettings::lastUpdateCheckDate = QDate::currentDate().addDays(MainRuntimeFlags::kLastUpdateShiftDays);
+}
+
+void runWindowsBootstrapTasksAsync() {
+#ifdef Q_OS_WIN
+    const std::wstring appUserModelId = WindowsToastIdentity::appUserModelIdWide();
+    std::thread([appUserModelId]() {
+        MainBootstrapHelper::ensureToastShortcut(appUserModelId.c_str());
+        MainBootstrapHelper::ensureProtocolRegistration();
+    }).detach();
+#endif
 }
 
 int main(int argc, char *argv[]) {
@@ -114,8 +127,6 @@ int main(int argc, char *argv[]) {
         LOG_INFO() << "SetCurrentProcessExplicitAppUserModelID result=0x"
                 << QString::number(static_cast<qulonglong>(appIdResult), 16);
     }
-    MainBootstrapHelper::ensureToastShortcut(appUserModelId.c_str());
-    MainBootstrapHelper::ensureProtocolRegistration();
 
     QApplication app(argc, argv);
     QApplication::setStyle("Windows11");
@@ -131,7 +142,10 @@ int main(int argc, char *argv[]) {
     QApplication::setWindowIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
 
     TrayManager tray;
-    tray.show();
+
+    QTimer::singleShot(MainRuntimeFlags::kAsyncBootstrapDelayMs, &app, [] {
+        runWindowsBootstrapTasksAsync();
+    });
 
     if (isToastLaunch) {
         QTimer::singleShot(0, &tray, [&tray]() {
@@ -140,7 +154,9 @@ int main(int argc, char *argv[]) {
     }
 
     KeyboardHandler kbHandler;
-    kbHandler.start();
+    QTimer::singleShot(0, &app, [&kbHandler]() {
+        kbHandler.start();
+    });
 
     QObject::connect(&app, &QApplication::aboutToQuit, [&] {
         kbHandler.stop();
