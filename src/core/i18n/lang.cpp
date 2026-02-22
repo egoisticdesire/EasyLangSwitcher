@@ -97,6 +97,21 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                 QStringLiteral("Проверить обновления сейчас"),
             });
         t.insert(
+            QStringLiteral("SETTINGS_TOOLTIP_UPDATE_AVAILABLE"), {
+                QStringLiteral("A new version %1 is available.\nClick to open update actions."),
+                QStringLiteral("Доступна новая версия %1.\nНажмите, чтобы открыть действия обновления."),
+            });
+        t.insert(
+            QStringLiteral("SETTINGS_TOOLTIP_UPDATE_AVAILABLE_WITH_LAST_CHECK"), {
+                QStringLiteral("A new version %1 is available.\nLast check: %2"),
+                QStringLiteral("Доступна новая версия %1.\nПоследняя проверка: %2"),
+            });
+        t.insert(
+            QStringLiteral("SETTINGS_TOOLTIP_LAST_CHECK"), {
+                QStringLiteral("The latest version is installed.\nLast check: %1"),
+                QStringLiteral("Установлена актуальная версия.\nПоследняя проверка: %1"),
+            });
+        t.insert(
             QStringLiteral("SETTINGS_APP_UPD_CHECK_NEVER"), {
                 QStringLiteral("Never"),
                 QStringLiteral("Никогда"),
@@ -226,6 +241,16 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
             QStringLiteral("NOTIFICATION_UPD_DOWNLOAD_ERROR"), {
                 QStringLiteral("Failed to download update"),
                 QStringLiteral("Не удалось загрузить обновление"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_SYSTEM_BODY"), {
+                QStringLiteral("New update notification for version %1"),
+                QStringLiteral("Новое уведомление об обновлении для версии %1"),
+            });
+        t.insert(
+            QStringLiteral("NOTIFICATION_UPD_SYSTEM_CLICK_HINT"), {
+                QStringLiteral("Click to open update actions."),
+                QStringLiteral("Нажмите, чтобы открыть действия обновления."),
             });
 
 
