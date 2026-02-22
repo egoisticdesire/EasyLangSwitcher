@@ -3,7 +3,7 @@ add_compile_options(/utf-8)
 
 set(APP_NAME "EasyLangSwitcher")
 
-project(${APP_NAME} VERSION 1.3.2)
+project(${APP_NAME} VERSION 1.4.0)
 
 set(APP_VERSION "${PROJECT_VERSION}")
 
@@ -22,7 +22,21 @@ if (NOT QT_DIR)
     message(FATAL_ERROR "Please set QT_DIR environment variable to Qt installation path")
 endif ()
 
-set(CMAKE_PREFIX_PATH "${QT_DIR}/6.10.1/msvc2022_64")
+set(_qt_candidate_kit "${QT_DIR}")
+set(_qt_candidate_root "${QT_DIR}/6.10.1/msvc2022_64")
+
+if (EXISTS "${_qt_candidate_kit}/bin/windeployqt6.exe")
+    set(CMAKE_PREFIX_PATH "${_qt_candidate_kit}")
+elseif (EXISTS "${_qt_candidate_root}/bin/windeployqt6.exe")
+    set(CMAKE_PREFIX_PATH "${_qt_candidate_root}")
+else ()
+    message(FATAL_ERROR
+            "Cannot locate Qt kit. "
+            "QT_DIR='${QT_DIR}'. "
+            "Expected either '${_qt_candidate_kit}/bin/windeployqt6.exe' "
+            "or '${_qt_candidate_root}/bin/windeployqt6.exe'")
+endif ()
+
 set(QT_BIN_DIR "${CMAKE_PREFIX_PATH}/bin")
 set(WINDEPLOYQT "${QT_BIN_DIR}/windeployqt6.exe")
 set(AUTOGEN_INCLUDE "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}_autogen/include")
