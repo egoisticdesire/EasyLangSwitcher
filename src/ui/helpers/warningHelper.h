@@ -5,8 +5,11 @@
 #include "iconHelper.h"
 #include "acrylicHelper.h"
 #include <QDialog>
+#include <QGuiApplication>
 #include <QScreen>
 #include <QSoundEffect>
+#include <QTimer>
+#include <QAction>
 
 class WarningDialog final : public QDialog {
     Q_OBJECT
@@ -48,7 +51,13 @@ public:
 
     void openCentered() {
         const QScreen *screen = QGuiApplication::primaryScreen();
-        if (!screen) screen = QGuiApplication::screens().first();
+        if (!screen) {
+            const QList<QScreen *> screens = QGuiApplication::screens();
+            if (!screens.isEmpty()) {
+                screen = screens.first();
+            }
+        }
+        if (!screen) return;
         const QRect geom = screen->availableGeometry();
 
         adjustSize();
@@ -65,7 +74,7 @@ public:
         raise();
         activateWindow();
 
-        if (audioEffect) audioEffect->play();
+        if (audioEffect) soundManager::instance().playEffect(audioEffect);
     }
 
     void setTranslations(const QString &text) const {

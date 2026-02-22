@@ -1,11 +1,18 @@
 #include "customToolTip.h"
-#include "notifications/inAppNotification.h"
 #include "../../ui/helpers/acrylicHelper.h"
 #include "../../core/i18n/lang.h"
-#include <QScreen>
+#include <QTimer>
 
+namespace {
+constexpr int kToolTipMinWidth = 220;
+constexpr int kToolTipMaxWidth = 360;
+constexpr int kToolTipHeightPadding = 10;
+constexpr int kToolTipHSpacing = 12;
+constexpr int kToolTipSlideOffset = 10;
+}
 
 CustomToolTip::CustomToolTip(QWidget *parent) : QWidget(nullptr) {
+    Q_UNUSED(parent);
     ui.setupUi(this);
 
     setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
@@ -13,7 +20,8 @@ CustomToolTip::CustomToolTip(QWidget *parent) : QWidget(nullptr) {
     setAttribute(Qt::WA_ShowWithoutActivating);
 
     ui.hlayout_background_frame->setContentsMargins(8, 0, 8, 0);
-    ui.tooltip_label->setAlignment(Qt::AlignCenter);
+    ui.tooltip_label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    ui.tooltip_label->setWordWrap(true);
 
     QTimer::singleShot(0, this, [this]() { AcrylicHelper::enableAcrylic(this); });
 
@@ -28,11 +36,38 @@ CustomToolTip::CustomToolTip(QWidget *parent) : QWidget(nullptr) {
 
 void CustomToolTip::updateSize() {
     const QFontMetrics fm(ui.tooltip_label->font());
-    const int textWidth = fm.horizontalAdvance(ui.tooltip_label->text());
-    this->setFixedSize(textWidth + 24, 28);
+    const int maxTextWidth = kToolTipMaxWidth - 16;
+    const QRect textRect = fm.boundingRect(
+        QRect(0, 0, maxTextWidth, 4096),
+        Qt::AlignLeft | Qt::TextWordWrap,
+        ui.tooltip_label->text()
+    );
+
+    const int tooltipWidth = qBound(kToolTipMinWidth, textRect.width() + 16, kToolTipMaxWidth);
+    const int tooltipHeight = qMax(28, textRect.height() + kToolTipHeightPadding);
+    ui.tooltip_label->setFixedWidth(tooltipWidth - 16);
+    this->setFixedSize(tooltipWidth, tooltipHeight);
+}
+
+QString CustomToolTip::resolveText() const {
+    if (currentLangKey.isEmpty()) return {};
+
+    QString text = Lang::tr(currentLangKey);
+    for (const QString &arg: currentLangArgs) {
+        text = text.arg(arg);
+    }
+    return text;
 }
 
 void CustomToolTip::showAt(const QWidget *target, const QString &langKey) {
+    showAt(target, langKey, {});
+}
+
+void CustomToolTip::showAt(const QWidget *target, const QString &langKey, const QString &arg) {
+    showAt(target, langKey, arg, {});
+}
+
+void CustomToolTip::showAt(const QWidget *target, const QString &langKey, const QString &arg1, const QString &arg2) {
     if (!target) return;
 
     animGroup->stop();
@@ -40,14 +75,18 @@ void CustomToolTip::showAt(const QWidget *target, const QString &langKey) {
     isClosing = false;
 
     currentLangKey = langKey;
-    ui.tooltip_label->setText(Lang::tr(langKey));
+    currentLangArgs.clear();
+    if (!arg1.isEmpty()) currentLangArgs.push_back(arg1);
+    if (!arg2.isEmpty()) currentLangArgs.push_back(arg2);
+    ui.tooltip_label->setText(resolveText());
     updateSize();
 
-    // Считаем позиции
-    constexpr int padding = 12;
-    const QPoint globalPos = target->mapToGlobal(QPoint(target->width() + padding, 0))
-                             + QPoint(0, (target->height() - this->height()) / 2);
-    const QPoint startPos = globalPos - QPoint(padding, 0);
+    // Позиция: справа от кнопки, по вертикали в центр кнопки.
+    const QPoint buttonTopLeft = target->mapToGlobal(QPoint(0, 0));
+    const int x = buttonTopLeft.x() + target->width() + kToolTipHSpacing;
+    const int y = buttonTopLeft.y() + (target->height() - this->height()) / 2;
+    const QPoint globalPos(x, y);
+    const QPoint startPos = globalPos - QPoint(kToolTipSlideOffset, 0);
 
     // Сначала перемещаем и скрываем, потом показываем
     this->move(startPos);
@@ -90,12 +129,10 @@ void CustomToolTip::hideAnimated() {
     animGroup->stop();
     animGroup->clear();
 
-    constexpr int padding = 12;
-
     auto *posAnim = new QVariantAnimation(this);
     posAnim->setDuration(180);
     posAnim->setStartValue(this->pos());
-    posAnim->setEndValue(this->pos() - QPoint(padding, 0));
+    posAnim->setEndValue(this->pos() - QPoint(kToolTipSlideOffset, 0));
     posAnim->setEasingCurve(QEasingCurve::InBack);
 
     connect(posAnim, &QVariantAnimation::valueChanged, this, [this](const QVariant &v) {
@@ -124,7 +161,7 @@ void CustomToolTip::hideNow() {
 
 void CustomToolTip::refreshTranslations() {
     if (!currentLangKey.isEmpty()) {
-        ui.tooltip_label->setText(Lang::tr(currentLangKey));
+        ui.tooltip_label->setText(resolveText());
         updateSize();
 
         AcrylicHelper::updateRegion(this);

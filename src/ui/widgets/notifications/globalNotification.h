@@ -13,6 +13,7 @@ namespace Ui {
 
 class QNetworkReply;
 class QFile;
+class QNetworkAccessManager;
 
 class GlobalNotification final : public QWidget {
     Q_OBJECT
@@ -23,7 +24,7 @@ public:
 
     enum Mode { UpdateAvailable, UpToDate, Error };
 
-    explicit GlobalNotification(Mode mode, const QString &version, const QString &url = "", QWidget *parent = nullptr);
+    explicit GlobalNotification(Mode mode, QString version, QString url = {}, QWidget *parent = nullptr);
 
     ~GlobalNotification() override;
 
@@ -77,6 +78,7 @@ private:
     QString m_version;
     QString m_downloadUrl;
     QString m_downloadPath;
+    QNetworkAccessManager *m_networkManager = nullptr;
     QNetworkReply *m_reply = nullptr;
     QFile *m_file = nullptr;
     QPointer<NotificationCloseButton> m_externalCloseBtn;
@@ -104,4 +106,6 @@ private:
     void updateContentOnly() const;
 
     void animateHeightChange();
+
+    void cleanupDownloadResources(bool removePartialFile);
 };

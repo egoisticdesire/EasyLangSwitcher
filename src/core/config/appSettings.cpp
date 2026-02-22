@@ -12,6 +12,8 @@ QString AppSettings::defaultAppLang = "en";
 AppSettings::UpdateFrequency AppSettings::defaultUpdateFrequency = UpdateFrequency::Never;
 QDate AppSettings::defaultLastUpdateCheckDate = QDate();
 QDate AppSettings::lastUpdateCheckDate = defaultLastUpdateCheckDate;
+QDateTime AppSettings::defaultLastUpdateCheckDateTime = QDateTime();
+QDateTime AppSettings::lastUpdateCheckDateTime = defaultLastUpdateCheckDateTime;
 
 int AppSettings::hotkeyMainVk = defaultHotkeyMainVk;
 int AppSettings::hotkeyModifiers = defaultHotkeyModifiers;
@@ -41,7 +43,7 @@ updateFrequencyMeta = {
 
 void AppSettings::logger(const QString &action) {
     LOG_DEBUG() << QString("%1 settings: vk=%2; name='%3'; delay=%4; prevVk=%5; prevName='%6'; "
-                   "autoStartup=%7; lang='%8'; updateFrequency='%9'; lastUpdCheck='%10'")
+                   "autoStartup=%7; lang='%8'; updateFrequency='%9'; lastUpdCheck='%10'; lastUpdCheckTs='%11'")
                     .arg(action)
                     .arg(hotkeyMainVk)
                     .arg(hotkeyName.toLower())
@@ -49,8 +51,9 @@ void AppSettings::logger(const QString &action) {
                     .arg(previousHotkeyMainVk)
                     .arg(previousHotkeyName.toLower())
                     .arg(autoStartup ? "true" : "false")
-                    .arg(appLang.toLower(), updateFrequencyToString(updateFrequency, false).toLower(),
-                         lastUpdateCheckDate.isValid() ? lastUpdateCheckDate.toString(Qt::ISODate) : "never");
+                    .arg(appLang.toLower(), updateFrequencyToString(updateFrequency, false).toLower())
+                    .arg(lastUpdateCheckDate.isValid() ? lastUpdateCheckDate.toString(Qt::ISODate) : "never")
+                    .arg(lastUpdateCheckDateTime.isValid() ? lastUpdateCheckDateTime.toString(Qt::ISODate) : "never");
 }
 
 QString AppSettings::updateFrequencyToString(
@@ -70,13 +73,14 @@ void AppSettings::load() {
     hotkeyModifiers = settings.value("hotkey/mods", defaultHotkeyModifiers).toInt();
     hotkeyName = settings.value("hotkey/name", defaultHotkeyName).toString();
     switchDelayMs = settings.value("delay", defaultSwitchDelayMs).toInt();
-    previousHotkeyMainVk = settings.value("previous_hotkey/main_vk", previousHotkeyMainVk).toInt();
-    previousHotkeyName = settings.value("previous_hotkey/name", previousHotkeyName).toString();
-    autoStartup = settings.value("auto_startup", autoStartup).toBool();
+    previousHotkeyMainVk = settings.value("previous_hotkey/main_vk", 0).toInt();
+    previousHotkeyName = settings.value("previous_hotkey/name", QString{}).toString();
+    autoStartup = settings.value("auto_startup", false).toBool();
     appLang = settings.value("app/lang", defaultAppLang).toString();
     updateFrequency = static_cast<UpdateFrequency>(settings.value("updates/frequency",
                                                                   static_cast<int>(defaultUpdateFrequency)).toInt());
     lastUpdateCheckDate = settings.value("updates/last_check_date", defaultLastUpdateCheckDate).toDate();
+    lastUpdateCheckDateTime = settings.value("updates/last_check_datetime", defaultLastUpdateCheckDateTime).toDateTime();
 
     logger("Loaded");
 }
@@ -92,6 +96,7 @@ void AppSettings::save() {
     settings.setValue("app/lang", appLang);
     settings.setValue("updates/frequency", static_cast<int>(updateFrequency));
     settings.setValue("updates/last_check_date", lastUpdateCheckDate);
+    settings.setValue("updates/last_check_datetime", lastUpdateCheckDateTime);
 
     logger("Saved");
 }
@@ -102,7 +107,7 @@ bool AppSettings::isDirty() {
     if (settings.value("hotkey/mods", defaultHotkeyModifiers).toInt() != hotkeyModifiers) return true;
     if (settings.value("hotkey/name", defaultHotkeyName).toString() != hotkeyName) return true;
     if (settings.value("delay", defaultSwitchDelayMs).toInt() != switchDelayMs) return true;
-    if (settings.value("auto_startup", autoStartup).toBool() != autoStartup) return true;
+    if (settings.value("auto_startup", false).toBool() != autoStartup) return true;
     if (settings.value("app/lang", defaultAppLang).toString() != appLang) return true;
     if (static_cast<UpdateFrequency>(settings.value("updates/frequency",
         static_cast<int>(defaultUpdateFrequency)).toInt()) != updateFrequency) return true;

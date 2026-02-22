@@ -2,17 +2,16 @@
 #include "ui_EasyLangSwitcher_settings.h"
 #include "hoverWarning.h"
 #include "animatedSelector.h"
-#include "notifications/globalNotification.h"
 #include "customToolTip.h"
 #include "updateManager.h"
 #include "updFrequencyPopup.h"
 #include "windowDragger.h"
 #include <QVector>
 #include <QTimer>
+#include <QDateTime>
 #include <QGraphicsDropShadowEffect>
 
 class KeySequenceHelper;
-class InAppNotification;
 
 class SettingsWindow final : public QWidget {
     Q_OBJECT
@@ -25,6 +24,8 @@ public:
     void openCentered();
 
     void setUpdateManager(UpdateManager *manager);
+
+    void setPendingUpdateHint(bool hasPending, QString version = {});
 
 signals:
     void settingsChanged();
@@ -46,7 +47,6 @@ private:
     // UI и компоненты
     Ui::settings_main_widget ui{};
     KeySequenceHelper *m_keyHelper = nullptr;
-    InAppNotification *inAppNotif = nullptr;
     QVector<AnimatedSelector *> selectors;
     WindowDragger *dragger = nullptr;
     KeyHoverWarning *keyHoverWarning = nullptr;
@@ -54,18 +54,19 @@ private:
     CustomToolTip *updateBtnToolTip = nullptr;
     UpdateManager *updateManager = nullptr;
     QGraphicsDropShadowEffect *m_shadow = nullptr;
-    QPointer<GlobalNotification> m_currentGlobalNotif;
     QVariantAnimation* m_syncRotationAnim = nullptr;
     void updateSyncIconRotation(int angle) const;
     void stopSyncAnimation() const;
+    void updateManualCheckButtonIcon() const;
+    void refreshUpdateButtonTooltipLive() const;
+    [[nodiscard]] QString lastUpdateCheckDisplay() const;
 
     // Логика и состояние
     QTimer autosaveTimer;
     static constexpr int autosaveIntervalMs = 1000;
     bool hasPendingChanges = false;
-
-    int previousPresetVk = 0;
-    QString previousPresetName;
+    bool m_hasPendingUpdate = false;
+    QString m_pendingUpdateVersion;
     QHash<QString, int> presetMap;
 
     // Методы инициализации

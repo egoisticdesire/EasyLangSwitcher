@@ -5,6 +5,7 @@
 #include <QScreen>
 #include <QGuiApplication>
 #include <QSettings>
+#include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QFile>
 #include <QStandardPaths>
@@ -16,14 +17,29 @@
 #include <QPropertyAnimation>
 #include <QParallelAnimationGroup>
 #include <QSequentialAnimationGroup>
-#include <QStyle>
+#include <QCursor>
+#include <utility>
 
-GlobalNotification::GlobalNotification(const Mode mode, const QString &version, const QString &url, QWidget *parent)
+namespace {
+const QScreen *resolveTargetScreen() {
+    if (const QScreen *cursorScreen = QGuiApplication::screenAt(QCursor::pos())) {
+        return cursorScreen;
+    }
+    if (const QScreen *primary = QGuiApplication::primaryScreen()) {
+        return primary;
+    }
+    const QList<QScreen *> screens = QGuiApplication::screens();
+    return screens.isEmpty() ? nullptr : screens.first();
+}
+}
+
+GlobalNotification::GlobalNotification(const Mode mode, QString version, QString url, QWidget *parent)
     : QWidget(nullptr),
       ui(new Ui::notification_main_widget),
       m_mode(mode),
-      m_version(version),
-      m_downloadUrl(url) {
+      m_version(std::move(version)),
+      m_downloadUrl(std::move(url)) {
+    Q_UNUSED(parent);
     ui->setupUi(this);
     this->setFixedWidth(420);
 
@@ -45,6 +61,7 @@ GlobalNotification::GlobalNotification(const Mode mode, const QString &version, 
     m_externalCloseBtn = new NotificationCloseButton(this);
     m_stackOpacityEffect = new QGraphicsOpacityEffect(ui->btn_stack);
     ui->btn_stack->setGraphicsEffect(m_stackOpacityEffect);
+    m_networkManager = new QNetworkAccessManager(this);
     m_hideTimer = new QTimer(this);
     m_hideTimer->setSingleShot(true);
 
@@ -68,7 +85,7 @@ GlobalNotification::GlobalNotification(const Mode mode, const QString &version, 
         if (m_downloadUrl.isEmpty()) return;
         QString releasePage = m_downloadUrl;
 
-        if (const int downloadIdx = releasePage.indexOf("/download/"); downloadIdx != -1)
+        if (const qsizetype downloadIdx = releasePage.indexOf("/download/"); downloadIdx >= 0)
             releasePage = releasePage.left(downloadIdx) + "/latest";
 
         LOG_DEBUG() << "Opening release page: " << releasePage;
@@ -104,6 +121,7 @@ GlobalNotification::GlobalNotification(const Mode mode, const QString &version, 
 }
 
 GlobalNotification::~GlobalNotification() {
+    cleanupDownloadResources(true);
     LOG_DEBUG() << "GlobalNotification DESTROYED: " << this;
     delete ui;
 }
@@ -189,6 +207,8 @@ void GlobalNotification::hideEvent(QHideEvent *event) {
 }
 
 void GlobalNotification::closeEvent(QCloseEvent *event) {
+    cleanupDownloadResources(true);
+
     if (m_externalCloseBtn) {
         m_externalCloseBtn->hide();
         m_externalCloseBtn->deleteLater();
@@ -223,10 +243,7 @@ void GlobalNotification::executeDownload(const QString &filePath) {
     toggleInterface(UiState::Progress);
     ui->info_desc_label->setText(Lang::tr("NOTIFICATION_UPD_DOWNLOAD_PROGRESS"));
 
-    if (m_file) {
-        m_file->close();
-        delete m_file;
-    }
+    cleanupDownloadResources(false);
 
     m_file = new QFile(filePath);
     if (!m_file->open(QIODevice::WriteOnly)) {
@@ -237,8 +254,7 @@ void GlobalNotification::executeDownload(const QString &filePath) {
         return;
     }
 
-    auto *manager = new QNetworkAccessManager(this);
-    m_reply = manager->get(QNetworkRequest(QUrl(m_downloadUrl))); //"https://api.github.coms/repos/%1/releases/latest"
+    m_reply = m_networkManager->get(QNetworkRequest(QUrl(m_downloadUrl))); //"https://api.github.coms/repos/%1/releases/latest"
 
     connect(m_reply, &QNetworkReply::readyRead, this, [this]() {
         if (m_file && m_reply && m_reply->error() == QNetworkReply::NoError)
@@ -299,7 +315,8 @@ void GlobalNotification::applySystemAccentColor() const {
     bool ok;
     const unsigned int rgba = dwmSettings.value("AccentColor").toUInt(&ok);
     if (ok) {
-        const QColor accent(rgba & 0xFF, (rgba >> 8) & 0xFF, (rgba >> 16) & 0xFF);
+        const QRgb rgb = rgba;
+        const QColor accent(qBlue(rgb), qGreen(rgb), qRed(rgb));
         ui->progress_bar->setStyleSheet(
             QString("QProgressBar::chunk { background-color: %1; border-radius: 2px; }").arg(accent.name()));
     }
@@ -310,7 +327,8 @@ void GlobalNotification::startShowAnimation() {
     this->setFixedHeight(this->sizeHint().height());
 
     this->setWindowOpacity(0.0);
-    const QScreen *screen = QGuiApplication::primaryScreen();
+    const QScreen *screen = resolveTargetScreen();
+    if (!screen) return;
     const QRect desktop = screen->availableGeometry();
 
     constexpr int margin = 20;
@@ -460,7 +478,8 @@ void GlobalNotification::animateStackTransition(int nextIndex) {
 }
 
 void GlobalNotification::moveToBottomRight() {
-    const QScreen *screen = QGuiApplication::primaryScreen();
+    const QScreen *screen = resolveTargetScreen();
+    if (!screen) return;
     const QRect desktop = screen->availableGeometry();
     constexpr int margin = 20;
 
@@ -641,4 +660,24 @@ void GlobalNotification::startAutohideTimer() {
         m_progressAnim->start();
         m_hideTimer->start(AUTOHIDE_DELAY);
     }
+}
+
+void GlobalNotification::cleanupDownloadResources(const bool removePartialFile) {
+    if (m_reply) {
+        disconnect(m_reply, nullptr, this, nullptr);
+        if (m_reply->isRunning()) m_reply->abort();
+        m_reply->deleteLater();
+        m_reply = nullptr;
+    }
+
+    if (!m_file) return;
+
+    if (m_file->isOpen()) {
+        m_file->close();
+    }
+    if (removePartialFile) {
+        m_file->remove();
+    }
+    delete m_file;
+    m_file = nullptr;
 }

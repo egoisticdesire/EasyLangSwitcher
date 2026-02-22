@@ -14,6 +14,7 @@
 #include <QPushButton>
 #include <QKeySequenceEdit>
 #include <QLineEdit>
+#include <QLocale>
 #include <algorithm>
 
 SettingsWindow::SettingsWindow(QWidget *parent) : QWidget(parent) {
@@ -75,6 +76,7 @@ void SettingsWindow::initVisuals() {
         IconHelper::loadIcon(":/icons/icons/InfoRegular.svg", QColor(175, 175, 175), QSize(16, 16)));
     ui.btn_upd_manually->setIcon(
         IconHelper::loadIcon(":/icons/icons/SyncFilled.svg", QColor(175, 175, 175), QSize(18, 18)));
+    updateManualCheckButtonIcon();
 
     // Драггер
     dragger = new WindowDragger(this);
@@ -106,8 +108,7 @@ void SettingsWindow::initVisuals() {
     });
 
     connect(m_syncRotationAnim, &QVariantAnimation::finished, this, [this]() {
-        ui.btn_upd_manually->setIcon(IconHelper::loadIcon(
-            ":/icons/icons/SyncFilled.svg", QColor(175, 175, 175), QSize(18, 18)));
+        updateManualCheckButtonIcon();
     });
 }
 
@@ -296,6 +297,7 @@ void SettingsWindow::initAutosaveLogic() {
         hasPendingChanges = false;
         LOG_DEBUG() << "Autosave successfully performed";
         emit settingsSaved();
+        emit settingsChanged();
     });
 
     connect(this, &SettingsWindow::settingsSaved, this, [this]() {
@@ -381,39 +383,37 @@ void SettingsWindow::markChanged() {
 
 void SettingsWindow::setUpdateManager(UpdateManager *manager) {
     if (!manager) return;
+    if (updateManager == manager) return;
+
+    if (updateManager) {
+        disconnect(updateManager, nullptr, this, nullptr);
+    }
+    disconnect(ui.btn_upd_manually, &QPushButton::clicked, this, nullptr);
+
     this->updateManager = manager;
 
-    // Принимает флаг, нужно ли трогать старое уведомление
-    auto finishChecking = [this](const bool isManual) {
+    const auto finishChecking = [this]() {
         stopSyncAnimation();
-
-        if (isManual && m_currentGlobalNotif) {
-            m_currentGlobalNotif->close();
-            m_currentGlobalNotif = nullptr;
-        }
     };
 
     connect(updateManager, &UpdateManager::updateAvailable, this,
-            [this, finishChecking](const QString &ver, const QString &url) {
-                // При нахождении обновы всегда обновляем окно (isManual = true)
-                finishChecking(true);
-                m_currentGlobalNotif = new GlobalNotification(GlobalNotification::UpdateAvailable, ver, url);
-                m_currentGlobalNotif->show();
+            [this, finishChecking](const QString &ver, const QString &url, const bool isManual) {
+                finishChecking();
+                refreshUpdateButtonTooltipLive();
+                Q_UNUSED(ver);
+                Q_UNUSED(url);
+                Q_UNUSED(isManual);
             });
 
-    connect(updateManager, &UpdateManager::noUpdateAvailable, this, [this, finishChecking](const QString &ver) {
-        const bool isManual = isManualCheckActive();
-        finishChecking(isManual);
-
-        if (!isManual) return;
-
-        m_currentGlobalNotif = new GlobalNotification(GlobalNotification::UpToDate, ver, "");
-        m_currentGlobalNotif->show();
+    connect(updateManager, &UpdateManager::noUpdateAvailable, this, [this, finishChecking](const QString &ver, const bool isManual) {
+        finishChecking();
+        refreshUpdateButtonTooltipLive();
+        Q_UNUSED(ver);
+        Q_UNUSED(isManual);
     });
 
-    connect(updateManager, &UpdateManager::updateError, this, [this, finishChecking](const QString &errorMsg) {
-        const bool isManual = isManualCheckActive();
-        finishChecking(isManual);
+    connect(updateManager, &UpdateManager::updateError, this, [this, finishChecking](const QString &errorMsg, const bool isManual) {
+        finishChecking();
 
         if (isManual) InAppNotification::showFor(this, errorMsg, InAppNotification::Error);
         LOG_ERROR() << "Update error: " << errorMsg;
@@ -474,7 +474,7 @@ bool SettingsWindow::eventFilter(QObject *watched, QEvent *event) {
         if (event->type() == QEvent::Enter) {
             // Показываем только если стек уведомлений пуст
             if (InAppNotification::stack.isEmpty()) {
-                updateBtnToolTip->showAt(ui.btn_upd_manually, "SETTINGS_TOOLTIP_CHECK_NOW");
+                refreshUpdateButtonTooltipLive();
             }
         } else if (event->type() == QEvent::Leave) {
             // Скрываем всегда. Если мышь ушла, тултип не должен оставаться,
@@ -505,7 +505,12 @@ void SettingsWindow::hideEvent(QHideEvent *event) {
 
 void SettingsWindow::openCentered() {
     const QScreen *screen = QGuiApplication::primaryScreen();
-    if (!screen) screen = QGuiApplication::primaryScreen();
+    if (!screen) {
+        const QList<QScreen *> screens = QGuiApplication::screens();
+        if (!screens.isEmpty()) {
+            screen = screens.first();
+        }
+    }
     if (!screen) return;
 
     const QRect geom = screen->availableGeometry();
@@ -628,11 +633,92 @@ void SettingsWindow::updateSyncIconRotation(const int angle) const {
     painter.rotate(angle);
     // Рисуем иконку так, чтобы её центр совпал с центром координат
     painter.drawPixmap(-iconSize / 2.0, -iconSize / 2.0, pix);
+
+    if (m_hasPendingUpdate) {
+        painter.resetTransform();
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(72, 155, 255));
+        constexpr int dot = 7;
+        painter.drawEllipse(QRect(canvasSize - dot - 1, 1, dot, dot));
+    }
     painter.end();
 
     // Устанавливаем результат в кнопку
     ui.btn_upd_manually->setIconSize(QSize(canvasSize, canvasSize));
     ui.btn_upd_manually->setIcon(QIcon(canvas));
+}
+
+void SettingsWindow::updateManualCheckButtonIcon() const {
+    if (isManualCheckActive()) return;
+
+    constexpr int canvasSize = 24;
+    constexpr int iconSize = 18;
+
+    QPixmap canvas(canvasSize, canvasSize);
+    canvas.fill(Qt::transparent);
+
+    const QPixmap base = IconHelper::loadIcon(
+        ":/icons/icons/SyncFilled.svg", QColor(175, 175, 175), QSize(iconSize, iconSize)
+    ).pixmap(iconSize, iconSize);
+
+    QPainter painter(&canvas);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+    painter.drawPixmap((canvasSize - iconSize) / 2, (canvasSize - iconSize) / 2, base);
+
+    if (m_hasPendingUpdate) {
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(72, 155, 255));
+        constexpr int dot = 7;
+        painter.drawEllipse(QRect(canvasSize - dot - 1, 1, dot, dot));
+    }
+    painter.end();
+
+    ui.btn_upd_manually->setIconSize(QSize(canvasSize, canvasSize));
+    ui.btn_upd_manually->setIcon(QIcon(canvas));
+}
+
+QString SettingsWindow::lastUpdateCheckDisplay() const {
+    const QLocale locale = (AppSettings::appLang == "ru")
+                               ? QLocale(QLocale::Russian, QLocale::Russia)
+                               : QLocale(QLocale::English, QLocale::UnitedStates);
+    if (AppSettings::lastUpdateCheckDateTime.isValid()) {
+        return locale.toString(AppSettings::lastUpdateCheckDateTime, QLocale::ShortFormat);
+    }
+    if (AppSettings::lastUpdateCheckDate.isValid()) {
+        return locale.toString(AppSettings::lastUpdateCheckDate, QLocale::ShortFormat);
+    }
+    return {};
+}
+
+void SettingsWindow::refreshUpdateButtonTooltipLive() const {
+    if (!updateBtnToolTip) return;
+    if (!ui.btn_upd_manually->underMouse()) return;
+    if (!InAppNotification::stack.isEmpty()) return;
+
+    if (m_hasPendingUpdate && !m_pendingUpdateVersion.isEmpty()) {
+        if (const QString lastCheck = lastUpdateCheckDisplay(); !lastCheck.isEmpty()) {
+            updateBtnToolTip->showAt(
+                ui.btn_upd_manually,
+                "SETTINGS_TOOLTIP_UPDATE_AVAILABLE_WITH_LAST_CHECK",
+                m_pendingUpdateVersion,
+                lastCheck
+            );
+        } else {
+            updateBtnToolTip->showAt(ui.btn_upd_manually, "SETTINGS_TOOLTIP_UPDATE_AVAILABLE", m_pendingUpdateVersion);
+        }
+    } else if (const QString lastCheck = lastUpdateCheckDisplay(); !lastCheck.isEmpty()) {
+        updateBtnToolTip->showAt(ui.btn_upd_manually, "SETTINGS_TOOLTIP_LAST_CHECK", lastCheck);
+    } else {
+        updateBtnToolTip->showAt(ui.btn_upd_manually, "SETTINGS_TOOLTIP_CHECK_NOW");
+    }
+}
+
+void SettingsWindow::setPendingUpdateHint(const bool hasPending, QString version) {
+    m_hasPendingUpdate = hasPending;
+    m_pendingUpdateVersion = hasPending ? version : QString{};
+    updateManualCheckButtonIcon();
+    refreshUpdateButtonTooltipLive();
 }
 
 void SettingsWindow::stopSyncAnimation() const {
@@ -658,7 +744,6 @@ void SettingsWindow::refreshTranslations() const {
     ui.btn_upd_frequency->setText(AppSettings::updateFrequencyToString(AppSettings::updateFrequency));
     if (updPopup) updPopup->refreshTranslations();
     if (updateBtnToolTip) updateBtnToolTip->refreshTranslations();
-    if (m_currentGlobalNotif) m_currentGlobalNotif->refreshTranslations();
     keyHoverWarning->setText(Lang::tr("SETTINGS_KEY_HOVER_WARNING_POPUP"));
     if (const auto *seq = findChild<QKeySequenceEdit *>("btn_sequence"))
         if (auto *le = seq->findChild<QLineEdit *>()) le->setPlaceholderText(Lang::tr("SETTINGS_KEY_SEQUENCE"));

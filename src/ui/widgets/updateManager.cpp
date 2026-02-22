@@ -2,9 +2,38 @@
 #include "../../core/config/appSettings.h"
 #include "../../core/config/logger.h"
 #include <QCoreApplication>
+#include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QNetworkAccessManager>
+#include <QRegularExpression>
 #include <QVersionNumber>
+
+namespace {
+QString extractVersionCore(QString value) {
+    value = value.trimmed();
+    static const QRegularExpression versionPattern(
+        R"((?:^|[^0-9])v?(\d+(?:\.\d+)+))",
+        QRegularExpression::CaseInsensitiveOption
+    );
+
+    QString lastMatch;
+    QRegularExpressionMatchIterator it = versionPattern.globalMatch(value);
+    while (it.hasNext()) {
+        const QRegularExpressionMatch match = it.next();
+        if (match.hasMatch()) {
+            lastMatch = match.captured(1);
+        }
+    }
+
+    if (!lastMatch.isEmpty()) return lastMatch;
+
+    if (value.startsWith('v', Qt::CaseInsensitive)) {
+        value.remove(0, 1);
+    }
+    return value;
+}
+}
 
 UpdateManager::UpdateManager(QObject *parent)
     : QObject(parent) {
@@ -33,15 +62,15 @@ void UpdateManager::checkForUpdatesIfDue() {
         return;
     }
 
-    performCheck();
+    performCheck(false);
 }
 
 void UpdateManager::checkForUpdatesForce() {
     LOG_DEBUG() << "UpdateManager: Force checking updates...";
-    performCheck();
+    performCheck(true);
 }
 
-void UpdateManager::performCheck() {
+void UpdateManager::performCheck(const bool isManualCheck) {
     LOG_DEBUG() << "UpdateManager: Requesting GitHub API...";
 
     // Формируем URL для получения последнего релиза
@@ -54,6 +83,7 @@ void UpdateManager::performCheck() {
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, true);
 
     QNetworkReply *reply = networkManager->get(request);
+    m_replyIsManual.insert(reply, isManualCheck);
 
     // Создаем таймер, который «убьет» запрос, если он затянется
     const auto timeoutTimer = new QTimer(reply);
@@ -72,30 +102,31 @@ void UpdateManager::performCheck() {
 }
 
 void UpdateManager::onGithubResponse(QNetworkReply *reply) {
+    const bool isManualCheck = m_replyIsManual.take(reply);
     reply->deleteLater();
 
     // Проверка сетевых ошибок (тайм-аут, нет интернета)
     if (reply->error() != QNetworkReply::NoError) {
         LOG_ERROR() << "Update check failed: " << reply->errorString();
-        emit updateError(reply->errorString());
+        emit updateError(reply->errorString(), isManualCheck);
         return;
     }
 
     // Проверка HTTP кодов (403 - лимит, 404 - репо не найден)
     const int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (statusCode == 403) {
-        emit updateError("GitHub API rate limit exceeded. Try again later.");
+        emit updateError("GitHub API rate limit exceeded. Try again later.", isManualCheck);
         return;
     }
     if (statusCode != 200) {
-        emit updateError(QString("Server returned error code: %1").arg(statusCode));
+        emit updateError(QString("Server returned error code: %1").arg(statusCode), isManualCheck);
         return;
     }
 
     QJsonParseError parseError;
     const QJsonDocument doc = QJsonDocument::fromJson(reply->readAll(), &parseError);
     if (parseError.error != QJsonParseError::NoError) {
-        emit updateError("Failed to parse update information");
+        emit updateError("Failed to parse update information", isManualCheck);
         return;
     }
 
@@ -103,7 +134,7 @@ void UpdateManager::onGithubResponse(QNetworkReply *reply) {
     const QString remoteTag = obj.value("tag_name").toString();
 
     if (remoteTag.isEmpty()) {
-        emit updateError("No version information found in response");
+        emit updateError("No version information found in response", isManualCheck);
         return;
     }
 
@@ -121,16 +152,18 @@ void UpdateManager::onGithubResponse(QNetworkReply *reply) {
     if (downloadUrl.isEmpty()) downloadUrl = obj.value("html_url").toString();
 
     const QString currentVersion = QCoreApplication::applicationVersion();
+    LOG_DEBUG() << "Version check. current=" << currentVersion << "; remote=" << remoteTag;
 
     AppSettings::lastUpdateCheckDate = QDate::currentDate();
+    AppSettings::lastUpdateCheckDateTime = QDateTime::currentDateTime();
     AppSettings::save();
 
     if (isNewerVersion(currentVersion, remoteTag)) {
         LOG_DEBUG() << "Update found:" << remoteTag;
-        emit updateAvailable(remoteTag, downloadUrl);
+        emit updateAvailable(remoteTag, downloadUrl, isManualCheck);
     } else {
         LOG_DEBUG() << "No updates available";
-        emit noUpdateAvailable(currentVersion);
+        emit noUpdateAvailable(currentVersion, isManualCheck);
     }
 }
 
@@ -171,16 +204,23 @@ bool UpdateManager::isUpdateDue() {
 }
 
 bool UpdateManager::isNewerVersion(const QString &currentVer, const QString &remoteVer) {
-    // Удаляем префикс 'v', если он есть (v1.0.1 -> 1.0.1)
-    QString c = currentVer;
-    if (c.startsWith('v', Qt::CaseInsensitive)) c.remove(0, 1);
+    const QString currentNormalized = extractVersionCore(currentVer);
+    const QString remoteNormalized = extractVersionCore(remoteVer);
+    const QVersionNumber currentVersionNumber = QVersionNumber::fromString(currentNormalized);
+    const QVersionNumber remoteVersionNumber = QVersionNumber::fromString(remoteNormalized);
 
-    QString r = remoteVer;
-    if (r.startsWith('v', Qt::CaseInsensitive)) r.remove(0, 1);
+    LOG_DEBUG() << "Parsed versions. currentRaw=" << currentVer
+                << "; currentNorm=" << currentNormalized
+                << "; remoteRaw=" << remoteVer
+                << "; remoteNorm=" << remoteNormalized;
 
-    // Простой способ через QVersionNumber (требует Qt 5.6+)
-    const QVersionNumber vCurrent = QVersionNumber::fromString(c);
-    const QVersionNumber vRemote = QVersionNumber::fromString(r);
+    if (currentVersionNumber.isNull() || remoteVersionNumber.isNull()) {
+        LOG_WARNING() << "Version parsing failed. currentRaw=" << currentVer
+                      << "; currentNorm=" << currentNormalized
+                      << "; remoteRaw=" << remoteVer
+                      << "; remoteNorm=" << remoteNormalized;
+        return false;
+    }
 
-    return vRemote > vCurrent;
+    return remoteVersionNumber > currentVersionNumber;
 }

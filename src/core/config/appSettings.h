@@ -2,6 +2,7 @@
 #include <QSettings>
 #include <QString>
 #include <QDate>
+#include <QDateTime>
 
 class AppSettings {
 public:
@@ -54,6 +55,10 @@ public:
     static QDate lastUpdateCheckDate;
 
     static QDate defaultLastUpdateCheckDate;
+
+    static QDateTime lastUpdateCheckDateTime;
+
+    static QDateTime defaultLastUpdateCheckDateTime;
 
     static constexpr auto GITHUB_REPO = "egoisticdesire/EasyLangSwitcher";
 
