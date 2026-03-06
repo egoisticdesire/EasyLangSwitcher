@@ -84,3 +84,10 @@ Desktop.ini
 .idea/
 *.iml
 cmake-build-*/
+
+# ==========================
+# Local agent artifacts
+# ==========================
+AGENTS.md
+clang-tidy-report.txt
+tools/collect_clang_tidy.ps1
