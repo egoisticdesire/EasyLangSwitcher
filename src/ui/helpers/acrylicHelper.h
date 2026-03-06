@@ -163,18 +163,46 @@ public:
         return info().isWin10;
     }
 
-    static void setAcrylicEnabled(QWidget* widget, const bool enabled)
+    static void enableActiveBackground(QWidget* widget)
     {
         if (widget == nullptr) {
             return;
         }
-        if (enabled) {
-            enableAcrylic(widget);
-            enableCustomPreview(widget);
+
+        enableAcrylic(widget);
+        enableCustomPreview(widget);
+    }
+
+    static void
+    enableInactiveBackground(QWidget* widget, const DWORD rgbWin11 = 0x202020, const DWORD rgbWin10 = 0x202020)
+    {
+        if (widget == nullptr || !info().setAttribPtr) {
+            return;
+        }
+
+        widget->removeEventFilter(instance());
+
+        auto* const hwnd = std::bit_cast<HWND>(static_cast<std::uintptr_t>(widget->winId()));
+        if (hwnd == nullptr) {
+            return;
+        }
+
+        ACCENT_POLICY policy{};
+        if (info().isWin11) {
+            policy.AccentState = static_cast<DWORD>(AccentState::EnableGradient);
+            policy.GradientColor = (0xFFu << 24) | rgbWin11;
+        }
+        else if (info().isWin10) {
+            policy.AccentState = static_cast<DWORD>(AccentState::EnableGradient);
+            policy.GradientColor = (0xFFu << 24) | rgbWin10;
+            updateRegion(widget);
         }
         else {
-            disableAcrylic(widget);
+            policy.AccentState = static_cast<DWORD>(AccentState::Disabled);
         }
+
+        WINDOWCOMPOSITIONATTRIBDATA data{19, &policy, sizeof(policy)};
+        info().setAttribPtr(hwnd, &data);
     }
 
     // 0xCC (~80%) | 0xE0 (~88%) | 0xE3 (~90%) | 0xE6 (~92%) | 0xF0 (~94%) | 0xF3 (~96%) | 0xF6 (~98%) | 0xF9 (~100%)
@@ -251,28 +279,6 @@ public:
                 DeleteObject(hrgn);
             }
         }
-    }
-
-    static void disableAcrylic(QWidget* widget)
-    {
-        if (widget == nullptr) {
-            return;
-        }
-
-        // Обязательно снимаем фильтр при выключении
-        widget->removeEventFilter(instance());
-
-        if (!info().setAttribPtr) {
-            return;
-        }
-        auto* const hwnd = std::bit_cast<HWND>(static_cast<std::uintptr_t>(widget->winId()));
-        if (hwnd == nullptr) {
-            return;
-        }
-
-        ACCENT_POLICY policy{static_cast<DWORD>(AccentState::Disabled), 0, 0, 0};
-        WINDOWCOMPOSITIONATTRIBDATA data{19, &policy, sizeof(policy)};
-        info().setAttribPtr(hwnd, &data);
     }
 
     static void enableCustomPreview(const QWidget* widget)

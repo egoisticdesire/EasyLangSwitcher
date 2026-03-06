@@ -90,7 +90,7 @@ void SettingsWindow::showEvent(QShowEvent* event)
 {
     QWidget::showEvent(event);
     QTimer::singleShot(0, this, [this]() {
-        AcrylicHelper::setAcrylicEnabled(this, true);
+        AcrylicHelper::enableActiveBackground(this);
         AcrylicHelper::updateRegion(this);
     });
     QTimer::singleShot(0, this, [this]() {
@@ -107,7 +107,12 @@ bool SettingsWindow::event(QEvent* ev)
     if (ev->type() == QEvent::WindowActivate || ev->type() == QEvent::WindowDeactivate) {
         bool active = (ev->type() == QEvent::WindowActivate);
         QTimer::singleShot(0, this, [this, active]() {
-            AcrylicHelper::setAcrylicEnabled(this, active);
+            if (active) {
+                AcrylicHelper::enableActiveBackground(this);
+            }
+            else {
+                AcrylicHelper::enableInactiveBackground(this);
+            }
             AcrylicHelper::updateRegion(this);
         });
         LOG_DEBUG() << "Settings window is " << (active ? "active" : "inactive");
@@ -206,8 +211,12 @@ void SettingsWindow::openCentered()
 
     // Фокус и акрил
     QTimer::singleShot(50, this, [this]() {
-        const bool trulyActive = this->isActiveWindow() || (QApplication::activeWindow() == this);
-        AcrylicHelper::setAcrylicEnabled(this, trulyActive);
+        if (this->isActiveWindow() || (QApplication::activeWindow() == this)) {
+            AcrylicHelper::enableActiveBackground(this);
+        }
+        else {
+            AcrylicHelper::enableInactiveBackground(this);
+        }
         AcrylicHelper::updateRegion(this);
     });
 }
