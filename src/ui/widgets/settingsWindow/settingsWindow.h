@@ -1,30 +1,33 @@
 #pragma once
-#include "ui_EasyLangSwitcher_settings.h"
-#include "../hoverWarning.h"
+
 #include "../animatedSelector.h"
 #include "../customToolTip.h"
-#include "../updateManager.h"
+#include "../hoverWarning.h"
 #include "../updFrequencyPopup.h"
+#include "../updateManager.h"
 #include "../windowDragger.h"
-#include <QVector>
-#include <QTimer>
+#include "ui_EasyLangSwitcher_settings.h"
+
 #include <QGraphicsDropShadowEffect>
+#include <QVector>
 
 class KeySequenceHelper;
 
-class SettingsWindow final : public QWidget {
+class SettingsWindow final : public QWidget
+{
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(SettingsWindow)
 
 public:
-    explicit SettingsWindow(QWidget *parent = nullptr);
+    explicit SettingsWindow(QWidget* parent = nullptr);
 
     ~SettingsWindow() override;
 
     void openCentered();
 
-    void setUpdateManager(UpdateManager *manager);
+    void setUpdateManager(UpdateManager* manager);
 
-    void setPendingUpdateHint(bool hasPending, QString version = {});
+    void setPendingUpdateHint(bool hasPending, const QString& version = {});
 
 signals:
     void settingsChanged();
@@ -32,28 +35,28 @@ signals:
     void settingsSaved();
 
 protected:
-    void showEvent(QShowEvent *event) override;
+    void showEvent(QShowEvent* event) override;
 
-    bool event(QEvent *ev) override;
+    bool event(QEvent* ev) override;
 
-    bool eventFilter(QObject *watched, QEvent *event) override;
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
-    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override;
+    bool nativeEvent(const QByteArray& eventType, void* message, qintptr* result) override;
 
-    void hideEvent(QHideEvent *event) override;
+    void hideEvent(QHideEvent* event) override;
 
 private:
     // UI и компоненты
     Ui::settings_main_widget ui{};
-    KeySequenceHelper *m_keyHelper = nullptr;
-    QVector<AnimatedSelector *> selectors;
-    WindowDragger *dragger = nullptr;
-    KeyHoverWarning *keyHoverWarning = nullptr;
-    UpdFrequencyPopup *updPopup = nullptr;
-    CustomToolTip *updateBtnToolTip = nullptr;
-    UpdateManager *updateManager = nullptr;
-    QGraphicsDropShadowEffect *m_shadow = nullptr;
-    QVariantAnimation *m_syncRotationAnim = nullptr;
+    KeySequenceHelper* m_keyHelper = nullptr;
+    QVector<AnimatedSelector*> selectors;
+    WindowDragger* dragger = nullptr;
+    KeyHoverWarning* keyHoverWarning = nullptr;
+    UpdFrequencyPopup* updPopup = nullptr;
+    CustomToolTip* updateBtnToolTip = nullptr;
+    UpdateManager* updateManager = nullptr;
+    QGraphicsDropShadowEffect* m_shadow = nullptr;
+    QVariantAnimation* m_syncRotationAnim = nullptr;
 
     void updateSyncIconRotation(int angle) const;
 
@@ -74,26 +77,27 @@ private:
     QHash<QString, int> presetMap;
 
     // Методы инициализации
-    void initVisuals(); // Иконки, тени, драггер, скрытие лишнего
-    void initHotkeyLogic(); // PresetMap, KeySequenceHelper и кнопки клавиш
-    void initUpdateLogic(); // Тултипы, попапы частоты обновлений
+    void initVisuals();            // Иконки, тени, драггер, скрытие лишнего
+    void initHotkeyLogic();        // PresetMap, KeySequenceHelper и кнопки клавиш
+    void initUpdateLogic();        // Тултипы, попапы частоты обновлений
     void initLanguageAndStartup(); // Кнопки языка и автозагрузки
-    void initAutosaveLogic(); // Коннекты таймера и логика сохранения
+    void initAutosaveLogic();      // Коннекты таймера и логика сохранения
 
     // Вспомогательные методы
-    void addSelectorForFrame(QFrame *frame, const QString &extraStyle = QString());
+    void addSelectorForFrame(QFrame* frame, const QString& extraStyle = QString());
 
-    [[nodiscard]] bool isManualCheckActive() const {
+    [[nodiscard]] bool isManualCheckActive() const
+    {
         return m_syncRotationAnim && m_syncRotationAnim->state() == QAbstractAnimation::Running;
     }
 
     void buildPresetMap();
 
-    [[nodiscard]] int vkFromPresetObjectName(const QString &obj) const;
+    [[nodiscard]] int vkFromPresetObjectName(const QString& obj) const;
 
     static QString nameFromVk(int vk);
 
-    void applyHotkeyIfChanged(int newVk, const QString &newName);
+    void applyHotkeyIfChanged(int newVk, const QString& newName);
 
     void markChanged();
 

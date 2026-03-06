@@ -1,7 +1,9 @@
 #include "settingsWindow.h"
+
 #include "../../../core/config/logger.h"
 
-SettingsWindow::SettingsWindow(QWidget *parent) : QWidget(parent) {
+SettingsWindow::SettingsWindow(QWidget* parent) : QWidget(parent)
+{
     ui.setupUi(this);
 
     // Визуальное оформление

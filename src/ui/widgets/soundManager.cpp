@@ -1,48 +1,57 @@
 #include "soundManager.h"
+
 #include "../helpers/windowsNotificationState.h"
+
 #include <QMediaDevices>
 #include <algorithm>
 
-soundManager &soundManager::instance() {
+soundManager& soundManager::instance()
+{
     static soundManager inst;
     return inst;
 }
 
-soundManager::soundManager(QObject *parent)
-    : QObject(parent) {
+soundManager::soundManager(QObject* parent) : QObject(parent)
+{
     // создаём объект устройств
-    const auto *devices = new QMediaDevices(this);
+    const auto* devices = new QMediaDevices(this);
 
-    connect(devices, &QMediaDevices::audioOutputsChanged,
-            this, &soundManager::reinitAll);
+    connect(devices, &QMediaDevices::audioOutputsChanged, this, &soundManager::reinitAll);
 }
 
-void soundManager::registerEffect(QSoundEffect *effect) {
-    if (!effect) return;
+void soundManager::registerEffect(QSoundEffect* effect)
+{
+    if (effect == nullptr) {
+        return;
+    }
 
     const auto exists = std::ranges::any_of(
-        std::as_const(effects), [effect](const QPointer<QSoundEffect> &ptr) {
-            return ptr.data() == effect;
-        }
-    );
-    if (exists) return;
+            std::as_const(effects), [effect](const QPointer<QSoundEffect>& ptr) { return ptr.data() == effect; });
+    if (exists) {
+        return;
+    }
 
     effects.append(QPointer<QSoundEffect>(effect));
     connect(effect, &QObject::destroyed, this, [this]() {
         effects.erase(
-            std::ranges::remove_if(
-                effects, [](const QPointer<QSoundEffect> &ptr) { return ptr.isNull(); }).begin(), effects.end()
-        );
+                std::ranges::remove_if(effects, [](const QPointer<QSoundEffect>& ptr) { return ptr.isNull(); }).begin(),
+                effects.end());
     });
 }
 
-void soundManager::playEffect(QSoundEffect *effect) {
-    if (!effect) return;
-    if (shouldMuteBySystemState()) return;
+void soundManager::playEffect(QSoundEffect* effect)
+{
+    if (effect == nullptr) {
+        return;
+    }
+    if (shouldMuteBySystemState()) {
+        return;
+    }
     effect->play();
 }
 
-bool soundManager::shouldMuteBySystemState() {
+bool soundManager::shouldMuteBySystemState()
+{
 #ifdef Q_OS_WIN
     return WindowsNotificationState::evaluatePopupDeferral().shouldDefer;
 #else
@@ -50,15 +59,17 @@ bool soundManager::shouldMuteBySystemState() {
 #endif
 }
 
-void soundManager::reinitAll() {
+void soundManager::reinitAll()
+{
     effects.erase(
-        std::ranges::remove_if(
-            effects, [](const QPointer<QSoundEffect> &ptr) { return ptr.isNull(); }).begin(), effects.end()
-    );
+            std::ranges::remove_if(effects, [](const QPointer<QSoundEffect>& ptr) { return ptr.isNull(); }).begin(),
+            effects.end());
 
-    for (const QPointer<QSoundEffect> &effectPtr: effects) {
-        QSoundEffect *e = effectPtr.data();
-        if (!e) continue;
+    for (const QPointer<QSoundEffect>& effectPtr : effects) {
+        QSoundEffect* e = effectPtr.data();
+        if (e == nullptr) {
+            continue;
+        }
 
         const QUrl src = e->source();
         const float vol = e->volume();

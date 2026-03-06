@@ -1,19 +1,19 @@
 #pragma once
 #include <QButtonGroup>
-#include <QPropertyAnimation>
 #include <QGraphicsDropShadowEffect>
 #include <QLineEdit>
-#include <QWidget>
-#include <QFrame>
 #include <QPointer>
+#include <QPropertyAnimation>
+#include <QWidget>
 
-class AnimatedSelector final : public QObject {
+class AnimatedSelector final : public QObject
+{
     Q_OBJECT
 
 public:
-    explicit AnimatedSelector(QWidget *parent);
+    explicit AnimatedSelector(QWidget* parent);
 
-    void bindToFrame(QFrame *frame, const QString &extraStyle = QString());
+    void bindToFrame(QFrame* frame, const QString& extraStyle = QString());
 
     void initPosition();
 
@@ -21,22 +21,25 @@ public:
 
     void animateToCurrentState();
 
-    [[nodiscard]] QFrame *boundFrame() const;
+    [[nodiscard]] QFrame* boundFrame() const;
 
-    [[nodiscard]] QFrame *indicator() const { return m_indicator; }
+    [[nodiscard]] QFrame* indicator() const
+    {
+        return m_indicator;
+    }
 
 private:
-    QFrame *m_indicator = nullptr;
+    QFrame* m_indicator = nullptr;
 
-    QFrame *m_frame = nullptr;
+    QFrame* m_frame = nullptr;
 
-    QButtonGroup *m_group = nullptr;
+    QButtonGroup* m_group = nullptr;
 
     QPointer<QLineEdit> m_customEdit;
 
-    QWidget *m_parent = nullptr;
+    QWidget* m_parent = nullptr;
 
-    QGraphicsDropShadowEffect *m_shadow = nullptr;
+    QGraphicsDropShadowEffect* m_shadow = nullptr;
 
     QRect m_indicatorGeometry;
 
@@ -53,12 +56,11 @@ private:
 
     bool m_customHasText = false;
 
-private slots:
-    void animateToButton(QAbstractButton *btn);
+    void animateToButton(QAbstractButton* btn);
 
     void animateToCustomEdit();
 
-    void onCustomEditChanged(const QString &text);
+    void onCustomEditChanged(const QString& text);
 
     void updateButtonColors() const;
 

@@ -1,7 +1,8 @@
 #pragma once
 #include <QString>
 
-struct WindowsNotificationEvaluation {
+struct WindowsNotificationEvaluation
+{
     bool hasSystemNotificationState = false;
     long systemStateHr = 0;
     QString systemStateName = "unavailable";
@@ -19,6 +20,7 @@ struct WindowsNotificationEvaluation {
     bool shouldDefer = false;
 };
 
-namespace WindowsNotificationState {
-    WindowsNotificationEvaluation evaluatePopupDeferral();
+namespace WindowsNotificationState
+{
+WindowsNotificationEvaluation evaluatePopupDeferral();
 }

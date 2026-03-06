@@ -1,22 +1,28 @@
-#include "../config/logger.h"
-#include "../config/appSettings.h"
 #include "kb.h"
-#include <vector>
+
+#include "../config/appSettings.h"
+#include "../config/logger.h"
+
+#include <array>
+#include <bit>
+#include <cstdint>
+#include <utility>
 #include <unordered_set>
 
-static QString hklToLangLabel(HKL hkl) {
+static QString hklToLangLabel(HKL hkl)
+{
     const LANGID langId = LOWORD(reinterpret_cast<DWORD_PTR>(hkl));
-    WCHAR name[LOCALE_NAME_MAX_LENGTH] = {};
-    if (LCIDToLocaleName(MAKELCID(langId, SORT_DEFAULT), name, LOCALE_NAME_MAX_LENGTH, 0)) {
-        return QString::fromWCharArray(name);
+    std::array<WCHAR, LOCALE_NAME_MAX_LENGTH> name{};
+    if (LCIDToLocaleName(MAKELCID(langId, SORT_DEFAULT), name.data(), static_cast<int>(name.size()), 0)) {
+        return QString::fromWCharArray(name.data());
     }
-    return QString("Unknown");
+    return {"Unknown"};
 }
 
-thread_local KeyboardHandler *KeyboardHandler::instance = nullptr;
+thread_local KeyboardHandler* KeyboardHandler::instance = nullptr;
 
-KeyboardHandler::KeyboardHandler(QObject *parent)
-    : QObject(parent) {
+KeyboardHandler::KeyboardHandler(QObject* parent) : QObject(parent)
+{
     // таймер долгого нажатия: если срабатывает => это долгий тап
     longPressTimer.setSingleShot(true);
     connect(&longPressTimer, &QTimer::timeout, this, [this]() {
@@ -32,10 +38,10 @@ KeyboardHandler::KeyboardHandler(QObject *parent)
     connect(&doublePressTimer, &QTimer::timeout, this, [this]() {
         // окно истекло: если есть switchPending и не longPress и не подавлено => выполняем переключение
         LOG_DEBUG() << QString("Double-press window expired: "
-                       "switchPending=%1; isLongPress=%2; rapidRepeatSuppressed=%3")
-                        .arg(switchPending ? "true" : "false")
-                        .arg(isLongPress ? "true" : "false")
-                        .arg(rapidRepeatSuppressed ? "true" : "false");
+                               "switchPending=%1; isLongPress=%2; rapidRepeatSuppressed=%3")
+                               .arg(switchPending ? "true" : "false")
+                               .arg(isLongPress ? "true" : "false")
+                               .arg(rapidRepeatSuppressed ? "true" : "false");
 
         // если было ожидающее переключение и оно не подавлено/не longPress -> переключаем
         if (switchPending && !isLongPress && !rapidRepeatSuppressed) {
@@ -50,20 +56,25 @@ KeyboardHandler::KeyboardHandler(QObject *parent)
     LOG_DEBUG() << "KeyboardHandler initialized";
 }
 
-KeyboardHandler::~KeyboardHandler() {
+KeyboardHandler::~KeyboardHandler()
+{
     stop();
 }
 
-void KeyboardHandler::start() {
+void KeyboardHandler::start()
+{
     instance = this;
     keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, nullptr, 0);
-    if (!keyboardHook)
+    if (keyboardHook == nullptr) {
         LOG_WARNING() << "Hook installation failed";
-    else
+    }
+    else {
         LOG_DEBUG() << "Hook installed successfully";
+    }
 }
 
-void KeyboardHandler::stop() {
+void KeyboardHandler::stop()
+{
     if (keyboardHook) {
         UnhookWindowsHookEx(keyboardHook);
         keyboardHook = nullptr;
@@ -72,22 +83,31 @@ void KeyboardHandler::stop() {
     }
 }
 
-LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WPARAM wParam, const LPARAM lParam) {
+LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WPARAM wParam, const LPARAM lParam)
+{
     if (nCode == HC_ACTION && instance && instance->isActive) {
         thread_local std::unordered_set<int> downKeys;
-        const auto kb = reinterpret_cast<KBDLLHOOKSTRUCT *>(lParam);
+        const auto* const kb = std::bit_cast<KBDLLHOOKSTRUCT*>(static_cast<std::uintptr_t>(lParam));
         const bool isDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
         const bool isUp = (wParam == WM_KEYUP || wParam == WM_SYSKEYUP);
         const int vk = static_cast<int>(kb->vkCode);
 
         // отслеживаем состояние Alt отдельно
         if (vk == VK_MENU || vk == VK_LMENU || vk == VK_RMENU) {
-            if (isDown) instance->isAltDown = true;
-            if (isUp) instance->isAltDown = false;
+            if (isDown) {
+                instance->isAltDown = true;
+            }
+            if (isUp) {
+                instance->isAltDown = false;
+            }
         }
 
-        if (isDown) downKeys.insert(vk);
-        if (isUp) downKeys.erase(vk);
+        if (isDown) {
+            downKeys.insert(vk);
+        }
+        if (isUp) {
+            downKeys.erase(vk);
+        }
 
         const int configuredMain = AppSettings::hotkeyMainVk;
         const DWORD now = GetTickCount();
@@ -98,8 +118,10 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
             // считаем комбо при наличии любой другой зажатой клавише,
             // включая модификаторы (чтобы "Modifier + Trigger" тоже было комбо).
             bool otherKeyDown = false;
-            for (const int d: downKeys) {
-                if (d == vk) continue;
+            for (const int d : downKeys) {
+                if (d == vk) {
+                    continue;
+                }
                 otherKeyDown = true;
                 break;
             }
@@ -121,8 +143,10 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
             // проверяем интервал между нажатиями для быстрого повторного нажатия
             const DWORD intervalSinceLastDown = now - instance->lastTriggerDownTime;
 
-            if (const auto doublePress = static_cast<DWORD>(AppSettings::switchDelayMs);
-                intervalSinceLastDown <= doublePress) {
+            const int doublePress = AppSettings::switchDelayMs;
+
+            if (const auto doublePressMs = static_cast<DWORD>(doublePress);
+                std::cmp_less_equal(intervalSinceLastDown, doublePressMs)) {
                 // обнаружено быстрое повторное нажатие: трактуем как отмену переключения
                 // и возвращаем нативное поведение
                 LOG_DEBUG() << "Rapid repeat: native key allowed";
@@ -139,28 +163,29 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
 
                 // разрешаем нативное поведение
                 return CallNextHookEx(nullptr, nCode, wParam, lParam);
-            } else {
-                // возможное первое нажатие одиночного/длительного нажатия;
-                // старт таймера долгого нажатия и окна повторного нажатия
-                instance->triggerKeyDown = true;
-                instance->isLongPress = false;
-                instance->rapidRepeatSuppressed = false;
-                instance->pressStartTime = now;
-                instance->switchPending = false;
-
-                // запускаем longPressTimer and doublePressTimer
-                instance->longPressTimer.start(AppSettings::switchDelayMs);
-                instance->doublePressTimer.start(doublePress);
-
-                LOG_DEBUG() << "Hotkey down vk=" << vk << ": start longPressTimer and doublePressTimer";
-
-                instance->lastTriggerDownTime = now;
-
-                // Подавлять нативное действие нужно только если триггер — CapsLock
-                if (configuredMain == VK_CAPITAL) return 1;
-                // для остальных клавиш разрешаем нативное поведение
-                return CallNextHookEx(nullptr, nCode, wParam, lParam);
             }
+            // возможное первое нажатие одиночного/длительного нажатия;
+            // старт таймера долгого нажатия и окна повторного нажатия
+            instance->triggerKeyDown = true;
+            instance->isLongPress = false;
+            instance->rapidRepeatSuppressed = false;
+            instance->pressStartTime = now;
+            instance->switchPending = false;
+
+            // запускаем longPressTimer and doublePressTimer
+            instance->longPressTimer.start(AppSettings::switchDelayMs);
+            instance->doublePressTimer.start(doublePress);
+
+            LOG_DEBUG() << "Hotkey down vk=" << vk << ": start longPressTimer and doublePressTimer";
+
+            instance->lastTriggerDownTime = now;
+
+            // Подавлять нативное действие нужно только если триггер — CapsLock
+            if (configuredMain == VK_CAPITAL) {
+                return 1;
+            }
+            // для остальных клавиш разрешаем нативное поведение
+            return CallNextHookEx(nullptr, nCode, wParam, lParam);
         }
 
         // обработка отпускания основной клавиши
@@ -175,12 +200,12 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
 
             const DWORD pressDuration = now - instance->pressStartTime;
             LOG_DEBUG() << QString("Hotkey up "
-                           "vk=%1: duration=%2; isLongPress=%3; rapidRepeatSuppressed=%4; switchPending=%5")
-                            .arg(vk)
-                            .arg(pressDuration)
-                            .arg(instance->isLongPress ? "true" : "false")
-                            .arg(instance->rapidRepeatSuppressed ? "true" : "false")
-                            .arg(instance->switchPending ? "true" : "false");
+                                   "vk=%1: duration=%2; isLongPress=%3; rapidRepeatSuppressed=%4; switchPending=%5")
+                                   .arg(vk)
+                                   .arg(pressDuration)
+                                   .arg(instance->isLongPress ? "true" : "false")
+                                   .arg(instance->rapidRepeatSuppressed ? "true" : "false")
+                                   .arg(instance->switchPending ? "true" : "false");
 
             // если долгое нажатие -> стандартное поведение клавиши
             if (instance->isLongPress) {
@@ -198,7 +223,8 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
                     switchKeyboardLayout();
 
                     LOG_DEBUG() << "Switch executed immediately";
-                } else {
+                }
+                else {
                     LOG_DEBUG() << "Switch suppressed: cancel trigger";
                 }
                 instance->triggerKeyDown = false;
@@ -207,7 +233,9 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
 
                 // если триггер — CapsLock, подавляем keyup чтобы Caps не переключился,
                 // иначе разрешаем нативное поведение
-                if (configuredMain == VK_CAPITAL) return 1;
+                if (configuredMain == VK_CAPITAL) {
+                    return 1;
+                }
                 return CallNextHookEx(nullptr, nCode, wParam, lParam);
             }
             // помечаем как ожидающее переключение
@@ -218,7 +246,9 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
             instance->triggerKeyDown = false;
 
             // подавляем keyup только для CapsLock (иначе нативное поведение)
-            if (configuredMain == VK_CAPITAL) return 1;
+            if (configuredMain == VK_CAPITAL) {
+                return 1;
+            }
             return CallNextHookEx(nullptr, nCode, wParam, lParam);
         }
 
@@ -242,9 +272,12 @@ LRESULT CALLBACK KeyboardHandler::LowLevelKeyboardProc(const int nCode, const WP
     return CallNextHookEx(nullptr, nCode, wParam, lParam);
 }
 
-void KeyboardHandler::switchKeyboardLayout() {
+void KeyboardHandler::switchKeyboardLayout()
+{
     const HWND hwnd = GetForegroundWindow();
-    if (!hwnd) return;
+    if (hwnd == nullptr) {
+        return;
+    }
 
     const DWORD threadId = GetWindowThreadProcessId(hwnd, nullptr);
     const HKL before = GetKeyboardLayout(threadId);
@@ -256,29 +289,30 @@ void KeyboardHandler::switchKeyboardLayout() {
         const HKL after = GetKeyboardLayout(threadId);
 
         LOG_DEBUG() << QString("Layout switched: '%1' (%2) → '%3' (%4)")
-        .arg(hklToLangLabel(before))
-        .arg(QString::number(reinterpret_cast<qulonglong>(before), 16))
-        .arg(hklToLangLabel(after))
-        .arg(QString::number(reinterpret_cast<qulonglong>(after), 16));
+                               .arg(hklToLangLabel(before),
+                                    QString::number(reinterpret_cast<qulonglong>(before), 16),
+                                    hklToLangLabel(after),
+                                    QString::number(reinterpret_cast<qulonglong>(after), 16));
     });
 }
 
-void KeyboardHandler::sendWinSpace() {
-    INPUT in[4] = {};
+void KeyboardHandler::sendWinSpace()
+{
+    std::array<INPUT, 4> in{};
 
-    in[0].type = INPUT_KEYBOARD;
-    in[0].ki.wVk = VK_LWIN;
+    in.at(0).type = INPUT_KEYBOARD;
+    in.at(0).ki.wVk = VK_LWIN;
 
-    in[1].type = INPUT_KEYBOARD;
-    in[1].ki.wVk = VK_SPACE;
+    in.at(1).type = INPUT_KEYBOARD;
+    in.at(1).ki.wVk = VK_SPACE;
 
-    in[2].type = INPUT_KEYBOARD;
-    in[2].ki.wVk = VK_SPACE;
-    in[2].ki.dwFlags = KEYEVENTF_KEYUP;
+    in.at(2).type = INPUT_KEYBOARD;
+    in.at(2).ki.wVk = VK_SPACE;
+    in.at(2).ki.dwFlags = KEYEVENTF_KEYUP;
 
-    in[3].type = INPUT_KEYBOARD;
-    in[3].ki.wVk = VK_LWIN;
-    in[3].ki.dwFlags = KEYEVENTF_KEYUP;
+    in.at(3).type = INPUT_KEYBOARD;
+    in.at(3).ki.wVk = VK_LWIN;
+    in.at(3).ki.dwFlags = KEYEVENTF_KEYUP;
 
-    SendInput(4, in, sizeof(INPUT));
+    SendInput(static_cast<UINT>(in.size()), in.data(), sizeof(INPUT));
 }

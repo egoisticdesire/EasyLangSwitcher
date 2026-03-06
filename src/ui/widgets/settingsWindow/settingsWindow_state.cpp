@@ -1,32 +1,39 @@
-#include "settingsWindow.h"
-#include "../notifications/inAppNotification.h"
-#include "../autoStartup.h"
-#include "../../../core/i18n/lang.h"
-#include "../../../core/config/logger.h"
-#include "../../../core/config/appSettings.h"
-#include "../../helpers/keySequenceHelper.h"
-#include <QAction>
-#include <QPushButton>
-#include <QKeySequenceEdit>
-#include <QLineEdit>
-#include <QSlider>
-#include <QSpinBox>
 #include <QToolButton>
 
-void SettingsWindow::initLanguageAndStartup() {
+#include "../../../core/config/appSettings.h"
+#include "../../../core/config/logger.h"
+#include "../../../core/i18n/lang.h"
+#include "../../helpers/keySequenceHelper.h"
+#include "../autoStartup.h"
+#include "../notifications/inAppNotification.h"
+#include "settingsWindow.h"
+
+#include <QAction>
+#include <QKeySequenceEdit>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QSlider>
+#include <QSpinBox>
+
+void SettingsWindow::initLanguageAndStartup()
+{
     // Восстанавливаем состояние кнопок из конфига
     ui.btn_en_lang->setChecked(AppSettings::appLang == "en");
     ui.btn_ru_lang->setChecked(AppSettings::appLang == "ru");
 
     // Обработка кликов (язык)
     connect(ui.btn_en_lang, &QPushButton::clicked, this, [this]() {
-        if (!ui.btn_en_lang->isChecked()) return;
+        if (!ui.btn_en_lang->isChecked()) {
+            return;
+        }
         ui.btn_ru_lang->setChecked(false);
         markChanged();
     });
 
     connect(ui.btn_ru_lang, &QPushButton::clicked, this, [this]() {
-        if (!ui.btn_ru_lang->isChecked()) return;
+        if (!ui.btn_ru_lang->isChecked()) {
+            return;
+        }
         ui.btn_en_lang->setChecked(false);
         markChanged();
     });
@@ -50,7 +57,9 @@ void SettingsWindow::initLanguageAndStartup() {
     // Слайдеры задержки (коннекты)
     connect(ui.key_delay_slider, &QSlider::valueChanged, this, [this](const int value) {
         const int stepped = (value / 10) * 10;
-        if (value != stepped) ui.key_delay_slider->setValue(stepped);
+        if (value != stepped) {
+            ui.key_delay_slider->setValue(stepped);
+        }
         if (AppSettings::switchDelayMs != stepped) {
             AppSettings::switchDelayMs = stepped;
             ui.key_delay_spinbox->setValue(stepped);
@@ -60,7 +69,9 @@ void SettingsWindow::initLanguageAndStartup() {
 
     connect(ui.key_delay_spinbox, qOverload<int>(&QSpinBox::valueChanged), this, [this](const int value) {
         const int stepped = ((value + 5) / 10) * 10;
-        if (value != stepped) ui.key_delay_spinbox->setValue(stepped);
+        if (value != stepped) {
+            ui.key_delay_spinbox->setValue(stepped);
+        }
         if (AppSettings::switchDelayMs != stepped) {
             AppSettings::switchDelayMs = stepped;
             ui.key_delay_slider->setValue(stepped);
@@ -69,7 +80,8 @@ void SettingsWindow::initLanguageAndStartup() {
     });
 }
 
-void SettingsWindow::initAutosaveLogic() {
+void SettingsWindow::initAutosaveLogic()
+{
     autosaveTimer.setSingleShot(true);
     autosaveTimer.setInterval(autosaveIntervalMs);
     LOG_DEBUG() << "Autosave timer configured, interval=" << autosaveIntervalMs;
@@ -107,7 +119,7 @@ void SettingsWindow::initAutosaveLogic() {
     });
 
     // Кнопка сброса и Esc
-    auto *closeAction = new QAction(this);
+    auto* closeAction = new QAction(this);
     closeAction->setShortcut(Qt::Key_Escape);
     connect(closeAction, &QAction::triggered, this, &SettingsWindow::close);
     addAction(closeAction);
@@ -115,7 +127,8 @@ void SettingsWindow::initAutosaveLogic() {
     connect(ui.btn_restore_default, &QToolButton::clicked, this, &SettingsWindow::restoreDefaultsForCurrentPage);
 }
 
-void SettingsWindow::markChanged() {
+void SettingsWindow::markChanged()
+{
     // Если пользователь вернул настройки в исходное состояние (до сохранения)
     // нам нужно проверить, "грязные" ли данные сейчас.
     // Но для языка мы берем значение прямо из UI, так как AppSettings::appLang
@@ -144,7 +157,8 @@ void SettingsWindow::markChanged() {
     LOG_DEBUG() << "Marked changed, autosave scheduled";
 }
 
-void SettingsWindow::refreshTranslations() const {
+void SettingsWindow::refreshTranslations() const
+{
     ui.key_select_label_msg->setText(Lang::tr("SETTINGS_SELECT_KEY_LABEL"));
     ui.key_delay_label->setText(Lang::tr("SETTINGS_SWITCH_DELAY_LABEL"));
     ui.app_startup_label->setText(Lang::tr("SETTINGS_APP_STARTUP_LABEL"));
@@ -158,10 +172,19 @@ void SettingsWindow::refreshTranslations() const {
     ui.btn_disable_startup->setText(Lang::tr("SETTINGS_DISABLE_STARTUP_LABEL"));
     ui.app_upd_check_label->setText(Lang::tr("SETTINGS_APP_UPD_CHECK_LABEL"));
     ui.btn_upd_frequency->setText(AppSettings::updateFrequencyToString(AppSettings::updateFrequency));
-    if (updPopup) updPopup->refreshTranslations();
-    if (updateBtnToolTip) updateBtnToolTip->refreshTranslations();
+    if (updPopup != nullptr) {
+        updPopup->refreshTranslations();
+    }
+    if (updateBtnToolTip != nullptr) {
+        updateBtnToolTip->refreshTranslations();
+    }
     keyHoverWarning->setText(Lang::tr("SETTINGS_KEY_HOVER_WARNING_POPUP"));
-    if (const auto *seq = findChild<QKeySequenceEdit *>("btn_sequence"))
-        if (auto *le = seq->findChild<QLineEdit *>()) le->setPlaceholderText(Lang::tr("SETTINGS_KEY_SEQUENCE"));
-    if (m_keyHelper) m_keyHelper->setPlaceholder(Lang::tr("SETTINGS_KEY_SEQUENCE"));
+    if (const auto* seq = findChild<QKeySequenceEdit*>("btn_sequence")) {
+        if (auto* le = seq->findChild<QLineEdit*>()) {
+            le->setPlaceholderText(Lang::tr("SETTINGS_KEY_SEQUENCE"));
+        }
+    }
+    if (m_keyHelper != nullptr) {
+        m_keyHelper->setPlaceholder(Lang::tr("SETTINGS_KEY_SEQUENCE"));
+    }
 }

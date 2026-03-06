@@ -1,31 +1,30 @@
 #pragma once
-#include "iconHelper.h"
-#include <QPropertyAnimation>
-#include <QPushButton>
-#include <QPainter>
-#include <QPointer>
-#include <QMouseEvent>
-#include <QEasingCurve>
 #include <QTimer>
 
-class NotificationCloseButton final : public QPushButton {
+#include "iconHelper.h"
+
+#include <QMouseEvent>
+#include <QPainter>
+#include <QPointer>
+#include <QPropertyAnimation>
+#include <QPushButton>
+
+class NotificationCloseButton final : public QPushButton
+{
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(NotificationCloseButton)
     Q_PROPERTY(qreal scale READ scale WRITE setScale)
 
 public:
-    ~NotificationCloseButton() override {
+    ~NotificationCloseButton() override
+    {
         LOG_DEBUG() << "NotificationCloseButton DESTROYED: " << this << " for target: " << m_target;
     }
 
-    explicit NotificationCloseButton(QWidget *target)
-        : QPushButton(nullptr), m_target(target) {
-        setWindowFlags(
-            Qt::ToolTip
-            | Qt::FramelessWindowHint
-            | Qt::NoDropShadowWindowHint
-            | Qt::WindowStaysOnTopHint
-            | Qt::WindowDoesNotAcceptFocus
-        );
+    explicit NotificationCloseButton(QWidget* target) : QPushButton(nullptr), m_target(target)
+    {
+        setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint | Qt::WindowStaysOnTopHint |
+                       Qt::WindowDoesNotAcceptFocus);
         setAttribute(Qt::WA_TranslucentBackground);
         setAttribute(Qt::WA_ShowWithoutActivating);
         setAttribute(Qt::WA_TransparentForMouseEvents, true);
@@ -51,20 +50,30 @@ public:
         LOG_DEBUG() << "NotificationCloseButton CREATED: " << this << " for target: " << m_target;
     }
 
-    [[nodiscard]] qreal scale() const { return m_scale; }
+    [[nodiscard]] qreal scale() const
+    {
+        return m_scale;
+    }
 
-    void setScale(const qreal s) {
+    void setScale(const qreal s)
+    {
         m_scale = s;
         update();
     }
 
-    void updatePosition() {
-        if (m_target.isNull() || !m_target->isVisible()) return;
+    void updatePosition()
+    {
+        if (m_target.isNull() || !m_target->isVisible()) {
+            return;
+        }
         this->move(m_target->x() - 10, m_target->y() - 10);
     }
 
-    void setFade(const bool shouldShow) {
-        if (!m_fadeAnim || !m_scaleAnim) return;
+    void setFade(const bool shouldShow)
+    {
+        if (m_fadeAnim == nullptr || m_scaleAnim == nullptr) {
+            return;
+        }
         const qreal targetOpacity = shouldShow ? 1.0 : 0.0;
         const qreal targetScale = shouldShow ? 1.0 : 0.0;
 
@@ -75,13 +84,18 @@ public:
                 show();
             }
             raise();
-        } else {
+        }
+        else {
             setAttribute(Qt::WA_TransparentForMouseEvents, true);
-            if (!isVisible()) return;
+            if (!isVisible()) {
+                return;
+            }
         }
 
         // Если состояние уже соответствует целевому, выходим
-        if (qFuzzyCompare(windowOpacity(), targetOpacity)) return;
+        if (qFuzzyCompare(windowOpacity(), targetOpacity)) {
+            return;
+        }
 
         m_fadeAnim->stop();
         m_scaleAnim->stop();
@@ -92,7 +106,8 @@ public:
         if (shouldShow) {
             m_scaleAnim->setEasingCurve(QEasingCurve::OutBack);
             m_scaleAnim->setDuration(350);
-        } else {
+        }
+        else {
             m_scaleAnim->setEasingCurve(QEasingCurve::InBack);
             m_scaleAnim->setDuration(200);
             m_isPopped = false;
@@ -102,8 +117,11 @@ public:
         m_scaleAnim->start();
     }
 
-    void animatePopIn() {
-        if (m_isPopped) return;
+    void animatePopIn()
+    {
+        if (m_isPopped) {
+            return;
+        }
         m_isPopped = true;
 
         m_scale = 0.0;
@@ -112,7 +130,9 @@ public:
     }
 
 protected:
-    void paintEvent(QPaintEvent *event) override {
+    void paintEvent(QPaintEvent* event) override
+    {
+        Q_UNUSED(event);
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
         painter.setRenderHint(QPainter::SmoothPixmapTransform);
@@ -131,7 +151,13 @@ protected:
 
         // Кнопка
         constexpr QRect btnRect(4, 4, 24, 24);
-        const QColor bgColor = isDown() ? QColor(28, 28, 28) : (underMouse() ? QColor(42, 42, 42) : QColor(32, 32, 32));
+        QColor bgColor(32, 32, 32);
+        if (isDown()) {
+            bgColor = QColor(28, 28, 28);
+        }
+        else if (underMouse()) {
+            bgColor = QColor(42, 42, 42);
+        }
 
         painter.setBrush(bgColor);
         painter.setPen(QPen(QColor(255, 255, 255, 50), 1.08));
@@ -142,12 +168,21 @@ protected:
     }
 
     // События нажатия оставляем для интерактивности, но без анимации scale
-    void mousePressEvent(QMouseEvent *event) override { QPushButton::mousePressEvent(event); }
-    void mouseReleaseEvent(QMouseEvent *event) override { QPushButton::mouseReleaseEvent(event); }
+    void mousePressEvent(QMouseEvent* event) override
+    {
+        Q_UNUSED(event);
+        QPushButton::mousePressEvent(event);
+    }
+    void mouseReleaseEvent(QMouseEvent* event) override
+    {
+        QPushButton::mouseReleaseEvent(event);
+    }
 
 private:
-    [[nodiscard]] bool isPointerOverTargetOrSelf() const {
-        if (m_target.isNull()) return false;
+    [[nodiscard]] bool isPointerOverTargetOrSelf() const
+    {
+        if (m_target.isNull())
+            return false;
 
         const QPoint globalPos = QCursor::pos();
         const bool overTarget = m_target->geometry().contains(globalPos);
@@ -155,13 +190,15 @@ private:
         return overTarget || overSelf;
     }
 
-    void checkMousePosition() {
+    void checkMousePosition()
+    {
         if (isPointerOverTargetOrSelf()) {
             // Если мышь зашла, а мы не в процессе показа или уже скрыты
             if ((!isVisible() || windowOpacity() < 0.1) && m_fadeAnim->state() != QAbstractAnimation::Running) {
                 animatePopIn();
             }
-        } else {
+        }
+        else {
             // Если мышь ушла, а мы еще видны
             if (isVisible() && windowOpacity() > 0.01 && m_fadeAnim->state() != QAbstractAnimation::Running) {
                 setFade(false);
@@ -170,9 +207,9 @@ private:
     }
 
     QPointer<QWidget> m_target;
-    QPropertyAnimation *m_fadeAnim = nullptr;
-    QPropertyAnimation *m_scaleAnim = nullptr;
+    QPropertyAnimation* m_fadeAnim = nullptr;
+    QPropertyAnimation* m_scaleAnim = nullptr;
     qreal m_scale = 1.0;
     bool m_isPopped = false;
-    QTimer *m_monitorTimer;
+    QTimer* m_monitorTimer;
 };

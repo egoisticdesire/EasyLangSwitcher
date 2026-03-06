@@ -1,14 +1,17 @@
 #pragma once
-#include <QtWidgets/QWidget>
-#include <QtGui/QPixmap>
-#include <QtGui/QPainter>
-#include <QtGui/QPainterPath>
-#include <QtGui/QWindow>
+#include <QtCore/QCoreApplication>
 #include <QtCore/QEvent>
 #include <QtCore/QObject>
-#include <QtCore/QCoreApplication>
-#include <cstring>
+#include <QtGui/QPainter>
+#include <QtGui/QPainterPath>
+#include <QtGui/QPixmap>
+#include <QtGui/QWindow>
+#include <QtWidgets/QWidget>
+
 #include <Windows.h>
+#include <bit>
+#include <cstdint>
+#include <cstring>
 #include <dwmapi.h>
 
 #pragma comment(lib, "dwmapi.lib")
@@ -26,45 +29,51 @@ constexpr int ACRYLIC_WINDOW_RADIUS = 8;
 #endif
 
 // WinAPI структуры и типы для недокументированного акрила
-enum ACCENT_STATE {
-    ACCENT_DISABLED = 0,
-    ACCENT_ENABLE_GRADIENT = 1,
-    ACCENT_ENABLE_TRANSPARENTGRADIENT = 2,
-    ACCENT_ENABLE_BLURBEHIND = 3,
-    ACCENT_ENABLE_ACRYLICBLURBEHIND = 4
+enum class AccentState : std::uint8_t
+{
+    Disabled = 0,
+    EnableGradient = 1,
+    EnableTransparentGradient = 2,
+    EnableBlurBehind = 3,
+    EnableAcrylicBlurBehind = 4
 };
 
-struct ACCENT_POLICY {
-    ACCENT_STATE AccentState;
+struct ACCENT_POLICY
+{
+    DWORD AccentState;
     DWORD AccentFlags;
     DWORD GradientColor;
     DWORD AnimationId;
 };
 
-struct WINDOWCOMPOSITIONATTRIBDATA {
+struct WINDOWCOMPOSITIONATTRIBDATA
+{
     DWORD Attribute; // WCA_ACCENT_POLICY = 19
     PVOID Data;
     SIZE_T SizeOfData;
 };
 
-using pSetWindowCompositionAttribute = BOOL(WINAPI*)(HWND, WINDOWCOMPOSITIONATTRIBDATA *);
+using pSetWindowCompositionAttribute = BOOL(WINAPI*)(HWND, WINDOWCOMPOSITIONATTRIBDATA*);
 using pRtlGetVersion = LONG(WINAPI*)(PRTL_OSVERSIONINFOEXW);
 
-class AcrylicHelper final : public QObject {
+class AcrylicHelper final : public QObject
+{
     // Структура для хранения версии ОС и указателей на функции (инициализируется один раз)
-    struct WinInternal {
+    struct WinInternal
+    {
         bool isWin11;
         bool isWin10;
         pSetWindowCompositionAttribute setAttribPtr;
 
-        WinInternal() {
+        WinInternal()
+        {
             // Получаем версию ОС
             isWin11 = false;
             isWin10 = false;
-            if (const auto ntdll = GetModuleHandleW(L"ntdll.dll")) {
-                if (const auto rtlGetVersion = reinterpret_cast<pRtlGetVersion>(
-                    GetProcAddress(ntdll, "RtlGetVersion"))) {
-                    RTL_OSVERSIONINFOEXW rovi = {sizeof(rovi)};
+            if (auto* const ntdll = GetModuleHandleW(L"ntdll.dll")) {
+                if (const auto rtlGetVersion =
+                            reinterpret_cast<pRtlGetVersion>(GetProcAddress(ntdll, "RtlGetVersion"))) {
+                    RTL_OSVERSIONINFOEXW rovi{sizeof(rovi)};
                     if (rtlGetVersion(&rovi) == 0) {
                         isWin10 = (rovi.dwMajorVersion == 10);
                         isWin11 = (isWin10 && rovi.dwBuildNumber >= 22000);
@@ -73,24 +82,27 @@ class AcrylicHelper final : public QObject {
             }
             // Ищем функцию акрила
             setAttribPtr = reinterpret_cast<pSetWindowCompositionAttribute>(
-                GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetWindowCompositionAttribute"));
+                    GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetWindowCompositionAttribute"));
         }
     };
 
     // Статический доступ к внутренним данным
-    static const WinInternal &info() {
+    static const WinInternal& info()
+    {
         static WinInternal instance;
         return instance;
     }
 
     // Синглтон для управления фильтром
-    static AcrylicHelper *instance() {
+    static AcrylicHelper* instance()
+    {
         static AcrylicHelper inst;
         return &inst;
     }
 
     // Генерация текстуры шума для Win10
-    static QPixmap &noiseTexture(const qreal dpr = 1.0) {
+    static QPixmap& noiseTexture(const qreal dpr = 1.0)
+    {
         static QPixmap pix;
         static qreal lastDpr = 0;
 
@@ -104,7 +116,9 @@ class AcrylicHelper final : public QObject {
             QImage img(physSize, physSize, QImage::Format_ARGB32_Premultiplied);
             img.fill(Qt::transparent);
 
-            unsigned int x = 123456789, y = 362436069, z = 521288629;
+            unsigned int x = 123456789;
+            unsigned int y = 362436069;
+            unsigned int z = 521288629;
             auto fastRand = [&]() {
                 x ^= x << 16;
                 x ^= x >> 5;
@@ -124,9 +138,9 @@ class AcrylicHelper final : public QObject {
             p.setRenderHint(QPainter::Antialiasing, false);
 
             for (int i = 0; i < iterations; ++i) {
-                const int px = fastRand() % physSize;
-                const int py = fastRand() % physSize;
-                const int shade = fastRand() % 256;
+                const int px = static_cast<int>(fastRand() % static_cast<unsigned int>(physSize));
+                const int py = static_cast<int>(fastRand() % static_cast<unsigned int>(physSize));
+                const int shade = static_cast<int>(fastRand() % 256U);
                 p.setPen(QColor(shade, shade, shade, 1));
                 p.drawPoint(px, py);
             }
@@ -139,28 +153,44 @@ class AcrylicHelper final : public QObject {
     }
 
 public:
-    static bool isWindows11OrGreater() { return info().isWin11; }
-    static bool isWindows10OrGreater() { return info().isWin10; }
+    static bool isWindows11OrGreater()
+    {
+        return info().isWin11;
+    }
 
-    static void setAcrylicEnabled(QWidget *widget, const bool enabled) {
-        if (!widget) return;
+    static bool isWindows10OrGreater()
+    {
+        return info().isWin10;
+    }
+
+    static void setAcrylicEnabled(QWidget* widget, const bool enabled)
+    {
+        if (widget == nullptr) {
+            return;
+        }
         if (enabled) {
             enableAcrylic(widget);
             enableCustomPreview(widget);
-        } else {
+        }
+        else {
             disableAcrylic(widget);
         }
     }
 
     // 0xCC (~80%) | 0xE0 (~88%) | 0xE3 (~90%) | 0xE6 (~92%) | 0xF0 (~94%) | 0xF3 (~96%) | 0xF6 (~98%) | 0xF9 (~100%)
-    static void enableAcrylic(
-        QWidget *widget,
-        const DWORD alphaWin11 = 0x40, const DWORD rgbWin11 = 0x202020,
-        const DWORD alphaWin10 = 0xE6, const DWORD rgbWin10 = 0x141414
-    ) {
-        if (!widget || !info().setAttribPtr) return;
-        const auto hwnd = reinterpret_cast<HWND>(widget->winId());
-        if (!hwnd) return;
+    static void enableAcrylic(QWidget* widget,
+                              const DWORD alphaWin11 = 0x40,
+                              const DWORD rgbWin11 = 0x202020,
+                              const DWORD alphaWin10 = 0xE6,
+                              const DWORD rgbWin10 = 0x141414)
+    {
+        if (widget == nullptr || !info().setAttribPtr) {
+            return;
+        }
+        auto* const hwnd = std::bit_cast<HWND>(static_cast<std::uintptr_t>(widget->winId()));
+        if (hwnd == nullptr) {
+            return;
+        }
 
         // Регистрация фильтра шума для Win10 прямо здесь
         if (info().isWin10 && !info().isWin11) {
@@ -169,23 +199,28 @@ public:
         }
 
         // Чистим флаг Layered, чтобы WinAPI акрил не конфликтовал с прозрачностью Qt
-        if (const LONG ex = GetWindowLongW(hwnd, GWL_EXSTYLE); ex & WS_EX_LAYERED)
+        if (const LONG ex = GetWindowLongW(hwnd, GWL_EXSTYLE); ex & WS_EX_LAYERED) {
             SetWindowLongW(hwnd, GWL_EXSTYLE, ex & ~WS_EX_LAYERED);
+        }
 
         ACCENT_POLICY policy{};
-        const auto &win = info();
+        const auto& win = info();
 
         if (win.isWin11) {
-            policy.AccentState = ACCENT_ENABLE_ACRYLICBLURBEHIND;
+            policy.AccentState = static_cast<DWORD>(AccentState::EnableAcrylicBlurBehind);
             policy.GradientColor = (alphaWin11 << 24) | rgbWin11;
             policy.AccentFlags = 2;
 
             // Нативное скругление Win11 (DWM масштабирует его сам)
-            constexpr DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
-            constexpr int DWMWCP_ROUND = 2;
-            (void) DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &DWMWCP_ROUND, sizeof(DWMWCP_ROUND));
-        } else if (win.isWin10) {
-            policy.AccentState = ACCENT_ENABLE_BLURBEHIND;
+            constexpr DWORD windowCornerPreferenceAttribute = 33;
+            constexpr DWORD roundWindowCornerPreference = 2;
+            (void) DwmSetWindowAttribute(hwnd,
+                                         windowCornerPreferenceAttribute,
+                                         &roundWindowCornerPreference,
+                                         sizeof(roundWindowCornerPreference));
+        }
+        else if (win.isWin10) {
+            policy.AccentState = static_cast<DWORD>(AccentState::EnableBlurBehind);
             policy.GradientColor = (alphaWin10 << 24) | rgbWin10;
             policy.AccentFlags = 2;
             updateRegion(widget);
@@ -195,11 +230,16 @@ public:
         win.setAttribPtr(hwnd, &data);
     }
 
-    static void updateRegion(const QWidget *widget) {
-        if (!widget || isWindows11OrGreater()) return; // Win11 сама справляется
+    static void updateRegion(const QWidget* widget)
+    {
+        if (widget == nullptr || isWindows11OrGreater()) {
+            return; // Win11 сама справляется
+        }
 
-        const auto hwnd = reinterpret_cast<HWND>(widget->winId());
-        if (!hwnd) return;
+        auto* const hwnd = std::bit_cast<HWND>(static_cast<std::uintptr_t>(widget->winId()));
+        if (hwnd == nullptr) {
+            return;
+        }
 
         // Расчет физических пикселей для корректного DPI на Win10
         const qreal dpr = widget->devicePixelRatio();
@@ -213,35 +253,50 @@ public:
         }
     }
 
-    static void disableAcrylic(QWidget *widget) {
-        if (!widget) return;
+    static void disableAcrylic(QWidget* widget)
+    {
+        if (widget == nullptr) {
+            return;
+        }
 
         // Обязательно снимаем фильтр при выключении
         widget->removeEventFilter(instance());
 
-        if (!info().setAttribPtr) return;
-        const auto hwnd = reinterpret_cast<HWND>(widget->winId());
-        if (!hwnd) return;
+        if (!info().setAttribPtr) {
+            return;
+        }
+        auto* const hwnd = std::bit_cast<HWND>(static_cast<std::uintptr_t>(widget->winId()));
+        if (hwnd == nullptr) {
+            return;
+        }
 
-        ACCENT_POLICY policy{ACCENT_DISABLED, 0, 0, 0};
+        ACCENT_POLICY policy{static_cast<DWORD>(AccentState::Disabled), 0, 0, 0};
         WINDOWCOMPOSITIONATTRIBDATA data{19, &policy, sizeof(policy)};
         info().setAttribPtr(hwnd, &data);
     }
 
-    static void enableCustomPreview(const QWidget *widget) {
-        if (!widget) return;
-        const auto hwnd = reinterpret_cast<HWND>(widget->winId());
-        if (!hwnd) return;
+    static void enableCustomPreview(const QWidget* widget)
+    {
+        if (widget == nullptr) {
+            return;
+        }
+        auto* const hwnd = std::bit_cast<HWND>(static_cast<std::uintptr_t>(widget->winId()));
+        if (hwnd == nullptr) {
+            return;
+        }
         constexpr BOOL fTrue = TRUE;
-        (void) DwmSetWindowAttribute(hwnd, 7, &fTrue, sizeof(fTrue)); // FORCE_ICONIC
+        (void) DwmSetWindowAttribute(hwnd, 7, &fTrue, sizeof(fTrue));  // FORCE_ICONIC
         (void) DwmSetWindowAttribute(hwnd, 10, &fTrue, sizeof(fTrue)); // HAS_ICONIC_BITMAP
     }
 
-    static bool handleIconicMessages(QWidget *widget, void *message, const QColor &bg = QColor(32, 32, 32)) {
-        const MSG *msg = static_cast<MSG *>(message);
+    static bool handleIconicMessages(QWidget* widget, void* message, const QColor& bg = QColor(32, 32, 32))
+    {
+        const auto* msg = static_cast<MSG*>(message);
         if (msg->message == WM_DWMSENDICONICTHUMBNAIL) {
-            int w = HIWORD(msg->lParam);
-            int h = LOWORD(msg->lParam);
+            const auto widthWord = HIWORD(msg->lParam);
+            const auto heightWord = LOWORD(msg->lParam);
+            int w = static_cast<int>(widthWord);
+            int h = static_cast<int>(heightWord);
             if (w == 0 || h == 0) {
                 w = widget->width() / 4;
                 h = widget->height() / 4;
@@ -261,9 +316,10 @@ public:
     }
 
 protected:
-    bool eventFilter(QObject *obj, QEvent *event) override {
+    bool eventFilter(QObject* obj, QEvent* event) override
+    {
         if (event->type() == QEvent::Paint) {
-            if (const auto widget = static_cast<QWidget *>(obj)) {
+            if (auto* const widget = dynamic_cast<QWidget*>(obj)) {
                 widget->removeEventFilter(this);
                 QCoreApplication::sendEvent(widget, event);
                 widget->installEventFilter(this);
@@ -281,8 +337,11 @@ protected:
     }
 
 private:
-    static HBITMAP qtPixmapToHBitmap(const QPixmap &pix) {
-        if (pix.isNull()) return nullptr;
+    static HBITMAP qtPixmapToHBitmap(const QPixmap& pix)
+    {
+        if (pix.isNull()) {
+            return nullptr;
+        }
         QImage img = pix.toImage().convertToFormat(QImage::Format_ARGB32_Premultiplied);
         BITMAPINFO bmi = {};
         bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -292,13 +351,16 @@ private:
         bmi.bmiHeader.biBitCount = 32;
         bmi.bmiHeader.biCompression = BI_RGB;
 
-        void *bits = nullptr;
+        void* bits = nullptr;
         const HBITMAP hBitmap = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
-        if (hBitmap && bits) memcpy(bits, img.bits(), img.sizeInBytes());
+        if (hBitmap && bits) {
+            memcpy(bits, img.bits(), img.sizeInBytes());
+        }
         return hBitmap;
     }
 
-    static QPixmap generateOpaqueScreenshot(QWidget *widget, const QSize &targetSize, const QColor &bgColor) {
+    static QPixmap generateOpaqueScreenshot(QWidget* widget, const QSize& targetSize, const QColor& bgColor)
+    {
         QPixmap finalPix(widget->size());
         finalPix.fill(Qt::transparent);
         QPainter painter(&finalPix);
@@ -313,13 +375,14 @@ private:
             painter.setClipping(false);
             painter.setPen(QPen(QColor(0x42, 0x42, 0x42), 1.0));
             painter.drawPath(path);
-        } else {
+        }
+        else {
             painter.fillRect(finalPix.rect(), bgColor);
             widget->render(&painter, QPoint(), QRegion(), QWidget::DrawChildren);
         }
         painter.end();
         return (finalPix.size() == targetSize)
-                   ? finalPix
-                   : finalPix.scaled(targetSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                       ? finalPix
+                       : finalPix.scaled(targetSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     }
 };

@@ -2,14 +2,15 @@
 
 #include <QStringList>
 
-namespace MainBootstrapHelper {
-    bool ensureToastShortcut(const wchar_t *appUserModelId);
+namespace MainBootstrapHelper
+{
+bool ensureToastShortcut(const wchar_t* appUserModelId);
 
-    void ensureProtocolRegistration();
+void ensureProtocolRegistration();
 
-    QStringList startupArgsFromArgv(int argc, char *argv[]);
+QStringList startupArgsFromArgv(int argc, char* const* argv);
 
-    QString instanceLockPath();
+QString instanceLockPath();
 
-    bool isToastActivationLaunch(const QStringList &startupArgs);
-}
+bool isToastActivationLaunch(const QStringList& startupArgs);
+} // namespace MainBootstrapHelper

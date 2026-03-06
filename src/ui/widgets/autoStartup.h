@@ -1,7 +1,8 @@
 #pragma once
 #include <QString>
 
-class AutoStartupManager {
+class AutoStartupManager
+{
 public:
     static bool setAutoStartup(bool enable);
 

@@ -3,16 +3,17 @@
 #ifdef Q_OS_WIN
 #include "../../core/config/logger.h"
 #include "windowsToastIdentity.h"
+
 #include <QApplication>
 #include <QMetaObject>
 #include <roapi.h>
+#include <string>
 #include <windows.data.xml.dom.h>
 #include <windows.foundation.h>
 #include <windows.ui.notifications.h>
 #include <wrl.h>
 #include <wrl/event.h>
 #include <wrl/wrappers/corewrappers.h>
-#include <string>
 
 #pragma comment(lib, "runtimeobject.lib")
 
@@ -22,97 +23,123 @@ using namespace ABI::Windows::Data::Xml::Dom;
 using namespace ABI::Windows::UI::Notifications;
 using ToastActivatedHandler = __FITypedEventHandler_2_Windows__CUI__CNotifications__CToastNotification_IInspectable;
 
-namespace {
-    constexpr HRESULT kToastHistoryNotFoundHr = static_cast<HRESULT>(0x80070490);
+namespace
+{
+constexpr HRESULT kToastHistoryNotFoundHr = static_cast<HRESULT>(0x80070490);
 
-    ComPtr<IToastNotification> g_activeToast;
-    ComPtr<ToastActivatedHandler> g_activeToastActivatedHandler;
-    EventRegistrationToken g_activeToastActivatedToken{};
-
-    bool ensureToastRuntimeInitialized() {
-        static bool initialized = false;
-        static HRESULT initResult = E_FAIL;
-
-        if (!initialized) {
-            initResult = RoInitialize(RO_INIT_MULTITHREADED);
-            if (initResult == RPC_E_CHANGED_MODE) {
-                initResult = RoInitialize(RO_INIT_SINGLETHREADED);
-            }
-            initialized = true;
-        }
-
-        if (FAILED(initResult)) {
-            LOG_WARNING() << "RoInitialize failed for toast. HRESULT=0x"
-                    << QString::number(static_cast<qulonglong>(initResult), 16);
-            return false;
-        }
-        return true;
-    }
-
-    void resetActiveToastHandlers() {
-        if (g_activeToast && g_activeToastActivatedHandler) {
-            if (const HRESULT hr = g_activeToast->remove_Activated(g_activeToastActivatedToken); FAILED(hr)) {
-                LOG_WARNING() << "Toast activation callback unregistration failed. HRESULT=0x"
-                        << QString::number(static_cast<qulonglong>(hr), 16);
-            }
-        }
-        g_activeToast.Reset();
-        g_activeToastActivatedHandler.Reset();
-        g_activeToastActivatedToken = {};
-    }
-
-    bool appendToastTextNode(const ComPtr<IXmlDocument> &xml, const int index, const QString &text) {
-        ComPtr<IXmlNodeList> textNodes;
-        HRESULT hr = xml->GetElementsByTagName(HStringReference(L"text").Get(), &textNodes);
-        if (FAILED(hr) || !textNodes) return false;
-
-        ComPtr<IXmlNode> textNode;
-        hr = textNodes->Item(index, &textNode);
-        if (FAILED(hr) || !textNode) return false;
-
-        ComPtr<IXmlText> textValue;
-        const std::wstring wideText = text.toStdWString();
-        hr = xml->CreateTextNode(HStringReference(wideText.c_str()).Get(), &textValue);
-        if (FAILED(hr) || !textValue) return false;
-
-        ComPtr<IXmlNode> textValueNode;
-        hr = textValue.As(&textValueNode);
-        if (FAILED(hr) || !textValueNode) return false;
-
-        ComPtr<IXmlNode> appended;
-        hr = textNode->AppendChild(textValueNode.Get(), &appended);
-        return SUCCEEDED(hr);
-    }
-
-    bool setToastLaunchAttributes(const ComPtr<IXmlDocument> &xml, const QString &launchArgument,
-                                  const bool suppressPopup) {
-        ComPtr<IXmlElement> root;
-        HRESULT hr = xml->get_DocumentElement(&root);
-        if (FAILED(hr) || !root) return false;
-
-        const std::wstring launch = launchArgument.toStdWString();
-        hr = root->SetAttribute(HStringReference(L"launch").Get(), HStringReference(launch.c_str()).Get());
-        if (FAILED(hr)) return false;
-
-        hr = root->SetAttribute(HStringReference(L"activationType").Get(), HStringReference(L"protocol").Get());
-        if (FAILED(hr)) return false;
-
-        if (suppressPopup) {
-            hr = root->SetAttribute(HStringReference(L"suppressPopup").Get(), HStringReference(L"true").Get());
-            if (FAILED(hr)) return false;
-        }
-
-        return true;
-    }
+ComPtr<IToastNotification>& activeToast()
+{
+    static ComPtr<IToastNotification> value;
+    return value;
 }
 
-bool WindowsToastNotification::showToastNotification(
-    const QString &title,
-    const QString &body,
-    const std::function<void()> &onActivated,
-    const bool suppressPopup
-) {
-    if (!ensureToastRuntimeInitialized()) return false;
+ComPtr<ToastActivatedHandler>& activeToastActivatedHandler()
+{
+    static ComPtr<ToastActivatedHandler> value;
+    return value;
+}
+
+EventRegistrationToken& activeToastActivatedToken()
+{
+    static EventRegistrationToken value{};
+    return value;
+}
+
+bool ensureToastRuntimeInitialized()
+{
+    static bool initialized = false;
+    static HRESULT initResult = E_FAIL;
+
+    if (!initialized) {
+        initResult = RoInitialize(RO_INIT_MULTITHREADED);
+        if (initResult == RPC_E_CHANGED_MODE) {
+            initResult = RoInitialize(RO_INIT_SINGLETHREADED);
+        }
+        initialized = true;
+    }
+
+    if (FAILED(initResult)) {
+        LOG_WARNING() << "RoInitialize failed for toast. HRESULT=0x"
+                      << QString::number(static_cast<qulonglong>(initResult), 16);
+        return false;
+    }
+    return true;
+}
+
+void resetActiveToastHandlers()
+{
+    if (activeToast() && activeToastActivatedHandler()) {
+        if (const HRESULT hr = activeToast()->remove_Activated(activeToastActivatedToken()); FAILED(hr)) {
+            LOG_WARNING() << "Toast activation callback unregistration failed. HRESULT=0x"
+                          << QString::number(static_cast<qulonglong>(hr), 16);
+        }
+    }
+    activeToast().Reset();
+    activeToastActivatedHandler().Reset();
+    activeToastActivatedToken() = {};
+}
+
+bool appendToastTextNode(const ComPtr<IXmlDocument>& xml, const int index, const QString& text)
+{
+    ComPtr<IXmlNodeList> textNodes;
+    HRESULT hr = xml->GetElementsByTagName(HStringReference(L"text").Get(), &textNodes);
+    if (FAILED(hr) || !textNodes)
+        return false;
+
+    ComPtr<IXmlNode> textNode;
+    hr = textNodes->Item(index, &textNode);
+    if (FAILED(hr) || !textNode)
+        return false;
+
+    ComPtr<IXmlText> textValue;
+    const std::wstring wideText = text.toStdWString();
+    hr = xml->CreateTextNode(HStringReference(wideText.c_str()).Get(), &textValue);
+    if (FAILED(hr) || !textValue)
+        return false;
+
+    ComPtr<IXmlNode> textValueNode;
+    hr = textValue.As(&textValueNode);
+    if (FAILED(hr) || !textValueNode)
+        return false;
+
+    ComPtr<IXmlNode> appended;
+    hr = textNode->AppendChild(textValueNode.Get(), &appended);
+    return SUCCEEDED(hr);
+}
+
+bool setToastLaunchAttributes(const ComPtr<IXmlDocument>& xml, const QString& launchArgument, const bool suppressPopup)
+{
+    ComPtr<IXmlElement> root;
+    HRESULT hr = xml->get_DocumentElement(&root);
+    if (FAILED(hr) || !root)
+        return false;
+
+    const std::wstring launch = launchArgument.toStdWString();
+    hr = root->SetAttribute(HStringReference(L"launch").Get(), HStringReference(launch.c_str()).Get());
+    if (FAILED(hr))
+        return false;
+
+    hr = root->SetAttribute(HStringReference(L"activationType").Get(), HStringReference(L"protocol").Get());
+    if (FAILED(hr))
+        return false;
+
+    if (suppressPopup) {
+        hr = root->SetAttribute(HStringReference(L"suppressPopup").Get(), HStringReference(L"true").Get());
+        if (FAILED(hr))
+            return false;
+    }
+
+    return true;
+}
+} // namespace
+
+bool WindowsToastNotification::showToastNotification(const QString& title,
+                                                     const QString& body,
+                                                     const std::function<void()>& onActivated,
+                                                     const bool suppressPopup)
+{
+    if (!ensureToastRuntimeInitialized())
+        return false;
     resetActiveToastHandlers();
 
     const std::wstring appId = WindowsToastIdentity::appUserModelIdWide();
@@ -122,20 +149,18 @@ bool WindowsToastNotification::showToastNotification(
 
     ComPtr<IToastNotificationManagerStatics> toastManager;
     HRESULT hr = RoGetActivationFactory(
-        HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotificationManager).Get(),
-        IID_PPV_ARGS(&toastManager)
-    );
+            HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotificationManager).Get(),
+            IID_PPV_ARGS(&toastManager));
     if (FAILED(hr) || !toastManager) {
         LOG_WARNING() << "Toast manager activation failed. HRESULT=0x"
-                << QString::number(static_cast<qulonglong>(hr), 16);
+                      << QString::number(static_cast<qulonglong>(hr), 16);
         return false;
     }
 
     ComPtr<IXmlDocument> toastXml;
     hr = toastManager->GetTemplateContent(ToastTemplateType_ToastText02, &toastXml);
     if (FAILED(hr) || !toastXml) {
-        LOG_WARNING() << "Toast XML template failed. HRESULT=0x"
-                << QString::number(static_cast<qulonglong>(hr), 16);
+        LOG_WARNING() << "Toast XML template failed. HRESULT=0x" << QString::number(static_cast<qulonglong>(hr), 16);
         return false;
     }
 
@@ -149,50 +174,44 @@ bool WindowsToastNotification::showToastNotification(
     }
 
     ComPtr<IToastNotificationFactory> toastFactory;
-    hr = RoGetActivationFactory(
-        HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotification).Get(),
-        IID_PPV_ARGS(&toastFactory)
-    );
+    hr = RoGetActivationFactory(HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotification).Get(),
+                                IID_PPV_ARGS(&toastFactory));
     if (FAILED(hr) || !toastFactory) {
         LOG_WARNING() << "Toast factory activation failed. HRESULT=0x"
-                << QString::number(static_cast<qulonglong>(hr), 16);
+                      << QString::number(static_cast<qulonglong>(hr), 16);
         return false;
     }
 
     ComPtr<IToastNotification> toast;
     hr = toastFactory->CreateToastNotification(toastXml.Get(), &toast);
     if (FAILED(hr) || !toast) {
-        LOG_WARNING() << "Toast creation failed. HRESULT=0x"
-                << QString::number(static_cast<qulonglong>(hr), 16);
+        LOG_WARNING() << "Toast creation failed. HRESULT=0x" << QString::number(static_cast<qulonglong>(hr), 16);
         return false;
     }
 
     if (onActivated) {
-        g_activeToastActivatedHandler =
-                Callback<ToastActivatedHandler>(
-                    [onActivated](ABI::Windows::UI::Notifications::IToastNotification *, IInspectable *) -> HRESULT {
-                        QMetaObject::invokeMethod(
-                            qApp,
-                            [onActivated]() { onActivated(); },
-                            Qt::QueuedConnection
-                        );
-                        return S_OK;
-                    });
+        activeToastActivatedHandler() = Callback<ToastActivatedHandler>(
+                [onActivated](ABI::Windows::UI::Notifications::IToastNotification*, IInspectable*) -> HRESULT {
+                    if (auto* const app = dynamic_cast<QApplication*>(QCoreApplication::instance()); app != nullptr) {
+                        QMetaObject::invokeMethod(app, [onActivated]() { onActivated(); }, Qt::QueuedConnection);
+                    }
+                    else {
+                        onActivated();
+                    }
+                    return S_OK;
+                });
 
-        if (!g_activeToastActivatedHandler.Get()) {
+        if (!activeToastActivatedHandler().Get()) {
             LOG_WARNING() << "Toast activation callback creation failed";
             return false;
         }
 
-        hr = toast->add_Activated(
-            g_activeToastActivatedHandler.Get(),
-            &g_activeToastActivatedToken
-        );
+        hr = toast->add_Activated(activeToastActivatedHandler().Get(), &activeToastActivatedToken());
         if (FAILED(hr)) {
             LOG_WARNING() << "Toast activation callback registration failed. HRESULT=0x"
-                    << QString::number(static_cast<qulonglong>(hr), 16);
-            g_activeToastActivatedHandler.Reset();
-            g_activeToastActivatedToken = {};
+                          << QString::number(static_cast<qulonglong>(hr), 16);
+            activeToastActivatedHandler().Reset();
+            activeToastActivatedToken() = {};
         }
     }
 
@@ -200,67 +219,68 @@ bool WindowsToastNotification::showToastNotification(
     hr = toastManager->CreateToastNotifierWithId(HStringReference(appId.c_str()).Get(), &notifier);
     if (FAILED(hr) || !notifier) {
         LOG_WARNING() << "Toast notifier creation failed. HRESULT=0x"
-                << QString::number(static_cast<qulonglong>(hr), 16);
+                      << QString::number(static_cast<qulonglong>(hr), 16);
         return false;
     }
 
     hr = notifier->Show(toast.Get());
     if (FAILED(hr)) {
-        LOG_WARNING() << "Toast show failed. HRESULT=0x"
-                << QString::number(static_cast<qulonglong>(hr), 16);
+        LOG_WARNING() << "Toast show failed. HRESULT=0x" << QString::number(static_cast<qulonglong>(hr), 16);
         resetActiveToastHandlers();
         return false;
     }
 
-    g_activeToast = toast;
+    activeToast() = toast;
     return true;
 }
 
-void WindowsToastNotification::clearToastHistoryForApp() {
-    if (!ensureToastRuntimeInitialized()) return;
+void WindowsToastNotification::clearToastHistoryForApp()
+{
+    if (!ensureToastRuntimeInitialized())
+        return;
 
     ComPtr<IToastNotificationManagerStatics> toastManager;
     HRESULT hr = RoGetActivationFactory(
-        HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotificationManager).Get(),
-        IID_PPV_ARGS(&toastManager)
-    );
-    if (FAILED(hr) || !toastManager) return;
+            HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotificationManager).Get(),
+            IID_PPV_ARGS(&toastManager));
+    if (FAILED(hr) || !toastManager)
+        return;
 
     ComPtr<IToastNotificationManagerStatics2> toastManager2;
     hr = toastManager.As(&toastManager2);
-    if (FAILED(hr) || !toastManager2) return;
+    if (FAILED(hr) || !toastManager2)
+        return;
 
     ComPtr<IToastNotificationHistory> history;
     hr = toastManager2->get_History(&history);
-    if (FAILED(hr) || !history) return;
+    if (FAILED(hr) || !history)
+        return;
 
     const std::wstring appId = WindowsToastIdentity::appUserModelIdWide();
     if (!appId.empty()) {
-        if (const HRESULT clearWithIdHr = history->ClearWithId(HStringReference(appId.c_str()).Get());
-            SUCCEEDED(clearWithIdHr) || clearWithIdHr == kToastHistoryNotFoundHr) {
+        const HRESULT clearWithIdHr = history->ClearWithId(HStringReference(appId.c_str()).Get());
+        if (SUCCEEDED(clearWithIdHr) || clearWithIdHr == kToastHistoryNotFoundHr) {
             resetActiveToastHandlers();
             return;
-        } else {
-            LOG_WARNING() << "Toast history ClearWithId failed. HRESULT=0x"
-                    << QString::number(static_cast<qulonglong>(clearWithIdHr), 16);
         }
+        LOG_WARNING() << "Toast history ClearWithId failed. HRESULT=0x"
+                      << QString::number(static_cast<qulonglong>(clearWithIdHr), 16);
     }
 
     if (const HRESULT clearHr = history->Clear(); FAILED(clearHr) && clearHr != kToastHistoryNotFoundHr) {
         LOG_WARNING() << "Toast history Clear failed. HRESULT=0x"
-                << QString::number(static_cast<qulonglong>(clearHr), 16);
+                      << QString::number(static_cast<qulonglong>(clearHr), 16);
     }
     resetActiveToastHandlers();
 }
 
 #else
 
-bool WindowsToastNotification::showToastNotification(
-    const QString &title,
-    const QString &body,
-    const std::function<void()> &onActivated,
-    const bool suppressPopup
-) {
+bool WindowsToastNotification::showToastNotification(const QString& title,
+                                                     const QString& body,
+                                                     const std::function<void()>& onActivated,
+                                                     const bool suppressPopup)
+{
     Q_UNUSED(title);
     Q_UNUSED(body);
     Q_UNUSED(onActivated);
@@ -268,7 +288,6 @@ bool WindowsToastNotification::showToastNotification(
     return false;
 }
 
-void WindowsToastNotification::clearToastHistoryForApp() {
-}
+void WindowsToastNotification::clearToastHistoryForApp() {}
 
 #endif

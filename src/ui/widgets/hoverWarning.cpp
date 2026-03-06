@@ -1,12 +1,17 @@
 #include "hoverWarning.h"
-#include "../helpers/acrylicHelper.h"
-#include <QScreen>
-#include <QTimer>
+
 #include <QTextDocument>
+#include <QTimer>
 #include <QtMath>
 
-KeyHoverWarning::KeyHoverWarning(QWidget *owner)
-    : QWidget(nullptr), owner(owner) {
+#include "../helpers/acrylicHelper.h"
+
+#include <QScreen>
+
+KeyHoverWarning::KeyHoverWarning(QWidget* owner)
+    : QWidget(nullptr), owner(owner), m_content(this), animGroupIn(new QParallelAnimationGroup(this)),
+      animGroupOut(new QParallelAnimationGroup(this))
+{
     ui.setupUi(this);
 
     setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
@@ -14,14 +19,10 @@ KeyHoverWarning::KeyHoverWarning(QWidget *owner)
     setAttribute(Qt::WA_ShowWithoutActivating);
     setFocusPolicy(Qt::NoFocus);
 
-    m_content = ui.background_frame ? ui.background_frame : static_cast<QWidget *>(this);
+    m_content = (ui.background_frame != nullptr) ? ui.background_frame : static_cast<QWidget*>(this);
     setFixedWidth(380);
 
     QTimer::singleShot(0, this, [this] { AcrylicHelper::enableAcrylic(this); });
-
-    // Инициализируем только группы
-    animGroupIn = new QParallelAnimationGroup(this);
-    animGroupOut = new QParallelAnimationGroup(this);
 
     connect(animGroupOut, &QParallelAnimationGroup::finished, this, [this] {
         if (m_isClosing) {
@@ -30,12 +31,13 @@ KeyHoverWarning::KeyHoverWarning(QWidget *owner)
         }
     });
 
-    if (owner) {
+    if (owner != nullptr) {
         owner->installEventFilter(this);
     }
 }
 
-bool KeyHoverWarning::eventFilter(QObject *obj, QEvent *event) {
+bool KeyHoverWarning::eventFilter(QObject* obj, QEvent* event)
+{
     if (obj == owner) {
         if (event->type() == QEvent::Close || event->type() == QEvent::Hide) {
             hideImmediately();
@@ -44,7 +46,8 @@ bool KeyHoverWarning::eventFilter(QObject *obj, QEvent *event) {
     return QWidget::eventFilter(obj, event);
 }
 
-void KeyHoverWarning::hideImmediately() {
+void KeyHoverWarning::hideImmediately()
+{
     animGroupIn->stop();
     animGroupOut->stop();
     hide();
@@ -52,12 +55,15 @@ void KeyHoverWarning::hideImmediately() {
     m_isClosing = false;
 }
 
-void KeyHoverWarning::setText(const QString &text) {
+void KeyHoverWarning::setText(const QString& text)
+{
     ui.label_warning->setText(text);
     ui.label_warning->setWordWrap(true);
 
-    auto *layout = m_content->layout();
-    if (!layout) return;
+    auto* layout = m_content->layout();
+    if (layout == nullptr) {
+        return;
+    }
 
     constexpr QMargins margins(10, 12, 10, 6);
     layout->setContentsMargins(margins);
@@ -78,8 +84,11 @@ void KeyHoverWarning::setText(const QString &text) {
     AcrylicHelper::updateRegion(this);
 }
 
-void KeyHoverWarning::showNear(const QWidget *anchor) {
-    if (!anchor || m_visible) return;
+void KeyHoverWarning::showNear(const QWidget* anchor)
+{
+    if (anchor == nullptr || m_visible) {
+        return;
+    }
 
     animGroupIn->stop();
     animGroupIn->clear();
@@ -92,19 +101,19 @@ void KeyHoverWarning::showNear(const QWidget *anchor) {
     const QPoint startPos = endPos - QPoint(12, 0);
 
     // Анимация позиции с поддержкой Акрила
-    auto *posAnim = new QVariantAnimation(this);
+    auto* posAnim = new QVariantAnimation(this);
     posAnim->setDuration(200);
     posAnim->setStartValue(startPos);
     posAnim->setEndValue(endPos);
     posAnim->setEasingCurve(QEasingCurve::OutBack);
 
-    connect(posAnim, &QVariantAnimation::valueChanged, this, [this](const QVariant &v) {
+    connect(posAnim, &QVariantAnimation::valueChanged, this, [this](const QVariant& v) {
         this->move(v.toPoint());
         AcrylicHelper::updateRegion(this);
     });
 
     // Анимация прозрачности
-    auto *opacityAnim = new QPropertyAnimation(this, "windowOpacity", this);
+    auto* opacityAnim = new QPropertyAnimation(this, "windowOpacity", this);
     opacityAnim->setDuration(140);
     opacityAnim->setStartValue(0.0);
     opacityAnim->setEndValue(1.0);
@@ -123,8 +132,11 @@ void KeyHoverWarning::showNear(const QWidget *anchor) {
     animGroupIn->start();
 }
 
-void KeyHoverWarning::hideNow() {
-    if (!m_visible || m_isClosing) return;
+void KeyHoverWarning::hideNow()
+{
+    if (!m_visible || m_isClosing) {
+        return;
+    }
 
     animGroupIn->stop();
     animGroupOut->stop();
@@ -135,18 +147,18 @@ void KeyHoverWarning::hideNow() {
     const QPoint startPos = pos();
     const QPoint endPos = startPos - QPoint(12, 0);
 
-    auto *posAnim = new QVariantAnimation(this);
+    auto* posAnim = new QVariantAnimation(this);
     posAnim->setDuration(180);
     posAnim->setStartValue(startPos);
     posAnim->setEndValue(endPos);
     posAnim->setEasingCurve(QEasingCurve::InBack);
 
-    connect(posAnim, &QVariantAnimation::valueChanged, this, [this](const QVariant &v) {
+    connect(posAnim, &QVariantAnimation::valueChanged, this, [this](const QVariant& v) {
         this->move(v.toPoint());
         AcrylicHelper::updateRegion(this);
     });
 
-    auto *opacityAnim = new QPropertyAnimation(this, "windowOpacity", this);
+    auto* opacityAnim = new QPropertyAnimation(this, "windowOpacity", this);
     opacityAnim->setDuration(140);
     opacityAnim->setStartValue(this->windowOpacity());
     opacityAnim->setEndValue(0.0);

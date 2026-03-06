@@ -1,72 +1,83 @@
 #include "animatedSelector.h"
-#include "../../core/config/logger.h"
-#include <QPushButton>
-#include <QPropertyAnimation>
-#include <QParallelAnimationGroup>
+
 #include <QTimer>
-#include <QStyle>
+
+#include "../../core/config/logger.h"
+
 #include <QGraphicsDropShadowEffect>
 #include <QPainter>
+#include <QParallelAnimationGroup>
 #include <QPointer>
+#include <QPropertyAnimation>
+#include <QPushButton>
+#include <QStyle>
 
-namespace {
-    constexpr int kIndicatorRadiusPx = 8;
-    constexpr int kIndicatorBgAlpha = 15;
+namespace
+{
+constexpr int kIndicatorRadiusPx = 8;
+constexpr int kIndicatorBgAlpha = 15;
 
-    class IndicatorFrame final : public QFrame {
-    public:
-        explicit IndicatorFrame(QWidget *parent = nullptr) : QFrame(parent) {
-            setFrameStyle(NoFrame);
-            setAttribute(Qt::WA_TranslucentBackground);
-        }
-
-        void setFillOpacity(const qreal opacity) {
-            const qreal clamped = qBound(0.0, opacity, 1.0);
-            if (qFuzzyCompare(m_fillOpacity, clamped)) return;
-            m_fillOpacity = clamped;
-            update();
-        }
-
-    protected:
-        void paintEvent(QPaintEvent *event) override {
-            Q_UNUSED(event);
-            QPainter p(this);
-            p.setRenderHint(QPainter::Antialiasing, true);
-            p.setPen(Qt::NoPen);
-
-            QColor fill(255, 255, 255, kIndicatorBgAlpha);
-            const int alpha = qBound(
-                0,
-                static_cast<int>(std::lround(static_cast<double>(kIndicatorBgAlpha) * m_fillOpacity)),
-                255
-            );
-            fill.setAlpha(alpha);
-            p.setBrush(fill);
-
-            QRectF r = rect();
-            r.adjust(0.5, 0.5, -0.5, -0.5);
-            p.drawRoundedRect(r, kIndicatorRadiusPx, kIndicatorRadiusPx);
-        }
-
-    private:
-        qreal m_fillOpacity = 1.0;
-    };
-
-    void setIndicatorFillOpacity(const QPointer<QFrame> &frame, const qreal opacity) {
-        if (!frame) return;
-        if (auto *indicator = dynamic_cast<IndicatorFrame *>(frame.data())) {
-            indicator->setFillOpacity(opacity);
-        }
+class IndicatorFrame final : public QFrame
+{
+public:
+    explicit IndicatorFrame(QWidget* parent = nullptr) : QFrame(parent)
+    {
+        setFrameStyle(NoFrame);
+        setAttribute(Qt::WA_TranslucentBackground);
     }
+
+    void setFillOpacity(const qreal opacity)
+    {
+        const qreal clamped = qBound(0.0, opacity, 1.0);
+        if (qFuzzyCompare(m_fillOpacity, clamped)) {
+            return;
+        }
+        m_fillOpacity = clamped;
+        update();
+    }
+
+protected:
+    void paintEvent(QPaintEvent* event) override
+    {
+        Q_UNUSED(event);
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing, true);
+        p.setPen(Qt::NoPen);
+
+        QColor fill(255, 255, 255, kIndicatorBgAlpha);
+        const int alpha =
+                qBound(0, static_cast<int>(std::lround(static_cast<double>(kIndicatorBgAlpha) * m_fillOpacity)), 255);
+        fill.setAlpha(alpha);
+        p.setBrush(fill);
+
+        QRectF r = rect();
+        r.adjust(0.5, 0.5, -0.5, -0.5);
+        p.drawRoundedRect(r, kIndicatorRadiusPx, kIndicatorRadiusPx);
+    }
+
+private:
+    qreal m_fillOpacity = 1.0;
+};
+
+void setIndicatorFillOpacity(const QPointer<QFrame>& frame, const qreal opacity)
+{
+    if (frame == nullptr) {
+        return;
+    }
+    if (auto* indicator = dynamic_cast<IndicatorFrame*>(frame.data())) {
+        indicator->setFillOpacity(opacity);
+    }
+}
 } // namespace
 
-AnimatedSelector::AnimatedSelector(QWidget *parent)
-    : QObject(parent), m_parent(parent) {
-}
+AnimatedSelector::AnimatedSelector(QWidget* parent) : QObject(parent), m_parent(parent) {}
 
-void AnimatedSelector::bindToFrame(QFrame *frame, const QString &extraStyle) {
+void AnimatedSelector::bindToFrame(QFrame* frame, const QString& extraStyle)
+{
     m_frame = frame;
-    if (!m_frame) return;
+    if (m_frame == nullptr) {
+        return;
+    }
     m_extraStyle = extraStyle;
 
     LOG_DEBUG() << "Bound to frame: " << m_frame->objectName();
@@ -83,25 +94,30 @@ void AnimatedSelector::bindToFrame(QFrame *frame, const QString &extraStyle) {
     m_shadow->setColor(QColor(0, 0, 0, 0));
     m_indicator->setGraphicsEffect(m_shadow);
 
-    QList<QPushButton *> buttons = m_frame->findChildren<QPushButton *>();
-    for (auto *b: buttons) b->setCheckable(true);
+    QList<QPushButton*> buttons = m_frame->findChildren<QPushButton*>();
+    for (auto* b : buttons) {
+        b->setCheckable(true);
+    }
 
     m_group = new QButtonGroup(this);
     m_group->setExclusive(true);
-    for (auto *b: buttons)
+    for (auto* b : buttons) {
         m_group->addButton(b);
+    }
 
-    connect(m_group, &QButtonGroup::buttonClicked,
-            this, &AnimatedSelector::animateToButton);
+    connect(m_group, &QButtonGroup::buttonClicked, this, &AnimatedSelector::animateToButton);
 
-    m_customEdit = m_frame->findChild<QLineEdit *>();
-    if (m_customEdit)
-        connect(m_customEdit, &QLineEdit::textChanged,
-                this, &AnimatedSelector::onCustomEditChanged);
+    m_customEdit = m_frame->findChild<QLineEdit*>();
+    if (m_customEdit != nullptr) {
+        connect(m_customEdit, &QLineEdit::textChanged, this, &AnimatedSelector::onCustomEditChanged);
+    }
 }
 
-void AnimatedSelector::initPosition() {
-    if (!m_group || !m_indicator) return;
+void AnimatedSelector::initPosition()
+{
+    if (m_group == nullptr || m_indicator == nullptr) {
+        return;
+    }
     m_customHasText = m_customEdit && !m_customEdit->text().trimmed().isEmpty();
 
     // Если инпут с текстом — индикатор не показываем, но сохраняем геометрию поля
@@ -115,15 +131,19 @@ void AnimatedSelector::initPosition() {
         return;
     }
 
-    const QAbstractButton *btn = nullptr;
-    for (const auto *b: m_group->buttons()) {
+    const QAbstractButton* btn = nullptr;
+    for (const auto* b : m_group->buttons()) {
         if (b->isChecked()) {
             btn = b;
             break;
         }
     }
-    if (!btn && !m_group->buttons().isEmpty()) btn = m_group->buttons().first();
-    if (!btn) return;
+    if (btn == nullptr && !m_group->buttons().isEmpty()) {
+        btn = m_group->buttons().first();
+    }
+    if (btn == nullptr) {
+        return;
+    }
 
     QRect g = btn->geometry();
     g.moveTopLeft(btn->mapTo(m_parent, QPoint(0, 0)));
@@ -135,10 +155,16 @@ void AnimatedSelector::initPosition() {
     updateButtonColors();
 }
 
-void AnimatedSelector::animateToButton(QAbstractButton *btn) {
-    if (!m_indicator || !btn || !m_parent || !m_frame) return;
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
+void AnimatedSelector::animateToButton(QAbstractButton* btn)
+{
+    if (m_indicator == nullptr || btn == nullptr || m_parent == nullptr || m_frame == nullptr) {
+        return;
+    }
 
-    if (m_animating && m_animTargetButton == btn) return;
+    if (m_animating && m_animTargetButton == btn) {
+        return;
+    }
     m_animating = true;
     m_animTargetButton = btn;
 
@@ -151,12 +177,15 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
     endGeom.moveTopLeft(btn->mapTo(m_parent, QPoint(0, 0)));
 
     QRect startGeom;
-    if (m_indicator->isVisible() && m_indicator->geometry().isValid())
+    if (m_indicator->isVisible() && m_indicator->geometry().isValid()) {
         startGeom = m_indicator->geometry();
-    else if (m_indicatorGeometry.isValid())
+    }
+    else if (m_indicatorGeometry.isValid()) {
         startGeom = m_indicatorGeometry;
-    else
+    }
+    else {
         startGeom = endGeom;
+    }
 
     QRect customGeom;
     bool hasCustomGeom = false;
@@ -167,16 +196,12 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
         hasCustomGeom = true;
     }
 
-    const auto nearRect = [](const QRect &a, const QRect &b, const int eps = 3) -> bool {
-        return std::abs(a.left() - b.left()) <= eps &&
-               std::abs(a.top() - b.top()) <= eps &&
-               std::abs(a.width() - b.width()) <= eps &&
-               std::abs(a.height() - b.height()) <= eps;
+    const auto nearRect = [](const QRect& a, const QRect& b, const int eps = 3) -> bool {
+        return std::abs(a.left() - b.left()) <= eps && std::abs(a.top() - b.top()) <= eps &&
+               std::abs(a.width() - b.width()) <= eps && std::abs(a.height() - b.height()) <= eps;
     };
-    const bool fadeInFromCustom = !m_indicator->isVisible() &&
-                                  hasCustomGeom &&
-                                  startGeom.isValid() &&
-                                  nearRect(startGeom, customGeom);
+    const bool fadeInFromCustom =
+            !m_indicator->isVisible() && hasCustomGeom && startGeom.isValid() && nearRect(startGeom, customGeom);
 
     if (!m_indicator->isVisible()) {
         m_indicator->setGeometry(startGeom);
@@ -185,7 +210,9 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
     }
     setIndicatorFillOpacity(QPointer<QFrame>(m_indicator), fadeInFromCustom ? 0.0 : 1.0);
 
-    if (m_indicator->graphicsEffect() != m_shadow) m_indicator->setGraphicsEffect(m_shadow);
+    if (m_indicator->graphicsEffect() != m_shadow) {
+        m_indicator->setGraphicsEffect(m_shadow);
+    }
 
     const QPointF startCenter = startGeom.center();
     const QPointF endCenter = endGeom.center();
@@ -207,30 +234,32 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
     constexpr double geometryOffsetY = 1.0;
 
     if (sameTarget && !fadeInFromCustom) {
-        auto *reclickAnim = new QVariantAnimation(this);
+        auto* reclickAnim = new QVariantAnimation(this);
         m_runningAnim = reclickAnim;
         reclickAnim->setStartValue(0.0);
         reclickAnim->setEndValue(1.0);
 
         // Параметры анимации reclick (регулируемые)
-        constexpr int reclickDurationMs = 320; // Общая длительность пульса
-        constexpr double reclickSqueezeX = 0.20; // Сжатие по горизонтали на пике
-        constexpr double reclickStretchY = 0.10; // Растяжение по вертикали на пике
+        constexpr int reclickDurationMs = 320;      // Общая длительность пульса
+        constexpr double reclickSqueezeX = 0.20;    // Сжатие по горизонтали на пике
+        constexpr double reclickStretchY = 0.10;    // Растяжение по вертикали на пике
         constexpr double reclickShadowBoost = 0.35; // Усиление тени на пике
 
         reclickAnim->setDuration(reclickDurationMs);
         reclickAnim->setEasingCurve(QEasingCurve::Linear);
 
-        connect(reclickAnim, &QVariantAnimation::valueChanged, this, [=](const QVariant &v) {
-            if (!indicatorPtr) return;
+        connect(reclickAnim, &QVariantAnimation::valueChanged, this, [=](const QVariant& v) {
+            if (indicatorPtr == nullptr) {
+                return;
+            }
             const double t = v.toDouble();
             const double smooth = t * t * (3.0 - 2.0 * t); // smoothstep для мягкого старта/финиша
-            const double pulse = std::sin(smooth * M_PI); // 0..1..0
+            const double pulse = std::sin(smooth * M_PI);  // 0..1..0
 
             const double w = std::max(1.0, endGeom.width() * (1.0 - reclickSqueezeX * pulse));
             const double h = std::max(1.0, endGeom.height() * (1.0 + reclickStretchY * pulse));
             const QPointF c = endGeom.center();
-            const QRectF r(c.x() - w * 0.5 + geometryOffsetX, c.y() - h * 0.5 + geometryOffsetY, w, h);
+            const QRectF r(c.x() - (w * 0.5) + geometryOffsetX, c.y() - (h * 0.5) + geometryOffsetY, w, h);
 
             indicatorPtr->setGeometry(r.toAlignedRect());
             indicatorPtr->raise();
@@ -238,22 +267,28 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
 
             if (shadowPtr) {
                 const double sh = pulse * reclickShadowBoost;
-                shadowPtr->setBlurRadius(6 + 6 * sh);
-                shadowPtr->setOffset(0, 4 + 4 * sh);
+                shadowPtr->setBlurRadius(6 + (6 * sh));
+                shadowPtr->setOffset(0, 4 + (4 * sh));
                 shadowPtr->setColor(QColor(0, 0, 0, static_cast<int>(160 * sh)));
             }
         });
 
-        connect(reclickAnim, &QVariantAnimation::finished, this,
+        connect(reclickAnim,
+                &QVariantAnimation::finished,
+                this,
                 [this, indicatorPtr, shadowPtr, btnPtr, endGeom, reclickAnim]() {
                     m_animating = false;
                     m_animTargetButton = nullptr;
-                    if (!indicatorPtr) return;
+                    if (indicatorPtr == nullptr) {
+                        return;
+                    }
 
                     indicatorPtr->setGeometry(endGeom);
                     indicatorPtr->raise();
                     setIndicatorFillOpacity(indicatorPtr, 1.0);
-                    if (btnPtr) btnPtr->setChecked(true);
+                    if (btnPtr) {
+                        btnPtr->setChecked(true);
+                    }
                     updateButtonColors();
                     m_indicatorGeometry = endGeom;
 
@@ -262,44 +297,46 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
                         shadowPtr->setOffset(0, 4);
                         shadowPtr->setColor(QColor(0, 0, 0, 0));
                     }
-                    if (m_runningAnim == reclickAnim) m_runningAnim = nullptr;
+                    if (m_runningAnim == reclickAnim) {
+                        m_runningAnim = nullptr;
+                    }
                 });
 
         reclickAnim->start(QAbstractAnimation::DeleteWhenStopped);
         return;
     }
 
-    auto *anim = new QVariantAnimation(this);
+    auto* anim = new QVariantAnimation(this);
     m_runningAnim = anim;
     anim->setStartValue(0.0);
     anim->setEndValue(1.0);
-    const int dur = static_cast<int>(qBound(320.0, 480.0 + distance * 0.40, 760.0));
+    const int dur = static_cast<int>(qBound(320.0, 480.0 + (distance * 0.40), 760.0));
     anim->setDuration(dur);
     anim->setEasingCurve(QEasingCurve::Linear);
     const QEasingCurve posEase(QEasingCurve::InOutCubic);
     const QEasingCurve backEase(QEasingCurve::InOutBack);
 
     // Параметры анимации (регулируемые)
-    constexpr double tailDelay = 0.3; // Задержка старта хвостовой границы
+    constexpr double tailDelay = 0.3;        // Задержка старта хвостовой границы
     constexpr double maxStretchRatio = 2.33; // Лимит растяжения вдоль направления
-    constexpr double squeezeGain = 0.66; // Сжатие перпендикулярной оси от растяжения
-    constexpr double backNorm = 0.11; // Нормализация разницы back/база
-    constexpr double leadBackFactor = 0.16; // Амплитуда back для ведущей границы
-    constexpr double tailBackFactor = 0.09; // Амплитуда back для хвостовой границы
-    constexpr double appearStart = 0.02; // Старт проявления при переходе из custom-поля
-    constexpr double appearDuration = 0.30; // Длительность проявления
+    constexpr double squeezeGain = 0.66;     // Сжатие перпендикулярной оси от растяжения
+    constexpr double backNorm = 0.11;        // Нормализация разницы back/база
+    constexpr double leadBackFactor = 0.16;  // Амплитуда back для ведущей границы
+    constexpr double tailBackFactor = 0.09;  // Амплитуда back для хвостовой границы
+    constexpr double appearStart = 0.02;     // Старт проявления при переходе из custom-поля
+    constexpr double appearDuration = 0.30;  // Длительность проявления
 
-    connect(anim, &QVariantAnimation::valueChanged, this, [=](const QVariant &v) {
-        if (!indicatorPtr) return;
+    connect(anim, &QVariantAnimation::valueChanged, this, [=](const QVariant& v) {
+        if (indicatorPtr == nullptr) {
+            return;
+        }
         const double t = v.toDouble();
         const double sinTerm = std::sin(t * M_PI);
         const double leadT = posEase.valueForProgress(t);
         const double tailRawT = qBound(0.0, (t - tailDelay) / std::max(0.0001, 1.0 - tailDelay), 1.0);
         const double tailT = posEase.valueForProgress(tailRawT);
 
-        const auto lerp = [](const double a, const double b, const double p) -> double {
-            return a + (b - a) * p;
-        };
+        const auto lerp = [](const double a, const double b, const double p) -> double { return a + ((b - a) * p); };
 
         double left = 0.0;
         double right = 0.0;
@@ -315,7 +352,8 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
         if (delta.x() >= 0.0) {
             right = lerp(startGeom.right(), endGeom.right(), leadT);
             left = lerp(startGeom.left(), endGeom.left(), pxX);
-        } else {
+        }
+        else {
             left = lerp(startGeom.left(), endGeom.left(), leadT);
             right = lerp(startGeom.right(), endGeom.right(), pxX);
         }
@@ -323,7 +361,8 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
         if (delta.y() >= 0.0) {
             bottom = lerp(startGeom.bottom(), endGeom.bottom(), leadT);
             top = lerp(startGeom.top(), endGeom.top(), pxY);
-        } else {
+        }
+        else {
             top = lerp(startGeom.top(), endGeom.top(), leadT);
             bottom = lerp(startGeom.bottom(), endGeom.bottom(), pxY);
         }
@@ -343,7 +382,8 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
             if (delta.x() >= 0.0) {
                 right += sx * leadBackPx * backDelta * wX;
                 left += sx * tailBackPx * backDelta * wX;
-            } else {
+            }
+            else {
                 left += sx * leadBackPx * backDelta * wX;
                 right += sx * tailBackPx * backDelta * wX;
             }
@@ -353,7 +393,8 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
             if (delta.y() >= 0.0) {
                 bottom += sy * leadBackPx * backDelta * wY;
                 top += sy * tailBackPx * backDelta * wY;
-            } else {
+            }
+            else {
                 top += sy * leadBackPx * backDelta * wY;
                 bottom += sy * tailBackPx * backDelta * wY;
             }
@@ -364,18 +405,26 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
         const double maxW = std::max(1.0, baseW * maxStretchRatio);
         const double maxH = std::max(1.0, baseH * maxStretchRatio);
         if (curW > maxW) {
-            if (delta.x() >= 0.0) left = right - maxW;
-            else right = left + maxW;
+            if (delta.x() >= 0.0) {
+                left = right - maxW;
+            }
+            else {
+                right = left + maxW;
+            }
             curW = maxW;
         }
         if (curH > maxH) {
-            if (delta.y() >= 0.0) top = bottom - maxH;
-            else bottom = top + maxH;
+            if (delta.y() >= 0.0) {
+                top = bottom - maxH;
+            }
+            else {
+                bottom = top + maxH;
+            }
             curH = maxH;
         }
 
-        const double stretchX = curW / std::max(1.0, baseW) - 1.0;
-        const double stretchY = curH / std::max(1.0, baseH) - 1.0;
+        const double stretchX = (curW / std::max(1.0, baseW)) - 1.0;
+        const double stretchY = (curH / std::max(1.0, baseH)) - 1.0;
         const double squeezeY = qBound(0.0, stretchX * squeezeGain, 0.20);
         const double squeezeX = qBound(0.0, stretchY * squeezeGain, 0.20);
         const double cx = 0.5 * (left + right);
@@ -391,14 +440,15 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
             const double u = qBound(0.0, (leadT - appearStart) / std::max(0.0001, appearDuration), 1.0);
             const double smooth = u * u * (3.0 - 2.0 * u); // smoothstep
             setIndicatorFillOpacity(indicatorPtr, smooth);
-        } else {
+        }
+        else {
             setIndicatorFillOpacity(indicatorPtr, 1.0);
         }
 
         if (shadowPtr) {
             const double sp = sinTerm;
-            shadowPtr->setBlurRadius(6 + 6 * sp);
-            shadowPtr->setOffset(0, 4 + 6 * sp);
+            shadowPtr->setBlurRadius(6 + (6 * sp));
+            shadowPtr->setOffset(0, 4 + (6 * sp));
             shadowPtr->setColor(QColor(0, 0, 0, static_cast<int>(160 * sp)));
         }
     });
@@ -407,12 +457,16 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
         m_animating = false;
         m_animTargetButton = nullptr;
 
-        if (!indicatorPtr) return;
+        if (indicatorPtr == nullptr) {
+            return;
+        }
 
         indicatorPtr->setGeometry(endGeom);
         setIndicatorFillOpacity(indicatorPtr, 1.0);
         indicatorPtr->raise();
-        if (btnPtr) btnPtr->setChecked(true);
+        if (btnPtr) {
+            btnPtr->setChecked(true);
+        }
         updateButtonColors();
         m_indicatorGeometry = endGeom;
 
@@ -421,25 +475,34 @@ void AnimatedSelector::animateToButton(QAbstractButton *btn) {
             shadowPtr->setOffset(0, 4);
             shadowPtr->setColor(QColor(0, 0, 0, 0));
         }
-        if (m_runningAnim == anim) m_runningAnim = nullptr;
+        if (m_runningAnim == anim) {
+            m_runningAnim = nullptr;
+        }
     });
 
     anim->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
-void AnimatedSelector::animateToCustomEdit() {
-    if (!m_indicator || !m_customEdit || !m_frame || !m_parent) return;
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
+void AnimatedSelector::animateToCustomEdit()
+{
+    if (m_indicator == nullptr || m_customEdit == nullptr || m_frame == nullptr || m_parent == nullptr) {
+        return;
+    }
 
     QRect startGeom;
     if (m_indicator->isVisible() && m_indicator->geometry().isValid()) {
         startGeom = m_indicator->geometry();
-    } else if (m_indicatorGeometry.isValid()) {
+    }
+    else if (m_indicatorGeometry.isValid()) {
         startGeom = m_indicatorGeometry;
-    } else {
-        if (const auto *b = m_group ? m_group->checkedButton() : nullptr) {
+    }
+    else {
+        if (const auto* b = (m_group != nullptr) ? m_group->checkedButton() : nullptr) {
             startGeom = b->geometry();
             startGeom.moveTopLeft(b->mapTo(m_parent, QPoint(0, 0)));
-        } else {
+        }
+        else {
             startGeom = QRect(m_frame->mapTo(m_parent, QPoint(0, 0)),
                               QSize(m_frame->size().width() - 18, m_frame->size().height() + 2));
         }
@@ -457,7 +520,9 @@ void AnimatedSelector::animateToCustomEdit() {
     setIndicatorFillOpacity(QPointer<QFrame>(m_indicator), 1.0);
 
     // запрет повторного запуска
-    if (m_animating) return;
+    if (m_animating) {
+        return;
+    }
     m_animating = true;
     m_animTargetButton = nullptr;
 
@@ -469,7 +534,7 @@ void AnimatedSelector::animateToCustomEdit() {
     const QPointer indicatorPtr(m_indicator);
     const QPointer shadowPtr(m_shadow);
 
-    auto *anim = new QVariantAnimation(this);
+    auto* anim = new QVariantAnimation(this);
     m_runningAnim = anim;
     anim->setStartValue(0.0);
     anim->setEndValue(1.0);
@@ -477,24 +542,27 @@ void AnimatedSelector::animateToCustomEdit() {
     const QPointF cEnd = targetGeom.center();
     const QPointF delta = cEnd - cStart;
     const double pathLen = std::hypot(delta.x(), delta.y());
-    anim->setDuration(static_cast<int>(qBound(420.0, 620.0 + pathLen * 0.45, 980.0)));
+    anim->setDuration(static_cast<int>(qBound(420.0, 620.0 + (pathLen * 0.45), 980.0)));
     anim->setEasingCurve(QEasingCurve::Linear);
     const QEasingCurve backEase(QEasingCurve::InOutBack);
     const QEasingCurve posEase(QEasingCurve::InOutCubic);
 
     // Параметры анимации (регулируемые)
-    constexpr double tailDelay = 0.30; // Задержка старта хвостовой границы
+    constexpr double tailDelay = 0.30;       // Задержка старта хвостовой границы
     constexpr double maxStretchRatio = 2.33; // Лимит растяжения вдоль направления
-    constexpr double squeezeGain = 0.66; // Сжатие перпендикулярной оси от растяжения
-    constexpr double backNorm = 0.11; // Нормализация разницы back/база
-    constexpr double leadBackFactor = 0.17; // Амплитуда back для ведущей границы
-    constexpr double tailBackFactor = 0.09; // Амплитуда back для хвостовой границы
-    constexpr double fadeStart = 0.80; // Начало плавного исчезновения в конце анимации
+    constexpr double squeezeGain = 0.66;     // Сжатие перпендикулярной оси от растяжения
+    constexpr double backNorm = 0.11;        // Нормализация разницы back/база
+    constexpr double leadBackFactor = 0.17;  // Амплитуда back для ведущей границы
+    constexpr double tailBackFactor = 0.09;  // Амплитуда back для хвостовой границы
+    constexpr double fadeStart = 0.80;       // Начало плавного исчезновения в конце анимации
 
-    connect(anim, &QVariantAnimation::valueChanged, this,
-            [indicatorPtr, shadowPtr, delta, startGeom, targetGeom, backEase, posEase](
-        const QVariant &v) {
-                if (!indicatorPtr) return;
+    connect(anim,
+            &QVariantAnimation::valueChanged,
+            this,
+            [indicatorPtr, shadowPtr, delta, startGeom, targetGeom, backEase, posEase](const QVariant& v) {
+                if (indicatorPtr == nullptr) {
+                    return;
+                }
                 const double t = v.toDouble();
                 const double sinTerm = std::sin(t * M_PI);
                 const double leadT = posEase.valueForProgress(t);
@@ -502,7 +570,7 @@ void AnimatedSelector::animateToCustomEdit() {
                 const double tailT = posEase.valueForProgress(tailRawT);
 
                 const auto lerp = [](const double a, const double b, const double p) -> double {
-                    return a + (b - a) * p;
+                    return a + ((b - a) * p);
                 };
 
                 double left = 0.0;
@@ -519,7 +587,8 @@ void AnimatedSelector::animateToCustomEdit() {
                 if (delta.x() >= 0.0) {
                     right = lerp(startGeom.right(), targetGeom.right(), leadT);
                     left = lerp(startGeom.left(), targetGeom.left(), pxX);
-                } else {
+                }
+                else {
                     left = lerp(startGeom.left(), targetGeom.left(), leadT);
                     right = lerp(startGeom.right(), targetGeom.right(), pxX);
                 }
@@ -527,7 +596,8 @@ void AnimatedSelector::animateToCustomEdit() {
                 if (delta.y() >= 0.0) {
                     bottom = lerp(startGeom.bottom(), targetGeom.bottom(), leadT);
                     top = lerp(startGeom.top(), targetGeom.top(), pxY);
-                } else {
+                }
+                else {
                     top = lerp(startGeom.top(), targetGeom.top(), leadT);
                     bottom = lerp(startGeom.bottom(), targetGeom.bottom(), pxY);
                 }
@@ -547,7 +617,8 @@ void AnimatedSelector::animateToCustomEdit() {
                     if (delta.x() >= 0.0) {
                         right += sx * leadBackPx * backDelta * wX;
                         left += sx * tailBackPx * backDelta * wX;
-                    } else {
+                    }
+                    else {
                         left += sx * leadBackPx * backDelta * wX;
                         right += sx * tailBackPx * backDelta * wX;
                     }
@@ -557,7 +628,8 @@ void AnimatedSelector::animateToCustomEdit() {
                     if (delta.y() >= 0.0) {
                         bottom += sy * leadBackPx * backDelta * wY;
                         top += sy * tailBackPx * backDelta * wY;
-                    } else {
+                    }
+                    else {
                         top += sy * leadBackPx * backDelta * wY;
                         bottom += sy * tailBackPx * backDelta * wY;
                     }
@@ -568,18 +640,26 @@ void AnimatedSelector::animateToCustomEdit() {
                 const double maxW = std::max(1.0, baseW * maxStretchRatio);
                 const double maxH = std::max(1.0, baseH * maxStretchRatio);
                 if (curW > maxW) {
-                    if (delta.x() >= 0.0) left = right - maxW;
-                    else right = left + maxW;
+                    if (delta.x() >= 0.0) {
+                        left = right - maxW;
+                    }
+                    else {
+                        right = left + maxW;
+                    }
                     curW = maxW;
                 }
                 if (curH > maxH) {
-                    if (delta.y() >= 0.0) top = bottom - maxH;
-                    else bottom = top + maxH;
+                    if (delta.y() >= 0.0) {
+                        top = bottom - maxH;
+                    }
+                    else {
+                        bottom = top + maxH;
+                    }
                     curH = maxH;
                 }
 
-                const double stretchX = curW / std::max(1.0, baseW) - 1.0;
-                const double stretchY = curH / std::max(1.0, baseH) - 1.0;
+                const double stretchX = (curW / std::max(1.0, baseW)) - 1.0;
+                const double stretchY = (curH / std::max(1.0, baseH)) - 1.0;
                 const double squeezeY = qBound(0.0, stretchX * squeezeGain, 0.20);
                 const double squeezeX = qBound(0.0, stretchY * squeezeGain, 0.20);
                 const double cx = 0.5 * (left + right);
@@ -603,8 +683,8 @@ void AnimatedSelector::animateToCustomEdit() {
                 // Тень — более мягкая, сильнее в середине; fadeMul приглушает хвост анимации.
                 if (shadowPtr) {
                     const double sh = sinTerm; // 0..1..0
-                    shadowPtr->setBlurRadius(6 + 6 * sh);
-                    shadowPtr->setOffset(0, 4 + 6 * sh);
+                    shadowPtr->setBlurRadius(6 + (6 * sh));
+                    shadowPtr->setOffset(0, 4 + (6 * sh));
                     shadowPtr->setColor(QColor(0, 0, 0, static_cast<int>(160 * sh * fadeMul)));
                 }
             });
@@ -613,33 +693,44 @@ void AnimatedSelector::animateToCustomEdit() {
         m_animating = false;
         m_animTargetButton = nullptr;
 
-        if (!indicatorPtr) return;
+        if (indicatorPtr == nullptr) {
+            return;
+        }
 
         // В финале скрываем индикатор, но сохраняем геометрию поля.
         indicatorPtr->hide();
         m_indicatorGeometry = targetGeom;
         setIndicatorFillOpacity(indicatorPtr, 1.0);
 
-        if (shadowPtr && indicatorPtr->graphicsEffect() != shadowPtr) indicatorPtr->setGraphicsEffect(shadowPtr);
+        if (shadowPtr && indicatorPtr->graphicsEffect() != shadowPtr) {
+            indicatorPtr->setGraphicsEffect(shadowPtr);
+        }
         if (shadowPtr) {
             shadowPtr->setBlurRadius(6);
             shadowPtr->setOffset(0, 4);
             shadowPtr->setColor(QColor(0, 0, 0, 0));
         }
 
-        if (m_runningAnim == anim) m_runningAnim = nullptr;
+        if (m_runningAnim == anim) {
+            m_runningAnim = nullptr;
+        }
         updateButtonColors();
     });
 
     anim->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
-void AnimatedSelector::onCustomEditChanged(const QString &text) {
+void AnimatedSelector::onCustomEditChanged(const QString& text)
+{
     updateEditStyle();
-    if (!m_group) return;
+    if (m_group == nullptr) {
+        return;
+    }
 
     // Защита от реэнтрантных вызовов
-    if (m_inTextHandler) return;
+    if (m_inTextHandler) {
+        return;
+    }
     m_inTextHandler = true;
 
     const bool hasText = !text.trimmed().isEmpty();
@@ -661,7 +752,7 @@ void AnimatedSelector::onCustomEditChanged(const QString &text) {
 
     if (hasText) {
         // Программно снимаем чеки, блокируя сигнал каждой кнопки, чтобы избежать вызовов animateToButton
-        for (auto *b: m_group->buttons()) {
+        for (auto* b : m_group->buttons()) {
             if (b->isChecked()) {
                 b->blockSignals(true);
                 b->setChecked(false);
@@ -671,7 +762,7 @@ void AnimatedSelector::onCustomEditChanged(const QString &text) {
 
         // Устанавливаем геометрию индикатора на геометрию фрейма и прячем индикатор,
         // но сохраняем геометрию — это ключевой момент для повторного ввода.
-        if (m_indicator) {
+        if (m_indicator != nullptr) {
             m_indicator->hide();
         }
 
@@ -680,12 +771,14 @@ void AnimatedSelector::onCustomEditChanged(const QString &text) {
 
         // Гарантированно запустить анимацию расширения по фрейму
         animateToCustomEdit();
-    } else {
+    }
+    else {
         // Текст пустой -> вернуть индикатор на кнопку (если есть выбранная)
-        if (auto *btn = m_group->checkedButton()) {
+        if (auto* btn = m_group->checkedButton()) {
             // Если есть активный custom — уже пустой — безопасно вызвать
             animateToButton(btn);
-        } else {
+        }
+        else {
             // Никаких действий, просто обновим цвета
             updateButtonColors();
         }
@@ -694,19 +787,25 @@ void AnimatedSelector::onCustomEditChanged(const QString &text) {
     m_inTextHandler = false;
 }
 
-void AnimatedSelector::updateButtonColors() const {
-    if (!m_group) return;
+void AnimatedSelector::updateButtonColors() const
+{
+    if (m_group == nullptr) {
+        return;
+    }
 
     const bool hasCustom = m_customEdit && !m_customEdit->text().trimmed().isEmpty();
-    for (auto *b: m_group->buttons()) {
+    for (auto* b : m_group->buttons()) {
         b->setProperty("customActive", hasCustom);
         b->style()->unpolish(b);
         b->style()->polish(b);
     }
 }
 
-void AnimatedSelector::updateEditStyle() const {
-    if (!m_customEdit) return;
+void AnimatedSelector::updateEditStyle() const
+{
+    if (m_customEdit == nullptr) {
+        return;
+    }
 
     const bool hasText = !m_customEdit->text().trimmed().isEmpty();
     m_customEdit->setProperty("hasText", hasText);
@@ -714,11 +813,13 @@ void AnimatedSelector::updateEditStyle() const {
     m_customEdit->style()->polish(m_customEdit);
 }
 
-QFrame *AnimatedSelector::boundFrame() const {
+QFrame* AnimatedSelector::boundFrame() const
+{
     return m_frame;
 }
 
-void AnimatedSelector::stopAndResetAnimation() {
+void AnimatedSelector::stopAndResetAnimation()
+{
     // остановить текущую анимацию безопасно
     if (m_runningAnim) {
         m_runningAnim->stop();
@@ -731,8 +832,11 @@ void AnimatedSelector::stopAndResetAnimation() {
     m_forceCustomStartFromFrame = false;
 }
 
-void AnimatedSelector::animateToCurrentState() {
-    if (!m_group) return;
+void AnimatedSelector::animateToCurrentState()
+{
+    if (m_group == nullptr) {
+        return;
+    }
     m_customHasText = m_customEdit && !m_customEdit->text().trimmed().isEmpty();
 
     // гарантируем сброс блокировок перед стартом
@@ -743,7 +847,7 @@ void AnimatedSelector::animateToCurrentState() {
     }
 
     // если есть выбранная кнопка — воспроизвести анимацию к ней
-    if (auto *btn = m_group->checkedButton()) {
+    if (auto* btn = m_group->checkedButton()) {
         stopAndResetAnimation();
         animateToButton(btn);
         return;

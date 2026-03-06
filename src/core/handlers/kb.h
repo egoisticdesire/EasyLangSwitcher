@@ -1,13 +1,16 @@
 #pragma once
-#include <QObject>
 #include <QTimer>
+
+#include <QObject>
 #include <Windows.h>
 
-class KeyboardHandler final : public QObject {
+class KeyboardHandler final : public QObject
+{
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(KeyboardHandler)
 
 public:
-    explicit KeyboardHandler(QObject *parent = nullptr);
+    explicit KeyboardHandler(QObject* parent = nullptr);
 
     ~KeyboardHandler() override;
 
@@ -15,7 +18,10 @@ public:
 
     void stop();
 
-    void setActive(const bool value) { isActive = value; }
+    void setActive(const bool value)
+    {
+        isActive = value;
+    }
 
 private:
     // state
@@ -42,5 +48,5 @@ private:
 
     static void sendWinSpace();
 
-    static thread_local KeyboardHandler *instance;
+    static thread_local KeyboardHandler* instance;
 };

@@ -1,57 +1,70 @@
 #pragma once
-#include <iostream>
-#include <QFileInfo>
-#include <QRegularExpression>
-#include <QDateTime>
 #include <QThread>
-#include <QQueue>
+
+#include <QFileInfo>
 #include <QMutex>
+#include <QQueue>
+#include <QRegularExpression>
 #include <QWaitCondition>
-#include <QTextStream>
-#include <QDebug>
 #include <atomic>
+#include <iostream>
 #include <type_traits>
 #include <utility>
 
-namespace logger_detail {
-    template<typename T, typename = void>
-    struct has_qtextstream_insertion : std::false_type {
-    };
+#include <cstdint>
 
-    template<typename T>
-    struct has_qtextstream_insertion<T, std::void_t<decltype(std::declval<QTextStream &>() << std::declval<const T &>()
-            )> >
-            : std::true_type {
-    };
+namespace logger_detail
+{
+template <typename T, typename = void> struct has_qtextstream_insertion : std::false_type
+{
+};
 
-    template<typename T, typename = void>
-    struct has_qdebug_insertion : std::false_type {
-    };
+template <typename T>
+struct has_qtextstream_insertion<T, std::void_t<decltype(std::declval<QTextStream&>() << std::declval<const T&>())>>
+    : std::true_type
+{
+};
 
-    template<typename T>
-    struct has_qdebug_insertion<T, std::void_t<decltype(std::declval<QDebug &>() << std::declval<const T &>())> >
-            : std::true_type {
-    };
-}
+template <typename T, typename = void> struct has_qdebug_insertion : std::false_type
+{
+};
 
-class ThreadedLogger final : public QThread {
+template <typename T>
+struct has_qdebug_insertion<T, std::void_t<decltype(std::declval<QDebug&>() << std::declval<const T&>())>>
+    : std::true_type
+{
+};
+} // namespace logger_detail
+
+class ThreadedLogger final : public QThread
+{
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(ThreadedLogger)
 
 public:
-    enum class Level { DEBUG, INFO, WARN, ERR };
+    enum class Level : std::uint8_t
+    {
+        DEBUG,
+        INFO,
+        WARN,
+        ERR
+    };
 
-    static ThreadedLogger &instance() {
+    static ThreadedLogger& instance()
+    {
         static ThreadedLogger logger;
         return logger;
     }
 
-    void enqueue(const QString &msg) {
+    void enqueue(const QString& msg)
+    {
         QMutexLocker locker(&m_mutex);
         m_queue.enqueue(msg);
         m_wait.wakeOne();
     }
 
-    void run() override {
+    void run() override
+    {
         for (;;) {
             QString msg;
             {
@@ -73,15 +86,24 @@ public:
         }
     }
 
-    void stop() {
+    void stop()
+    {
         m_terminate.store(true);
         m_wait.wakeAll();
-        if (isRunning()) wait();
+        if (isRunning()) {
+            wait();
+        }
     }
 
 private:
-    ThreadedLogger() { start(); }
-    ~ThreadedLogger() override { stop(); }
+    ThreadedLogger()
+    {
+        start();
+    }
+    ~ThreadedLogger() override
+    {
+        stop();
+    }
 
     QQueue<QString> m_queue;
     QMutex m_mutex;
@@ -89,13 +111,23 @@ private:
     std::atomic_bool m_terminate = false;
 };
 
-class Logger {
+class Logger
+{
+    Q_DISABLE_COPY_MOVE(Logger)
+
 public:
-    enum class Level { DEBUG, INFO, WARN, ERR };
+    enum class Level : std::uint8_t
+    {
+        DEBUG,
+        INFO,
+        WARN,
+        ERR
+    };
 
     static inline bool _debug = true;
 
-    static QString cleanFunction(const QString &func) {
+    static QString cleanFunction(const QString& func)
+    {
         static const QRegularExpression reCtor(R"(\{[^\}]+\})");
         static const QRegularExpression reLambda(R"(<lambda_[^>]+>)");
         static const QRegularExpression reOpCall(R"(::operator\s*\([^\)]*\))");
@@ -128,28 +160,34 @@ public:
         return f.trimmed();
     }
 
-
-    Logger(const char *file, const char *function, const int line, const Level level = Level::DEBUG)
-        : m_level(level), m_file(file), m_function(function), m_line(line) {
+    Logger(const char* file, const char* function, const int line, const Level level = Level::DEBUG)
+        : m_level(level), m_file(file), m_function(function), m_line(line)
+    {
         // Быстрая проверка: нужно ли вообще логировать?
         const Level minLevel = _debug ? Level::DEBUG : Level::INFO;
         m_suppressed = (level < minLevel);
-        if (m_suppressed) return;
+        if (m_suppressed) {
+            return;
+        }
 
         // Определяем цвет уровня (используем готовые статические строки)
         switch (level) {
-            case Level::DEBUG: m_levelColor = m_blue;
+            case Level::DEBUG:
+                m_levelColor = blueColor();
                 break;
-            case Level::INFO: m_levelColor = m_gray;
+            case Level::INFO:
+                m_levelColor = grayColor();
                 break;
-            case Level::WARN: m_levelColor = m_gold;
+            case Level::WARN:
+                m_levelColor = goldColor();
                 break;
-            case Level::ERR: m_levelColor = m_red;
+            case Level::ERR:
+                m_levelColor = redColor();
                 break;
         }
 
         // Вспомогательная функция теперь внутри, чтобы не засорять класс
-        auto visibleLength = [](const QString &s) {
+        auto visibleLength = [](const QString& s) {
             static const QRegularExpression reColors("\033\\[[0-9;]*m");
             QString plain = s;
             plain.remove(reColors);
@@ -161,9 +199,10 @@ public:
         const QString timeStr = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz");
         const QString levelStr = levelToString(level).leftJustified(9, ' ');
 
-        QString formattedFileName = QString("%1%2%3").arg(m_purple, QFileInfo(file).fileName(), m_reset);
-        QString formattedFuncName = QString("%1%2%3").arg(m_cyan, cleanFunction(function), m_reset);
-        QString formattedName = QString("%1 %2→%3 %4").arg(formattedFileName, m_levelColor, m_reset, formattedFuncName);
+        QString formattedFileName = QString("%1%2%3").arg(purpleColor(), QFileInfo(file).fileName(), resetColor());
+        QString formattedFuncName = QString("%1%2%3").arg(cyanColor(), cleanFunction(function), resetColor());
+        QString formattedName =
+                QString("%1 %2→%3 %4").arg(formattedFileName, m_levelColor, resetColor(), formattedFuncName);
 
         // Выравнивание
         if (const qsizetype padRaw = 80 - visibleLength(formattedName); padRaw > 0) {
@@ -175,33 +214,37 @@ public:
         // Записываем в поток
         m_stream
                 // << threadStr << " "
-                << m_green << "[" << timeStr << "]" << m_reset << " "
-                << m_levelColor << levelStr << m_reset << " "
-                << formattedName
-                << m_levelColor << "#" << m_reset
-                << m_cyan << lineStr << m_reset
-                << " ";
+                << greenColor() << "[" << timeStr << "]" << resetColor() << " " << m_levelColor << levelStr
+                << resetColor() << " " << formattedName << m_levelColor << "#" << resetColor() << cyanColor() << lineStr
+                << resetColor() << " ";
     }
 
-    ~Logger() {
-        if (!m_suppressed) ThreadedLogger::instance().enqueue(m_str);
+    ~Logger()
+    {
+        if (!m_suppressed) {
+            ThreadedLogger::instance().enqueue(m_str);
+        }
     }
 
-    template<typename T>
-    Logger &operator<<(const T &value) {
-        if (m_suppressed) return *this;
+    template <typename T> Logger& operator<<(const T& value)
+    {
+        if (m_suppressed) {
+            return *this;
+        }
 
         if constexpr (logger_detail::has_qtextstream_insertion<T>::value) {
-            QTextStream(&m_str) << m_levelColor << value << m_reset;
-        } else if constexpr (logger_detail::has_qdebug_insertion<T>::value) {
+            QTextStream(&m_str) << m_levelColor << value << resetColor();
+        }
+        else if constexpr (logger_detail::has_qdebug_insertion<T>::value) {
             QString rendered;
             {
                 QDebug debugStream(&rendered);
                 debugStream.noquote().nospace() << value;
             }
-            QTextStream(&m_str) << m_levelColor << rendered << m_reset;
-        } else {
-            QTextStream(&m_str) << m_levelColor << "<unprintable-value>" << m_reset;
+            QTextStream(&m_str) << m_levelColor << rendered << resetColor();
+        }
+        else {
+            QTextStream(&m_str) << m_levelColor << "<unprintable-value>" << resetColor();
         }
         return *this;
     }
@@ -213,31 +256,64 @@ private:
     Level m_level;
     QString m_levelColor;
 
-    inline static const QString m_reset = "\033[0m";
-    inline static const QString m_green = "\033[38;2;135;225;110m";
-    inline static const QString m_cyan = "\033[38;2;100;195;205m";
-    inline static const QString m_blue = "\033[38;2;4;96;215m";
-    inline static const QString m_gray = "\033[38;2;175;175;175m";
-    inline static const QString m_gold = "\033[38;2;234;191;0m";
-    inline static const QString m_red = "\033[38;2;239;41;41m";
-    inline static const QString m_purple = "\033[38;2;200;120;200m";
+    [[nodiscard]] static QString resetColor()
+    {
+        return QStringLiteral("\033[0m");
+    }
+    [[nodiscard]] static QString greenColor()
+    {
+        return QStringLiteral("\033[38;2;135;225;110m");
+    }
+    [[nodiscard]] static QString cyanColor()
+    {
+        return QStringLiteral("\033[38;2;100;195;205m");
+    }
+    [[nodiscard]] static QString blueColor()
+    {
+        return QStringLiteral("\033[38;2;4;96;215m");
+    }
+    [[nodiscard]] static QString grayColor()
+    {
+        return QStringLiteral("\033[38;2;175;175;175m");
+    }
+    [[nodiscard]] static QString goldColor()
+    {
+        return QStringLiteral("\033[38;2;234;191;0m");
+    }
+    [[nodiscard]] static QString redColor()
+    {
+        return QStringLiteral("\033[38;2;239;41;41m");
+    }
+    [[nodiscard]] static QString purpleColor()
+    {
+        return QStringLiteral("\033[38;2;200;120;200m");
+    }
 
-    const char *m_file;
-    const char *m_function;
+    const char* m_file;
+    const char* m_function;
     int m_line;
 
-    static QString levelToString(const Level lvl) {
+    static QString levelToString(const Level lvl)
+    {
         switch (lvl) {
-            case Level::DEBUG: return "DEBUG";
-            case Level::INFO: return "INFO";
-            case Level::WARN: return "WARNING";
-            case Level::ERR: return "ERROR";
+            case Level::DEBUG:
+                return "DEBUG";
+            case Level::INFO:
+                return "INFO";
+            case Level::WARN:
+                return "WARNING";
+            case Level::ERR:
+                return "ERROR";
         }
         return "UNKNOWN";
     }
 };
 
-#define LOG_DEBUG() if (!Logger::_debug) {} else Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::DEBUG)
+#define LOG_DEBUG()                                                                                                    \
+    if (!Logger::_debug) {                                                                                             \
+    }                                                                                                                  \
+    else                                                                                                               \
+        Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::DEBUG)
 #define LOG_INFO() Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::INFO)
 #define LOG_WARNING() Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::WARN)
 #define LOG_ERROR() Logger(__FILE__, __FUNCTION__, __LINE__, Logger::Level::ERR)

@@ -1,10 +1,12 @@
 #include "updFrequencyPopup.h"
-#include "../../core/i18n/lang.h"
-#include "../helpers/acrylicHelper.h"
+
 #include <QTimer>
 
-UpdFrequencyPopup::UpdFrequencyPopup(QWidget *parent)
-    : QWidget(parent) {
+#include "../../core/i18n/lang.h"
+#include "../helpers/acrylicHelper.h"
+
+UpdFrequencyPopup::UpdFrequencyPopup(QWidget* parent) : QWidget(parent)
+{
     ui.setupUi(this);
 
     setWindowFlags(Qt::Popup | Qt::NoDropShadowWindowHint);
@@ -14,7 +16,8 @@ UpdFrequencyPopup::UpdFrequencyPopup(QWidget *parent)
     setupConnections();
 }
 
-void UpdFrequencyPopup::showEvent(QShowEvent *event) {
+void UpdFrequencyPopup::showEvent(QShowEvent* event)
+{
     QWidget::showEvent(event);
 
     QTimer::singleShot(0, this, [this]() {
@@ -23,7 +26,8 @@ void UpdFrequencyPopup::showEvent(QShowEvent *event) {
     });
 }
 
-void UpdFrequencyPopup::setupConnections() {
+void UpdFrequencyPopup::setupConnections()
+{
     connect(ui.btn_upd_never, &QPushButton::clicked, this, [this] {
         emit selected(AppSettings::UpdateFrequency::Never);
         close();
@@ -45,8 +49,9 @@ void UpdFrequencyPopup::setupConnections() {
     });
 }
 
-int UpdFrequencyPopup::currentButtonYOffset() const {
-    const QPushButton *btn = nullptr;
+int UpdFrequencyPopup::currentButtonYOffset() const
+{
+    const QPushButton* btn = nullptr;
 
     switch (AppSettings::updateFrequency) {
         case AppSettings::UpdateFrequency::Never:
@@ -63,21 +68,24 @@ int UpdFrequencyPopup::currentButtonYOffset() const {
             break;
     }
 
-    if (!btn)
+    if (btn == nullptr) {
         return 0;
+    }
 
     // позиция кнопки относительно pop-up
     return btn->mapTo(this, QPoint(0, 0)).y();
 }
 
-void UpdFrequencyPopup::setCurrent(const AppSettings::UpdateFrequency value) const {
+void UpdFrequencyPopup::setCurrent(const AppSettings::UpdateFrequency value) const
+{
     ui.btn_upd_never->setChecked(value == AppSettings::UpdateFrequency::Never);
     ui.btn_upd_daily->setChecked(value == AppSettings::UpdateFrequency::Daily);
     ui.btn_upd_weekly->setChecked(value == AppSettings::UpdateFrequency::Weekly);
     ui.btn_upd_monthly->setChecked(value == AppSettings::UpdateFrequency::Monthly);
 }
 
-void UpdFrequencyPopup::refreshTranslations() {
+void UpdFrequencyPopup::refreshTranslations()
+{
     ui.btn_upd_never->setText(Lang::tr("SETTINGS_APP_UPD_CHECK_NEVER"));
     ui.btn_upd_daily->setText(Lang::tr("SETTINGS_APP_UPD_CHECK_DAILY"));
     ui.btn_upd_weekly->setText(Lang::tr("SETTINGS_APP_UPD_CHECK_WEEKLY"));
