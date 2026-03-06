@@ -1,8 +1,8 @@
 #pragma once
-#include <QTimer>
-
 #include <QObject>
-#include <Windows.h>
+
+class QThread;
+class KeyboardHookWorker;
 
 class KeyboardHandler final : public QObject
 {
@@ -18,35 +18,10 @@ public:
 
     void stop();
 
-    void setActive(const bool value)
-    {
-        isActive = value;
-    }
+    void setActive(bool value);
 
 private:
-    // state
     bool isActive = true;
-    bool isAltDown = false;
-    bool triggerKeyDown = false;
-    bool isLongPress = false;
-    bool switchPending = false;
-    bool rapidRepeatSuppressed = false;
-
-    DWORD pressStartTime = 0;
-    DWORD lastTriggerDownTime = 0;
-
-    QTimer longPressTimer;
-    QTimer doublePressTimer;
-
-    HHOOK keyboardHook = nullptr;
-
-    // hook
-    static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
-
-    // switching
-    static void switchKeyboardLayout();
-
-    static void sendWinSpace();
-
-    static thread_local KeyboardHandler* instance;
+    QThread* hookThread = nullptr;
+    KeyboardHookWorker* worker = nullptr;
 };
