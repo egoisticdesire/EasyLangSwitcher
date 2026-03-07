@@ -89,7 +89,7 @@ protected:
     bool nativeEvent(const QByteArray& eventType, void* message, qintptr* result) override
     {
         if (eventType == "windows_generic_MSG") {
-            if (AcrylicHelper::handleIconicMessages(this, message, QColor(32, 32, 32))) {
+            if (AcrylicHelper::handleIconicMessages(*this, message, QColor(32, 32, 32))) {
                 *result = 0;
                 return true;
             }
