@@ -1,429 +1,155 @@
 #include "lang.h"
-#include "../config/appSettings.h"
-#include <QHash>
-#include <QString>
 
 #include "../../ui/helpers/fontHelper.h"
+#include "../config/appSettings.h"
 
-static const QHash<QString, TranslationEntry> &translationsTable() {
+#include <QHash>
+#include <QString>
+#include <initializer_list>
+
+namespace
+{
+// ReSharper disable once CppDFATimeOver
+QString trWithOptionalArgs(const QString& value, const std::initializer_list<QString> args)
+{
+    QString result = value;
+    for (const QString& arg : args) {
+        result = result.arg(arg);
+    }
+    return result;
+}
+} // namespace
+
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define TR(key, en, ru, ...)                                                                                           \
+    t.insert(QStringLiteral(key),                                                                                      \
+             {                                                                                                         \
+                     trWithOptionalArgs(QStringLiteral(en), {__VA_ARGS__}),                                            \
+                     trWithOptionalArgs(QStringLiteral(ru), {__VA_ARGS__}),                                            \
+             })
+
+static const QHash<QString, TranslationEntry>& translationsTable()
+{
     static const QHash<QString, TranslationEntry> table = []() -> QHash<QString, TranslationEntry> {
         QHash<QString, TranslationEntry> t;
 
+        TR("SECOND_INSTANCE_ERROR", "%1 is already running!", "%1 уже запущен!");
 
-        t.insert(
-            QStringLiteral("SECOND_INSTANCE_ERROR"), {
-                QStringLiteral("%1 is already running!"),
-                QStringLiteral("%1 уже запущен!"),
-            });
+        TR("TRAY_LABEL_STATUS", "Status", "Статус");
+        TR("TRAY_LABEL_HOTKEY", "Hotkey", "Гор. клавиша");
+        TR("TRAY_LABEL_DELAY", "Delay (ms)", "Задержка (мс)");
 
+        TR("TRAY_TOGGLE_ENABLED", "Enabled", "Включено");
+        TR("TRAY_TOGGLE_DISABLED", "Disabled", "Выключено");
+        TR("TRAY_TOGGLE_RESUME", "  Enable", "  Возобновить");
+        TR("TRAY_TOGGLE_PAUSE", "  Disable", "  Приостановить");
+        TR("TRAY_SETTINGS", "  Settings", "  Настройки");
+        TR("TRAY_EXIT", "  Exit", "  Выход");
 
-        t.insert(
-            QStringLiteral("TRAY_LABEL_STATUS"), {
-                QStringLiteral("Status"),
-                QStringLiteral("Статус"),
-            });
-        t.insert(
-            QStringLiteral("TRAY_LABEL_HOTKEY"), {
-                QStringLiteral("Hotkey"),
-                QStringLiteral("Гор. клавиша"),
-            });
-        t.insert(
-            QStringLiteral("TRAY_LABEL_DELAY"), {
-                QStringLiteral("Delay (ms)"),
-                QStringLiteral("Задержка (мс)"),
-            });
+        TR("SETTINGS_SELECT_KEY_LABEL", "Select Hotkey", "Выберите горячую клавишу");
+        TR("SETTINGS_SWITCH_DELAY_LABEL", "Switching delay time", "Время задержки переключения");
+        TR("SETTINGS_APP_STARTUP_LABEL", "Launch at Windows startup", "Автозапуск при старте Windows");
+        TR("SETTINGS_APP_LANG_LABEL", "Application language", "Язык приложения");
+        TR("SETTINGS_APP_UPD_CHECK_LABEL", "Automatically check for updates", "Автоматически проверять обновления");
+        TR("SETTINGS_TOOLTIP_CHECK_NOW", "Check for updates now", "Проверить обновления сейчас");
+        TR("SETTINGS_TOOLTIP_UPDATE_AVAILABLE",
+           "A new version %1 is available.\nClick to open update actions.",
+           "Доступна новая версия %1.\nНажмите, чтобы открыть действия обновления.");
+        TR("SETTINGS_TOOLTIP_UPDATE_AVAILABLE_WITH_LAST_CHECK",
+           "A new version %1 is available.\nLast check: %2",
+           "Доступна новая версия %1.\nПоследняя проверка: %2");
+        TR("SETTINGS_TOOLTIP_LAST_CHECK",
+           "The latest version is installed.\nLast check: %1",
+           "Установлена актуальная версия.\nПоследняя проверка: %1");
+        TR("SETTINGS_APP_UPD_CHECK_NEVER", "Never", "Никогда");
+        TR("SETTINGS_APP_UPD_CHECK_DAILY", "Daily", "Ежедневно");
+        TR("SETTINGS_APP_UPD_CHECK_WEEKLY", "Weekly", "Еженедельно");
+        TR("SETTINGS_APP_UPD_CHECK_MONTHLY", "Monthly", "Ежемесячно");
+        TR("SETTINGS_RESTORE_DEFAULT_LABEL", "Restore default settings", "Восстановить настройки по умолчанию");
+        TR("SETTINGS_KEY_SEQUENCE", "Key...", "Клавиша...");
+        TR("SETTINGS_ALL_CHANGES_SAVED",
+           "All changes are saved automatically",
+           "Все изменения сохранены автоматически");
+        TR("SETTINGS_SIDER_MENU_GENERAL", "General", "Общие");
+        TR("SETTINGS_SIDER_MENU_EXCLUSIONS", "Exclusions", "Исключения");
+        TR("SETTINGS_SIDER_MENU_INFO", "Info", "Информация");
+        TR("SETTINGS_SIDER_MENU_CLOSE", "Close", "Закрыть");
+        TR("SETTINGS_ENABLE_STARTUP_LABEL", "Enable", "Включить");
+        TR("SETTINGS_DISABLE_STARTUP_LABEL", "Disable", "Выключить");
 
+        TR("NOTIFICATION_UPD_BTN_DOWNLOAD", "  Download", "  Загрузить");
+        TR("NOTIFICATION_UPD_BTN_RELEASES", "  What's new", "  Что нового");
+        TR("NOTIFICATION_UPD_BTN_OPEN_FOLDER", "  Open folder", "  Открыть папку");
+        TR("NOTIFICATION_UPD_BTN_SAVE_AS_TOOLTIP", "Save to a specific location...", "Сохранить в выбранную папку...");
+        TR("NOTIFICATION_UPD_SAVE_FILE_TITLE", "Save Installer", "Сохранить файл установки");
+        TR("NOTIFICATION_UPD_AVAILABLE_TITLE",
+           "A new version of %1 is ready",
+           "Доступна новая версия %1",
+           AppSettings::APP_NAME);
+        TR("NOTIFICATION_UPD_AVAILABLE_DESC",
+           "Download version %1 now or view the changes on the release page!",
+           "Загрузите версию %1 прямо сейчас или посмотрите список изменений в описании релиза!");
+        TR("NOTIFICATION_UPD_NOT_AVAILABLE_TITLE",
+           "The latest version of %1 is installed",
+           "Уже установлена последняя версия %1",
+           AppSettings::APP_NAME);
+        TR("NOTIFICATION_UPD_NOT_AVAILABLE_DESC",
+           "The current version %1 is the latest, nothing needs to be updated!",
+           "Версия %1 — самая свежая, обновлений не требуется!");
+        TR("NOTIFICATION_UPD_DOWNLOAD_COMPLETE", "Download completed successfully!", "Загрузка успешно завершена!");
+        TR("NOTIFICATION_UPD_DOWNLOAD_PROGRESS", "Downloading update...", "Загрузка обновления...");
+        TR("NOTIFICATION_UPD_DOWNLOAD_ERROR", "Failed to download update", "Не удалось загрузить обновление");
+        TR("NOTIFICATION_UPD_SYSTEM_BODY",
+           "New update notification for version %1",
+           "Новое уведомление об обновлении для версии %1");
+        TR("NOTIFICATION_UPD_SYSTEM_CLICK_HINT",
+           "Click to open update actions.",
+           "Нажмите, чтобы открыть действия обновления.");
 
-        t.insert(
-            QStringLiteral("TRAY_TOGGLE_ENABLED"), {
-                QStringLiteral("Enabled"),
-                QStringLiteral("Включено"),
-            });
-        t.insert(
-            QStringLiteral("TRAY_TOGGLE_DISABLED"), {
-                QStringLiteral("Disabled"),
-                QStringLiteral("Выключено"),
-            });
-        t.insert(
-            QStringLiteral("TRAY_TOGGLE_RESUME"), {
-                QStringLiteral("  Enable"),
-                QStringLiteral("  Возобновить"),
-            });
-        t.insert(
-            QStringLiteral("TRAY_TOGGLE_PAUSE"), {
-                QStringLiteral("  Disable"),
-                QStringLiteral("  Приостановить"),
-            });
-        t.insert(
-            QStringLiteral("TRAY_SETTINGS"), {
-                QStringLiteral("  Settings"),
-                QStringLiteral("  Настройки"),
-            });
-        t.insert(
-            QStringLiteral("TRAY_EXIT"), {
-                QStringLiteral("  Exit"),
-                QStringLiteral("  Выход"),
-            });
+        TR("BTN_APPLY", "Apply", "Применить");
+        TR("SAVE_BUTTON", "Save", "Сохранить");
+        TR("CANCEL_BUTTON", "Cancel", "Отмена");
+        TR("ADD_APP_BUTTON", "  Add Application...", "  Добавить приложение...");
+        TR("ADD_REGEX_BUTTON", "  Add Regular Expression...", "  Добавить регулярное выражение...");
+        TR("TABLE_HEADER_TYPE", "Type", "Тип");
+        TR("TABLE_HEADER_PATH", "Path / Pattern", "Путь / Шаблон");
+        TR("TABLE_HEADER_RULE", "Rule", "Правило");
+        TR("TABLE_HEADER_DELETE", "Delete", "Удаление");
+        TR("ON_BUTTON", "On", "Вкл");
+        TR("OFF_BUTTON", "Off", "Выкл");
+        TR("ENABLE_ALL_RULES_BUTTON", "Enable All Rules", "Включить все правила");
+        TR("DISABLE_ALL_RULES_BUTTON", "Disable All Rules", "Выключить все правила");
+        TR("CLEAR_LIST_BUTTON", "Clear List", "Очистить список");
+        TR("REGEX_PLACEHOLDER",
+           "Enter a process name or a regular expression to exclude...",
+           "Введите имя процесса или регулярное выражение для исключения...");
+        TR("CASE_SENSITIVITY_LABEL", "Case Sensitivity", "Чувствительность к регистру");
+        TR("FULL_MATCH_LABEL", "Full Match", "Полное совпадение");
+        TR("CHANGES_NOT_SAVED", "Changes not saved", "Изменения не сохранены");
+        TR("EXCLUSION_ADDED", "Exclusion rule added", "Правило исключения добавлено");
+        TR("EXCLUSION_REMOVED", "Exclusion rule removed", "Правило исключения удалено");
+        TR("EXCLUSIONS_CLEARED", "Exclusions list cleared", "Список правил очищен");
+        TR("DUPLICATE_ENTRY", "This entry already exists", "Такая запись уже существует");
+        TR("INVALID_INPUT", "Invalid input", "Недопустимое значение");
+        TR("REGEX_ERROR", "Regular expression error", "Ошибка в регулярном выражении");
+        TR("MISSING_PATH", "Path not specified", "Не указан путь");
+        TR("LANGUAGE_CHANGED", "Interface language changed", "Язык интерфейса изменен");
+        TR("SETTINGS_RESET", "Settings reset to default", "Настройки сброшены до значений по умолчанию");
+        TR("INFO_SWITCHES", "Switches:", "Переключений:");
+        TR("ENABLE_INDICATOR_LABEL", "Enable Indicator", "Включить индикатор");
+        TR("DISABLE_INDICATOR_LABEL", "Disable Indicator", "Выключить индикатор");
+        TR("FONT_COLOR_LABEL", "Font Color", "Цвет шрифта");
+        TR("BACKGROUND_COLOR_LABEL", "Background Color", "Цвет фона");
+        TR("BORDER_COLOR_LABEL", "Border Color", "Цвет рамки");
+        TR("DONATE_BUTTON_LABEL", "Support Project", "Поддержать проект");
+        TR("DONATE_BUTTON_TOOLTIP", "Open the project support page", "Открыть страницу поддержки проекта");
+        TR("CONFIRMATION_LABEL", "Are you sure?", "Вы уверены?");
+        TR("YES_BUTTON_LABEL", "Yes", "Да");
+        TR("NO_BUTTON_LABEL", "No", "Нет");
 
-
-        t.insert(
-            QStringLiteral("SETTINGS_SELECT_KEY_LABEL"), {
-                QStringLiteral("Select Hotkey"),
-                QStringLiteral("Выберите горячую клавишу"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_SWITCH_DELAY_LABEL"), {
-                QStringLiteral("Switching delay time"),
-                QStringLiteral("Время задержки переключения"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_APP_STARTUP_LABEL"), {
-                QStringLiteral("Launch at Windows startup"),
-                QStringLiteral("Автозапуск при старте Windows"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_APP_LANG_LABEL"), {
-                QStringLiteral("Application language"),
-                QStringLiteral("Язык приложения"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_APP_UPD_CHECK_LABEL"), {
-                QStringLiteral("Automatically check for updates"),
-                QStringLiteral("Автоматически проверять обновления"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_TOOLTIP_CHECK_NOW"), {
-                QStringLiteral("Check for updates now"),
-                QStringLiteral("Проверить обновления сейчас"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_APP_UPD_CHECK_NEVER"), {
-                QStringLiteral("Never"),
-                QStringLiteral("Никогда"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_APP_UPD_CHECK_DAILY"), {
-                QStringLiteral("Daily"),
-                QStringLiteral("Ежедневно"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_APP_UPD_CHECK_WEEKLY"), {
-                QStringLiteral("Weekly"),
-                QStringLiteral("Еженедельно"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_APP_UPD_CHECK_MONTHLY"), {
-                QStringLiteral("Monthly"),
-                QStringLiteral("Ежемесячно"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_RESTORE_DEFAULT_LABEL"), {
-                QStringLiteral("Restore default settings"),
-                QStringLiteral("Восстановить настройки по умолчанию"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_KEY_SEQUENCE"), {
-                QStringLiteral("Key..."),
-                QStringLiteral("Клавиша..."),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_ALL_CHANGES_SAVED"), {
-                QStringLiteral("All changes are saved automatically"),
-                QStringLiteral("Все изменения сохранены автоматически"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_SIDER_MENU_GENERAL"), {
-                QStringLiteral("General"),
-                QStringLiteral("Общие"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_SIDER_MENU_EXCLUSIONS"), {
-                QStringLiteral("Exclusions"),
-                QStringLiteral("Исключения"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_SIDER_MENU_INFO"), {
-                QStringLiteral("Info"),
-                QStringLiteral("Информация"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_SIDER_MENU_CLOSE"), {
-                QStringLiteral("Close"),
-                QStringLiteral("Закрыть"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_ENABLE_STARTUP_LABEL"), {
-                QStringLiteral("Enable"),
-                QStringLiteral("Включить"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_DISABLE_STARTUP_LABEL"), {
-                QStringLiteral("Disable"),
-                QStringLiteral("Выключить"),
-            });
-
-
-        t.insert(
-            QStringLiteral("NOTIFICATION_UPD_BTN_DOWNLOAD"), {
-                QStringLiteral("  Download"),
-                QStringLiteral("  Загрузить"),
-            });
-        t.insert(
-            QStringLiteral("NOTIFICATION_UPD_BTN_RELEASES"), {
-                QStringLiteral("  What's new"),
-                QStringLiteral("  Что нового"),
-            });
-        t.insert(
-            QStringLiteral("NOTIFICATION_UPD_BTN_OPEN_FOLDER"), {
-                QStringLiteral("  Open folder"),
-                QStringLiteral("  Открыть папку"),
-            });
-        t.insert(
-            QStringLiteral("NOTIFICATION_UPD_BTN_SAVE_AS_TOOLTIP"), {
-                QStringLiteral("Save to a specific location..."),
-                QStringLiteral("Сохранить в выбранную папку..."),
-            });
-        t.insert(
-            QStringLiteral("NOTIFICATION_UPD_SAVE_FILE_TITLE"), {
-                QStringLiteral("Save Installer"),
-                QStringLiteral("Сохранить файл установки"),
-            });
-        t.insert(
-            QStringLiteral("NOTIFICATION_UPD_AVAILABLE_TITLE"), {
-                QStringLiteral("A new version of %1 is ready")
-                .arg(AppSettings::APP_NAME),
-                QStringLiteral("Доступна новая версия %1")
-                .arg(AppSettings::APP_NAME),
-            });
-        t.insert(
-            QStringLiteral("NOTIFICATION_UPD_AVAILABLE_DESC"), {
-                QStringLiteral("Download version %1 now or view the changes on the release page!"),
-                QStringLiteral("Загрузите версию %1 прямо сейчас или посмотрите список изменений в описании релиза!"),
-            });
-        t.insert(
-            QStringLiteral("NOTIFICATION_UPD_NOT_AVAILABLE_TITLE"), {
-                QStringLiteral("The latest version of %1 is installed")
-                .arg(AppSettings::APP_NAME),
-                QStringLiteral("Уже установлена последняя версия %1")
-                .arg(AppSettings::APP_NAME),
-            });
-        t.insert(
-            QStringLiteral("NOTIFICATION_UPD_NOT_AVAILABLE_DESC"), {
-                QStringLiteral("The current version %1 is the latest, nothing needs to be updated!"),
-                QStringLiteral("Версия %1 — самая свежая, обновлений не требуется!"),
-            });
-        t.insert(
-            QStringLiteral("NOTIFICATION_UPD_DOWNLOAD_COMPLETE"), {
-                QStringLiteral("Download completed successfully!"),
-                QStringLiteral("Загрузка успешно завершена!"),
-            });
-        t.insert(
-            QStringLiteral("NOTIFICATION_UPD_DOWNLOAD_PROGRESS"), {
-                QStringLiteral("Downloading update..."),
-                QStringLiteral("Загрузка обновления..."),
-            });
-        t.insert(
-            QStringLiteral("NOTIFICATION_UPD_DOWNLOAD_ERROR"), {
-                QStringLiteral("Failed to download update"),
-                QStringLiteral("Не удалось загрузить обновление"),
-            });
-
-
-        t.insert(
-            QStringLiteral("BTN_APPLY"), {
-                QStringLiteral("Apply"),
-                QStringLiteral("Применить"),
-            });
-        t.insert(
-            QStringLiteral("SAVE_BUTTON"), {
-                QStringLiteral("Save"),
-                QStringLiteral("Сохранить"),
-            });
-        t.insert(
-            QStringLiteral("CANCEL_BUTTON"), {
-                QStringLiteral("Cancel"),
-                QStringLiteral("Отмена"),
-            });
-        t.insert(
-            QStringLiteral("ADD_APP_BUTTON"), {
-                QStringLiteral("  Add Application..."),
-                QStringLiteral("  Добавить приложение..."),
-            });
-        t.insert(
-            QStringLiteral("ADD_REGEX_BUTTON"), {
-                QStringLiteral("  Add Regular Expression..."),
-                QStringLiteral("  Добавить регулярное выражение..."),
-            });
-        t.insert(
-            QStringLiteral("TABLE_HEADER_TYPE"), {
-                QStringLiteral("Type"),
-                QStringLiteral("Тип"),
-            });
-        t.insert(
-            QStringLiteral("TABLE_HEADER_PATH"), {
-                QStringLiteral("Path / Pattern"),
-                QStringLiteral("Путь / Шаблон"),
-            });
-        t.insert(
-            QStringLiteral("TABLE_HEADER_RULE"), {
-                QStringLiteral("Rule"),
-                QStringLiteral("Правило"),
-            });
-        t.insert(
-            QStringLiteral("TABLE_HEADER_DELETE"), {
-                QStringLiteral("Delete"),
-                QStringLiteral("Удаление"),
-            });
-        t.insert(
-            QStringLiteral("ON_BUTTON"), {
-                QStringLiteral("On"),
-                QStringLiteral("Вкл"),
-            });
-        t.insert(
-            QStringLiteral("OFF_BUTTON"), {
-                QStringLiteral("Off"),
-                QStringLiteral("Выкл"),
-            });
-        t.insert(
-            QStringLiteral("ENABLE_ALL_RULES_BUTTON"), {
-                QStringLiteral("Enable All Rules"),
-                QStringLiteral("Включить все правила"),
-            });
-        t.insert(
-            QStringLiteral("DISABLE_ALL_RULES_BUTTON"), {
-                QStringLiteral("Disable All Rules"),
-                QStringLiteral("Выключить все правила"),
-            });
-        t.insert(
-            QStringLiteral("CLEAR_LIST_BUTTON"), {
-                QStringLiteral("Clear List"),
-                QStringLiteral("Очистить список"),
-            });
-        t.insert(
-            QStringLiteral("REGEX_PLACEHOLDER"), {
-                QStringLiteral("Enter a process name or a regular expression to exclude..."),
-                QStringLiteral("Введите имя процесса или регулярное выражение для исключения..."),
-            });
-        t.insert(
-            QStringLiteral("CASE_SENSITIVITY_LABEL"), {
-                QStringLiteral("Case Sensitivity"),
-                QStringLiteral("Чувствительность к регистру"),
-            });
-        t.insert(
-            QStringLiteral("FULL_MATCH_LABEL"), {
-                QStringLiteral("Full Match"),
-                QStringLiteral("Полное совпадение"),
-            });
-        t.insert(
-            QStringLiteral("CHANGES_NOT_SAVED"), {
-                QStringLiteral("Changes not saved"),
-                QStringLiteral("Изменения не сохранены"),
-            });
-        t.insert(
-            QStringLiteral("EXCLUSION_ADDED"), {
-                QStringLiteral("Exclusion rule added"),
-                QStringLiteral("Правило исключения добавлено"),
-            });
-        t.insert(
-            QStringLiteral("EXCLUSION_REMOVED"), {
-                QStringLiteral("Exclusion rule removed"),
-                QStringLiteral("Правило исключения удалено"),
-            });
-        t.insert(
-            QStringLiteral("EXCLUSIONS_CLEARED"), {
-                QStringLiteral("Exclusions list cleared"),
-                QStringLiteral("Список правил очищен"),
-            });
-        t.insert(
-            QStringLiteral("DUPLICATE_ENTRY"), {
-                QStringLiteral("This entry already exists"),
-                QStringLiteral("Такая запись уже существует"),
-            });
-        t.insert(
-            QStringLiteral("INVALID_INPUT"), {
-                QStringLiteral("Invalid input"),
-                QStringLiteral("Недопустимое значение"),
-            });
-        t.insert(
-            QStringLiteral("REGEX_ERROR"), {
-                QStringLiteral("Regular expression error"),
-                QStringLiteral("Ошибка в регулярном выражении"),
-            });
-        t.insert(
-            QStringLiteral("MISSING_PATH"), {
-                QStringLiteral("Path not specified"),
-                QStringLiteral("Не указан путь"),
-            });
-        t.insert(
-            QStringLiteral("LANGUAGE_CHANGED"), {
-                QStringLiteral("Interface language changed"),
-                QStringLiteral("Язык интерфейса изменен"),
-            });
-        t.insert(
-            QStringLiteral("SETTINGS_RESET"), {
-                QStringLiteral("Settings reset to default"),
-                QStringLiteral("Настройки сброшены до значений по умолчанию"),
-            });
-        t.insert(
-            QStringLiteral("INFO_SWITCHES"), {
-                QStringLiteral("Switches:"),
-                QStringLiteral("Переключений:"),
-            });
-        t.insert(
-            QStringLiteral("ENABLE_INDICATOR_LABEL"), {
-                QStringLiteral("Enable Indicator"),
-                QStringLiteral("Включить индикатор"),
-            });
-        t.insert(
-            QStringLiteral("DISABLE_INDICATOR_LABEL"), {
-                QStringLiteral("Disable Indicator"),
-                QStringLiteral("Выключить индикатор"),
-            });
-        t.insert(
-            QStringLiteral("FONT_COLOR_LABEL"), {
-                QStringLiteral("Font Color"),
-                QStringLiteral("Цвет шрифта"),
-            });
-        t.insert(
-            QStringLiteral("BACKGROUND_COLOR_LABEL"), {
-                QStringLiteral("Background Color"),
-                QStringLiteral("Цвет фона"),
-            });
-        t.insert(
-            QStringLiteral("BORDER_COLOR_LABEL"), {
-                QStringLiteral("Border Color"),
-                QStringLiteral("Цвет рамки"),
-            });
-        t.insert(
-            QStringLiteral("DONATE_BUTTON_LABEL"), {
-                QStringLiteral("Support Project"),
-                QStringLiteral("Поддержать проект"),
-            });
-        t.insert(
-            QStringLiteral("DONATE_BUTTON_TOOLTIP"), {
-                QStringLiteral("Open the project support page"),
-                QStringLiteral("Открыть страницу поддержки проекта"),
-            });
-        t.insert(
-            QStringLiteral("CONFIRMATION_LABEL"), {
-                QStringLiteral("Are you sure?"),
-                QStringLiteral("Вы уверены?"),
-            });
-        t.insert(
-            QStringLiteral("YES_BUTTON_LABEL"), {
-                QStringLiteral("Yes"),
-                QStringLiteral("Да"),
-            });
-        t.insert(
-            QStringLiteral("NO_BUTTON_LABEL"), {
-                QStringLiteral("No"),
-                QStringLiteral("Нет"),
-            });
-
-
-        t.insert(
-            QStringLiteral("SETTINGS_KEY_HOVER_WARNING_POPUP"), {
-                QString::fromUtf8(R"(
+        t.insert(QStringLiteral("SETTINGS_KEY_HOVER_WARNING_POPUP"),
+                 TranslationEntry{
+                         .en = QString::fromUtf8(R"(
                     <html><head/><body style="%1 margin: 0; padding: 0;">
                     <div style="%1 %3 font-size: %5pt;">
                     <span style="%7 %8">Warnings:</span>
@@ -448,11 +174,15 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     </ul>
                     </body></html>
             )")
-                .arg("font-family: 'Inter', 'Segoe UI', sans-serif;", "padding-top: 12px;", "line-height: 1.2;")
-                .arg(FontManager::Small().pixelSize())
-                .arg(FontManager::Default().pixelSize())
-                .arg("color:rgba(255, 255, 255, 175);", "color:rgba(255, 255, 255, 200);", "font-weight: 600;"),
-                QString::fromUtf8(R"(
+                                       .arg("font-family: 'Inter', 'Segoe UI', sans-serif;",
+                                            "padding-top: 12px;",
+                                            "line-height: 1.2;")
+                                       .arg(FontManager::Small().pixelSize())
+                                       .arg(FontManager::Default().pixelSize())
+                                       .arg("color:rgba(255, 255, 255, 175);",
+                                            "color:rgba(255, 255, 255, 200);",
+                                            "font-weight: 600;"),
+                         .ru = QString::fromUtf8(R"(
                     <html><head/><body style="%1 margin: 0; padding: 0;">
                     <div style="%1 %3 font-size: %5pt;">
                     <span style="%7 %8">Предупреждения:</span>
@@ -477,15 +207,19 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     </ul>
                     </body></html>
             )")
-                .arg("font-family: 'Inter', 'Segoe UI', sans-serif;", "padding-top: 12px;", "line-height: 1.2;")
-                .arg(FontManager::Small().pixelSize())
-                .arg(FontManager::Default().pixelSize())
-                .arg("color:rgba(255, 255, 255, 175);", "color:rgba(255, 255, 255, 200);", "font-weight: 600;"),
-            });
+                                       .arg("font-family: 'Inter', 'Segoe UI', sans-serif;",
+                                            "padding-top: 12px;",
+                                            "line-height: 1.2;")
+                                       .arg(FontManager::Small().pixelSize())
+                                       .arg(FontManager::Default().pixelSize())
+                                       .arg("color:rgba(255, 255, 255, 175);",
+                                            "color:rgba(255, 255, 255, 200);",
+                                            "font-weight: 600;"),
+                 });
 
-        t.insert(
-            QStringLiteral("INFO_TEXT"), {
-                QString::fromUtf8(R"(
+        t.insert(QStringLiteral("INFO_TEXT"),
+                 TranslationEntry{
+                         .en = QString::fromUtf8(R"(
                     <html><head/><body>
                     <p align="justify">
                     <span style=" font-weight:700;">%1</span> is a simple and lightweight Windows application that allows you to switch keyboard layouts using <span style=" font-weight:700;">a single key</span>. Switching cycles through all languages added in the system:
@@ -517,8 +251,8 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     </p>
                     </body></html>
             )")
-                .arg(AppSettings::APP_NAME),
-                QString::fromUtf8(R"(
+                                       .arg(AppSettings::APP_NAME),
+                         .ru = QString::fromUtf8(R"(
                     <html><head/><body>
                     <p align="justify">
                     <span style=" font-weight:700;">%1</span> — простое и лёгкое приложение для Windows, которое позволяет переключать раскладку клавиатуры <span style=" font-weight:700;">одной клавишей</span>. Переключение происходит циклично по всем языкам, добавленным в системе:
@@ -550,12 +284,12 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     </p>
                     </body></html>
             )")
-                .arg(AppSettings::APP_NAME),
-            });
+                                       .arg(AppSettings::APP_NAME),
+                 });
 
-        t.insert(
-            QStringLiteral("INFO_FOOTER"), {
-                QString::fromUtf8(R"(
+        t.insert(QStringLiteral("INFO_FOOTER"),
+                 TranslationEntry{
+                         .en = QString::fromUtf8(R"(
                     <html><head/><body>
                     <p align="center" style="color: rgba(255, 255, 255, 200);">
                     The application is distributed for free under the <span style=" font-weight:700;">MIT license</span>.
@@ -565,7 +299,7 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     </p>
                     </body></html>
             )"),
-                QString::fromUtf8(R"(
+                         .ru = QString::fromUtf8(R"(
                     <html><head/><body>
                     <p align="center" style="color: rgba(255, 255, 255, 200);">
                     Приложение распространяется бесплатно под лицензией <span style=" font-weight:700;">MIT</span>.
@@ -575,36 +309,43 @@ static const QHash<QString, TranslationEntry> &translationsTable() {
                     </p>
                     </body></html>
             )"),
-            });
+                 });
 
         return t;
     }();
     return table;
 }
 
-QString Lang::tr(const QString &key) {
+#undef TR
+
+QString Lang::tr(const QString& key)
+{
     return tr(key, AppSettings::appLang);
 }
 
-QString Lang::tr(const QString &key, const QString &localeCode) {
-    const QString code = localeCode.trimmed().toLower();
+QString Lang::tr(const QString& key, const QStringView localeCode)
+{
+    const QString code = localeCode.trimmed().toString().toLower();
     return tr(key, (code == "en") ? Locale::EN : Locale::RU);
 }
 
-QString Lang::tr(const QString &key, const Locale locale) {
-    const auto &tbl = translationsTable();
+QString Lang::tr(const QString& key, const Locale locale)
+{
+    const auto& tbl = translationsTable();
     auto it = tbl.constFind(key);
 
     if (it == tbl.constEnd()) {
         const QString up = key.toUpper();
         it = tbl.constFind(up);
-        if (it == tbl.constEnd())
+        if (it == tbl.constEnd()) {
             return key; // fallback
+        }
     }
 
     return (locale == Locale::EN) ? it->en : it->ru;
 }
 
-const QHash<QString, TranslationEntry> &Lang::allTranslations() {
+const QHash<QString, TranslationEntry>& Lang::allTranslations()
+{
     return translationsTable();
 }

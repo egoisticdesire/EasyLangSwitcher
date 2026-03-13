@@ -1,17 +1,24 @@
 #pragma once
 #include "ui_EasyLangSwitcher_settings_tooltip.h"
-#include <QWidget>
-#include <QPropertyAnimation>
-#include <QParallelAnimationGroup>
 
-class CustomToolTip final : public QWidget {
+#include <QParallelAnimationGroup>
+#include <QPropertyAnimation>
+#include <QStringList>
+#include <QWidget>
+
+class CustomToolTip final : public QWidget
+{
     Q_OBJECT
     Q_PROPERTY(QPoint pos READ pos WRITE move)
 
 public:
-    explicit CustomToolTip(QWidget *parent = nullptr);
+    explicit CustomToolTip(const QWidget* parent = nullptr);
 
-    void showAt(const QWidget *target, const QString &langKey);
+    void showAt(const QWidget* target, const QString& langKey);
+
+    void showAt(const QWidget* target, const QString& langKey, const QString& arg);
+
+    void showAt(const QWidget* target, const QString& langKey, const QString& arg1, const QString& arg2);
 
     void hideAnimated();
 
@@ -23,7 +30,10 @@ private:
     Ui::tooltip_main_widget ui{};
     bool isClosing = false;
     QString currentLangKey;
-    QParallelAnimationGroup *animGroup;
+    QStringList currentLangArgs;
+    QParallelAnimationGroup* animGroup = nullptr;
 
     void updateSize();
+
+    [[nodiscard]] QString resolveText() const;
 };

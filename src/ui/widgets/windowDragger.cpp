@@ -1,43 +1,68 @@
 #include "windowDragger.h"
+
 #include "../../core/config/logger.h"
+
 #include <QMouseEvent>
 
-WindowDragger::WindowDragger(QWidget *target)
-    : QObject(target), win(target) {
+WindowDragger::WindowDragger(QWidget* target) : QObject(target), win(target)
+{
     win->installEventFilter(this);
     LOG_DEBUG() << "WindowDragger initialized";
 }
 
-void WindowDragger::addIgnoredWidget(QWidget *w) {
+void WindowDragger::addIgnoredWidget(QWidget* w)
+{
     ignore.insert(w);
 }
 
-bool WindowDragger::eventFilter(QObject *obj, QEvent *ev) {
-    if (obj != win) return QObject::eventFilter(obj, ev);
+bool WindowDragger::eventFilter(QObject* obj, QEvent* ev)
+{
+    if (obj != win) {
+        return QObject::eventFilter(obj, ev);
+    }
 
     switch (ev->type()) {
-        case QEvent::MouseButtonPress: {
-            const auto *e = dynamic_cast<QMouseEvent *>(ev);
-            if (e->button() != Qt::LeftButton) break;
+        case QEvent::MouseButtonPress:
+            {
+                const auto* e = dynamic_cast<QMouseEvent*>(ev);
+                if (e == nullptr) {
+                    break;
+                }
+                if (e->button() != Qt::LeftButton) {
+                    break;
+                }
 
-            if (QWidget *child = win->childAt(e->position().toPoint()); child && ignore.contains(child)) {
-                dragging = false;
+                QWidget* child = win->childAt(e->position().toPoint());
+                while (child) {
+                    if (ignore.contains(child)) {
+                        dragging = false;
+                        break;
+                    }
+                    child = child->parentWidget();
+                }
+                if (child == nullptr) {
+                    dragging = true;
+                }
+
+                if (dragging) {
+                    dragOffset = e->globalPosition().toPoint() - win->frameGeometry().topLeft();
+                    return true;
+                }
                 break;
             }
 
-            dragging = true;
-            dragOffset = e->globalPosition().toPoint() - win->frameGeometry().topLeft();
-            return true;
-        }
-
-        case QEvent::MouseMove: {
-            if (dragging) {
-                const auto *e = dynamic_cast<QMouseEvent *>(ev);
-                win->move(e->globalPosition().toPoint() - dragOffset);
-                return true;
+        case QEvent::MouseMove:
+            {
+                if (dragging) {
+                    const auto* e = dynamic_cast<QMouseEvent*>(ev);
+                    if (e == nullptr) {
+                        break;
+                    }
+                    win->move(e->globalPosition().toPoint() - dragOffset);
+                    return true;
+                }
+                break;
             }
-            break;
-        }
 
         case QEvent::MouseButtonRelease:
             dragging = false;

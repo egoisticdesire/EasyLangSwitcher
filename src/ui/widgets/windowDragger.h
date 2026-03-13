@@ -1,24 +1,24 @@
 #pragma once
 #include <QWidget>
-#include <QSet>
 
-class WindowDragger final : public QObject {
+class WindowDragger final : public QObject
+{
     Q_OBJECT
 
 public:
-    explicit WindowDragger(QWidget *target);
+    explicit WindowDragger(QWidget* target);
 
-    void addIgnoredWidget(QWidget *w);
+    void addIgnoredWidget(QWidget* w);
 
 protected:
-    bool eventFilter(QObject *obj, QEvent *ev) override;
+    bool eventFilter(QObject* obj, QEvent* ev) override;
 
 private:
     bool dragging = false;
 
     QPoint dragOffset;
 
-    QWidget *win = nullptr;
+    QWidget* win = nullptr;
 
-    QSet<QWidget *> ignore;
+    QSet<QWidget*> ignore;
 };

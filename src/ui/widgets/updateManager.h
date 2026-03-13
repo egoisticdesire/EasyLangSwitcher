@@ -1,12 +1,16 @@
 #pragma once
 #include <QTimer>
+
 #include <QNetworkReply>
 
-class UpdateManager final : public QObject {
+class QNetworkAccessManager;
+
+class UpdateManager final : public QObject
+{
     Q_OBJECT
 
 public:
-    explicit UpdateManager(QObject *parent = nullptr);
+    explicit UpdateManager(QObject* parent = nullptr);
 
     void start();
 
@@ -20,24 +24,24 @@ public:
 
 signals:
     // Сигнал, что обновление найдено (передаем ссылку на скачивание или версию)
-    void updateAvailable(const QString &tagName, const QString &url);
+    void updateAvailable(const QString& tagName, const QString& url, bool isManualCheck);
 
-    void noUpdateAvailable(const QString &version);
+    void noUpdateAvailable(const QString& version, bool isManualCheck);
 
     // Сигнал об ошибке (опционально)
-    void updateError(const QString &errorText);
-
-private slots:
-    void onGithubResponse(QNetworkReply *reply);
+    void updateError(const QString& errorText, bool isManualCheck);
 
 private:
+    void onGithubResponse(QNetworkReply* reply);
+
     QTimer timer;
-    QNetworkAccessManager *networkManager;
+    QNetworkAccessManager* networkManager = nullptr;
+    QHash<QNetworkReply*, bool> m_replyIsManual;
 
     static bool isUpdateDue();
 
     // Вспомогательная функция для сравнения версий
-    static bool isNewerVersion(const QString &currentVer, const QString &remoteVer);
+    static bool isNewerVersion(const QString& currentVer, const QString& remoteVer);
 
-    void performCheck();
+    void performCheck(bool isManualCheck);
 };

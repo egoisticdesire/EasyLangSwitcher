@@ -1,15 +1,23 @@
 #pragma once
+#include <cstdint>
+
 #include <QSettings>
 #include <QString>
-#include <QDate>
 
-class AppSettings {
+class AppSettings
+{
 public:
     static constexpr auto APP_NAME = "EasyLangSwitcher";
 
-    static void logger(const QString &action);
+    static void logger(const QString& action);
 
-    enum class UpdateFrequency { Never, Daily, Weekly, Monthly };
+    enum class UpdateFrequency : std::uint8_t
+    {
+        Never,
+        Daily,
+        Weekly,
+        Monthly
+    };
 
     static QString updateFrequencyToString(UpdateFrequency value, bool localized = true);
 
@@ -37,26 +45,22 @@ public:
 
     static int defaultHotkeyModifiers;
 
-    static QString defaultHotkeyName;
-
     static int defaultSwitchDelayMs;
 
     static int defaultHotkeyMainVk;
 
     static QString appLang;
 
-    static QString defaultAppLang;
-
     static UpdateFrequency defaultUpdateFrequency;
 
     static UpdateFrequency updateFrequency;
 
-    static QDate lastUpdateCheckDate;
+    static QDate& lastUpdateCheckDate();
 
-    static QDate defaultLastUpdateCheckDate;
+    static QDateTime& lastUpdateCheckDateTime();
 
     static constexpr auto GITHUB_REPO = "egoisticdesire/EasyLangSwitcher";
 
 private:
-    static inline QSettings settings{APP_NAME, APP_NAME};
+    static QSettings& settingsStorage();
 };

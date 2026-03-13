@@ -73,6 +73,7 @@
   </qresource>
   <qresource prefix="sounds">
     <file>sounds/off.wav</file>
+    <file>sounds/notification_alert.wav</file>
     <file>sounds/on.wav</file>
     <file>sounds/click.wav</file>
     <file>sounds/error.wav</file>

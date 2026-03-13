@@ -1,20 +1,20 @@
 #pragma once
 #include "../../core/config/logger.h"
-#include <QIcon>
-#include <QPixmap>
-#include <QPainter>
-#include <QSvgRenderer>
+
 #include <QFile>
+#include <QIcon>
+#include <QPainter>
+#include <QPixmap>
 #include <QSize>
 #include <QString>
+#include <QSvgRenderer>
 
-class IconHelper {
+class IconHelper
+{
 public:
-    static QIcon loadIcon(
-        const QString &path,
-        const QColor &color = QColor(200, 200, 200),
-        const QSize &size = QSize(18, 18)
-    ) {
+    static QIcon
+    loadIcon(const QString& path, const QColor& color = QColor(200, 200, 200), const QSize& size = QSize(18, 18))
+    {
         if (path.endsWith(".svg", Qt::CaseInsensitive)) {
             QFile file(path);
             if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {

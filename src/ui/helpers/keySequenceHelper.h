@@ -1,33 +1,44 @@
 #pragma once
+#include <QTimer>
+#include <QToolButton>
+
 #include "../../core/config/logger.h"
 #include "../helpers/vkMapper.h"
-#include <QObject>
-#include <QKeySequenceEdit>
-#include <QToolButton>
-#include <QLineEdit>
+
 #include <QKeyEvent>
+#include <QKeySequenceEdit>
+#include <QLineEdit>
+#include <QObject>
+#include <algorithm>
+#include <array>
 #include <utility>
 
-class KeySequenceHelper final : public QObject {
+class KeySequenceHelper final : public QObject
+{
     Q_OBJECT
 
 public:
-    KeySequenceHelper(
-        const QWidget *root,
-        const QString &objectName,
-        const QIcon &icon,
-        QString placeholder = "Key...",
-        QObject *parent = nullptr
-    ) : QObject(parent), m_placeholder(std::move(placeholder)) {
+    KeySequenceHelper(const QWidget* root,
+                      const QString& objectName,
+                      const QIcon& icon,
+                      QString placeholder = "Key...",
+                      QObject* parent = nullptr)
+        : QObject(parent), m_placeholder(std::move(placeholder))
+    {
         LOG_DEBUG() << "KeySequenceHelper initialized";
 
-        m_edit = root->findChild<QKeySequenceEdit *>(objectName);
+        if (root == nullptr) {
+            return;
+        }
+        m_edit = root->findChild<QKeySequenceEdit*>(objectName);
+        if (m_edit == nullptr) {
+            return;
+        }
         m_edit->setStyleSheet("color: rgba(255, 255, 255, 225);");
-        if (!m_edit) return;
 
         m_edit->setClearButtonEnabled(false);
 
-        m_lineEdit = m_edit->findChild<QLineEdit *>();
+        m_lineEdit = m_edit->findChild<QLineEdit*>();
         if (m_lineEdit) {
             m_lineEdit->setAlignment(Qt::AlignCenter);
             m_lineEdit->setPlaceholderText(m_placeholder);
@@ -49,10 +60,14 @@ public:
         )");
 
         connect(m_btn, &QToolButton::clicked, this, [this]() {
-            if (!m_edit) return;
+            if (m_edit == nullptr) {
+                return;
+            }
             m_internalUpdate = true;
             m_edit->setKeySequence(QKeySequence());
-            if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+            if (m_lineEdit != nullptr) {
+                m_lineEdit->setPlaceholderText(m_placeholder);
+            }
             m_btn->setVisible(false);
             m_internalUpdate = false;
 
@@ -66,14 +81,20 @@ public:
         });
 
         connect(m_edit, &QKeySequenceEdit::keySequenceChanged, this, [this]() {
-            if (!m_edit) return;
-            if (m_internalUpdate) return;
+            if (m_edit == nullptr) {
+                return;
+            }
+            if (m_internalUpdate) {
+                return;
+            }
 
             const QKeySequence seq = m_edit->keySequence();
 
             if (seq.isEmpty()) {
                 m_btn->setVisible(false);
-                if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+                if (m_lineEdit != nullptr) {
+                    m_lineEdit->setPlaceholderText(m_placeholder);
+                }
 
                 if (m_lastEmittedVk != 0 || !m_lastEmittedName.isEmpty()) {
                     m_lastEmittedVk = 0;
@@ -84,21 +105,22 @@ public:
             }
 
             // обрезать модификаторы и извлечь первый элемент
-            const QKeyCombination raw = seq[0];
-            const int baseKey = raw.key() &
-                                ~(Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier);
+            const QKeyCombination raw = firstKeyCombination(seq);
+            const int baseKey =
+                    raw.key() & ~(Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier);
 
-            if (blockedKeys.contains(baseKey)) {
+            if (isBlockedKey(baseKey)) {
                 const int vk = VkMapper::sequenceToVk(QKeySequence(baseKey));
-                const QString keyName = vk
-                                            ? VkMapper::vkToName(vk)
-                                            : QKeySequence(baseKey).toString(QKeySequence::NativeText);
+                const QString keyName =
+                        vk ? VkMapper::vkToName(vk) : QKeySequence(baseKey).toString(QKeySequence::NativeText);
 
                 LOG_DEBUG() << "Blocked key pressed: " << keyName;
 
                 m_internalUpdate = true;
                 m_edit->setKeySequence(QKeySequence());
-                if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+                if (m_lineEdit != nullptr) {
+                    m_lineEdit->setPlaceholderText(m_placeholder);
+                }
                 m_btn->setVisible(false);
                 m_internalUpdate = false;
 
@@ -119,21 +141,26 @@ public:
                 if (m_edit->keySequence() != cleanSeq) {
                     m_internalUpdate = true;
                     m_edit->setKeySequence(cleanSeq);
-                    if (m_lineEdit && m_lineEdit->placeholderText().isEmpty())
+                    if (m_lineEdit != nullptr && m_lineEdit->placeholderText().isEmpty()) {
                         m_lineEdit->setPlaceholderText(m_placeholder);
+                    }
                     m_btn->setVisible(true);
                     m_internalUpdate = false;
-                } else {
+                }
+                else {
                     m_btn->setVisible(true);
                 }
 
                 vk = VkMapper::sequenceToVk(cleanSeq);
                 name = vk ? VkMapper::vkToName(vk) : cleanSeq.toString(QKeySequence::NativeText);
-            } else {
+            }
+            else {
                 const QString fallback = seq.toString(QKeySequence::NativeText);
                 m_internalUpdate = true;
                 m_edit->setKeySequence(QKeySequence());
-                if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+                if (m_lineEdit != nullptr) {
+                    m_lineEdit->setPlaceholderText(m_placeholder);
+                }
                 m_btn->setVisible(false);
                 m_internalUpdate = false;
                 vk = 0;
@@ -153,29 +180,39 @@ public:
 
         // переопределение плейсхолдера "Press shortcut"
         m_edit->installEventFilter(this);
-        if (m_lineEdit) m_lineEdit->installEventFilter(this);
+        if (m_lineEdit != nullptr) {
+            m_lineEdit->installEventFilter(this);
+        }
 
         updatePosition();
     }
 
-    void setPlaceholder(const QString &text) {
+    void setPlaceholder(const QString& text)
+    {
         // 1. Обновляем внутреннюю переменную, чтобы eventFilter использовал новый текст
         m_placeholder = text;
 
         // 2. Сразу применяем к виджету, чтобы результат был виден мгновенно
-        if (m_lineEdit) {
+        if (m_lineEdit != nullptr) {
             m_lineEdit->setPlaceholderText(m_placeholder);
         }
     }
 
 signals:
-    void hotkeySelected(int mainVk, int modifiersMask, const QString &name);
+    void hotkeySelected(int mainVk, int modifiersMask, const QString& name);
 
 protected:
-    bool eventFilter(QObject *w, QEvent *ev) override {
+    bool eventFilter(QObject* w, QEvent* ev) override
+    {
         if (w == m_edit || w == m_lineEdit) {
+            if (m_edit == nullptr) {
+                return QObject::eventFilter(w, ev);
+            }
             if (ev->type() == QEvent::KeyPress) {
-                const auto *ke = dynamic_cast<QKeyEvent *>(ev);
+                const auto* ke = dynamic_cast<QKeyEvent*>(ev);
+                if (ke == nullptr) {
+                    return QObject::eventFilter(w, ev);
+                }
 
 #ifdef _WIN32
                 const int sc = static_cast<int>(ke->nativeScanCode() & 0xFF);
@@ -183,7 +220,9 @@ protected:
                 if (const int qtLatin = VkMapper::scanCodeToQtKey(sc); qtLatin != 0) {
                     m_internalUpdate = true;
                     m_edit->setKeySequence(QKeySequence(qtLatin));
-                    if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+                    if (m_lineEdit != nullptr) {
+                        m_lineEdit->setPlaceholderText(m_placeholder);
+                    }
                     m_btn->setVisible(true);
                     m_internalUpdate = false;
 
@@ -201,28 +240,40 @@ protected:
 
                 if (ke->key() == Qt::Key_Escape) {
                     m_edit->clearFocus();
-                    if (m_lineEdit) m_lineEdit->clearFocus();
-                    if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+                    if (m_lineEdit != nullptr) {
+                        m_lineEdit->clearFocus();
+                    }
+                    if (m_lineEdit != nullptr) {
+                        m_lineEdit->setPlaceholderText(m_placeholder);
+                    }
                     return true;
                 }
 
                 if (ke->key() == Qt::Key_Backspace) {
-                    if (m_btn && m_btn->isVisible())
+                    if (m_btn && m_btn->isVisible()) {
                         emit m_btn->clicked();
+                    }
                     return true;
                 }
             }
 
-            if (ev->type() == QEvent::Resize || ev->type() == QEvent::FontChange)
+            if (ev->type() == QEvent::Resize || ev->type() == QEvent::FontChange) {
                 updatePosition();
+            }
 
             if (ev->type() == QEvent::FocusIn) {
-                if (m_lineEdit)
+                if (m_lineEdit != nullptr) {
                     QTimer::singleShot(0, [this]() {
-                        if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+                        if (m_lineEdit != nullptr) {
+                            m_lineEdit->setPlaceholderText(m_placeholder);
+                        }
                     });
-            } else if (ev->type() == QEvent::FocusOut) {
-                if (m_lineEdit) m_lineEdit->setPlaceholderText(m_placeholder);
+                }
+            }
+            else if (ev->type() == QEvent::FocusOut) {
+                if (m_lineEdit != nullptr) {
+                    m_lineEdit->setPlaceholderText(m_placeholder);
+                }
             }
         }
 
@@ -230,8 +281,11 @@ protected:
     }
 
 private:
-    void updatePosition() const {
-        if (!m_edit || !m_btn) return;
+    void updatePosition() const
+    {
+        if (m_edit == nullptr || m_btn == nullptr) {
+            return;
+        }
 
         const int h = m_edit->height();
         const int btnW = m_btn->sizeHint().width();
@@ -240,24 +294,35 @@ private:
         m_btn->setGeometry(m_edit->width() - btnW - margin, (h - btnH) / 2, btnW, btnH);
     }
 
-    QKeySequenceEdit *m_edit = nullptr;
-    QLineEdit *m_lineEdit = nullptr;
-    QToolButton *m_btn = nullptr;
+    QKeySequenceEdit* m_edit = nullptr;
+    QLineEdit* m_lineEdit = nullptr;
+    QToolButton* m_btn = nullptr;
     QString m_placeholder;
 
     bool m_internalUpdate = false;
     int m_lastEmittedVk = -1;
     QString m_lastEmittedName;
 
-    inline static const QSet<int> blockedKeys = {
-        Qt::Key_CapsLock,
-        Qt::Key_Backspace,
-        Qt::Key_Delete,
-        Qt::Key_Insert,
-        Qt::Key_Home,
-        Qt::Key_End,
-        Qt::Key_PageUp,
-        Qt::Key_PageDown,
-        Qt::Key_Escape,
-    };
+    [[nodiscard]] static QKeyCombination firstKeyCombination(const QKeySequence& sequence)
+    {
+        return sequence.count() > 0
+                       ? sequence[0] // NOLINT(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+                       : QKeyCombination(Qt::Key_unknown);
+    }
+
+    [[nodiscard]] static bool isBlockedKey(const int key)
+    {
+        constexpr std::array blockedKeys = {
+                Qt::Key_CapsLock,
+                Qt::Key_Backspace,
+                Qt::Key_Delete,
+                Qt::Key_Insert,
+                Qt::Key_Home,
+                Qt::Key_End,
+                Qt::Key_PageUp,
+                Qt::Key_PageDown,
+                Qt::Key_Escape,
+        };
+        return std::ranges::any_of(blockedKeys, [key](const int blockedKey) { return blockedKey == key; });
+    }
 };

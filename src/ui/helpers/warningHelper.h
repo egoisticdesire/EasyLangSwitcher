@@ -1,23 +1,29 @@
 #pragma once
-#include "ui_EasyLangSwitcher_warning.h"
+#include <QTimer>
+
 #include "../widgets/soundManager.h"
 #include "../widgets/windowDragger.h"
-#include "iconHelper.h"
 #include "acrylicHelper.h"
+#include "iconHelper.h"
+#include "screenResolver.h"
+#include "ui_EasyLangSwitcher_warning.h"
+
+#include <QAction>
 #include <QDialog>
-#include <QScreen>
 #include <QSoundEffect>
 
-class WarningDialog final : public QDialog {
+class WarningDialog final : public QDialog
+{
     Q_OBJECT
 
 public:
-    explicit WarningDialog(QWidget *parent = nullptr) : QDialog(parent) {
+    explicit WarningDialog(QWidget* parent = nullptr) : QDialog(parent)
+    {
         ui.setupUi(this);
         this->setWindowIcon(IconHelper::loadIcon(":/icons/icons/FlashSparkleFilled2.png"));
 
         ui.icon_label->setIcon(
-            IconHelper::loadIcon(":/icons/icons/WarningFilled.svg", QColor(234, 191, 0), QSize(48, 48)));
+                IconHelper::loadIcon(":/icons/icons/WarningFilled.svg", QColor(234, 191, 0), QSize(48, 48)));
         ui.icon_label->setAttribute(Qt::WA_TransparentForMouseEvents);
 
         setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
@@ -25,7 +31,7 @@ public:
 
         QTimer::singleShot(0, this, [this] { AcrylicHelper::enableAcrylic(this); });
 
-        auto *closeAction = new QAction(this);
+        auto* closeAction = new QAction(this);
         closeAction->setShortcut(Qt::Key_Escape);
         connect(closeAction, &QAction::triggered, this, &WarningDialog::close);
         addAction(closeAction);
@@ -37,18 +43,22 @@ public:
 
         audioEffect = new QSoundEffect(this);
         audioEffect->setSource(QUrl("qrc:/sounds/sounds/error.wav"));
-        audioEffect->setVolume(0.5f);
+        audioEffect->setVolume(0.5F);
 
         soundManager::instance().registerEffect(audioEffect);
     }
 
-    void setText(const QString &text) const {
+    void setText(const QString& text) const
+    {
         ui.text_label->setText(text);
     }
 
-    void openCentered() {
-        const QScreen *screen = QGuiApplication::primaryScreen();
-        if (!screen) screen = QGuiApplication::screens().first();
+    void openCentered()
+    {
+        const QScreen* screen = ScreenResolver::primaryOrFirst();
+        if (screen == nullptr) {
+            return;
+        }
         const QRect geom = screen->availableGeometry();
 
         adjustSize();
@@ -65,17 +75,21 @@ public:
         raise();
         activateWindow();
 
-        if (audioEffect) audioEffect->play();
+        if (audioEffect != nullptr) {
+            soundManager::playEffect(audioEffect);
+        }
     }
 
-    void setTranslations(const QString &text) const {
+    void setTranslations(const QString& text) const
+    {
         ui.btn_close->setText(text);
     }
 
 protected:
-    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override {
+    bool nativeEvent(const QByteArray& eventType, void* message, qintptr* result) override
+    {
         if (eventType == "windows_generic_MSG") {
-            if (AcrylicHelper::handleIconicMessages(this, message, QColor(32, 32, 32))) {
+            if (AcrylicHelper::handleIconicMessages(*this, message, QColor(32, 32, 32))) {
                 *result = 0;
                 return true;
             }
@@ -86,7 +100,7 @@ protected:
 private:
     Ui::warning_main_widget ui{};
 
-    WindowDragger *dragger = nullptr;
+    WindowDragger* dragger = nullptr;
 
-    QSoundEffect *audioEffect = nullptr;
+    QSoundEffect* audioEffect = nullptr;
 };

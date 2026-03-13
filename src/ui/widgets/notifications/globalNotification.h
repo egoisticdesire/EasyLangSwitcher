@@ -1,29 +1,46 @@
 #pragma once
-#include "ui_EasyLangSwitcher_notification.h"
 #include "../../helpers/closeButton.h"
-#include <QWidget>
+#include "ui_EasyLangSwitcher_notification.h"
+
 #include <QGraphicsOpacityEffect>
 #include <QPointer>
 #include <QString>
+#include <QWidget>
 
-namespace Ui {
-    class notification_main_widget;
+#include <cstdint>
+
+namespace Ui
+{
+class notification_main_widget;
 }
-
 
 class QNetworkReply;
 class QFile;
+class QNetworkAccessManager;
 
-class GlobalNotification final : public QWidget {
+class GlobalNotification final : public QWidget
+{
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(GlobalNotification)
     Q_PROPERTY(double progress READ progress WRITE setProgress)
 
 public:
-    enum class UiState { Buttons, Progress, Finish, Hidden };
+    enum class UiState : std::uint8_t
+    {
+        Buttons,
+        Progress,
+        Finish,
+        Hidden
+    };
 
-    enum Mode { UpdateAvailable, UpToDate, Error };
+    enum class Mode : std::uint8_t
+    {
+        UpdateAvailable,
+        UpToDate,
+        Error
+    };
 
-    explicit GlobalNotification(Mode mode, const QString &version, const QString &url = "", QWidget *parent = nullptr);
+    explicit GlobalNotification(Mode mode, QString version, QString url = {}, const QWidget* parent = nullptr);
 
     ~GlobalNotification() override;
 
@@ -36,32 +53,31 @@ public:
     void refreshTranslations();
 
 protected:
-    void mousePressEvent(QMouseEvent *event) override;
+    void mousePressEvent(QMouseEvent* event) override;
 
-    void paintEvent(QPaintEvent *event) override;
+    void paintEvent(QPaintEvent* event) override;
 
-    bool event(QEvent *event) override;
+    bool event(QEvent* event) override;
 
-    void changeEvent(QEvent *event) override;
+    void changeEvent(QEvent* event) override;
 
-    void moveEvent(QMoveEvent *event) override;
+    void moveEvent(QMoveEvent* event) override;
 
-    void showEvent(QShowEvent *event) override;
+    void showEvent(QShowEvent* event) override;
 
-    void enterEvent(QEnterEvent *event) override;
+    void enterEvent(QEnterEvent* event) override;
 
-    void leaveEvent(QEvent *event) override;
+    void leaveEvent(QEvent* event) override;
 
-    void hideEvent(QHideEvent *event) override;
+    void hideEvent(QHideEvent* event) override;
 
-    void closeEvent(QCloseEvent *event) override;
+    void closeEvent(QCloseEvent* event) override;
 
-private slots:
     void startFastDownload();
 
     void startCustomDownload();
 
-    void executeDownload(const QString &filePath);
+    void executeDownload(const QString& filePath);
 
     void onDownloadFinished();
 
@@ -72,29 +88,32 @@ private slots:
     void moveToBottomRight();
 
 private:
-    Ui::notification_main_widget *ui;
+    Ui::notification_main_widget* ui;
     Mode m_mode;
     QString m_version;
     QString m_downloadUrl;
     QString m_downloadPath;
-    QNetworkReply *m_reply = nullptr;
-    QFile *m_file = nullptr;
+    QNetworkAccessManager* m_networkManager = nullptr;
+    QNetworkReply* m_reply = nullptr;
+    QFile* m_file = nullptr;
     QPointer<NotificationCloseButton> m_externalCloseBtn;
     bool m_isExiting = false;
     UiState m_currentState = UiState::Buttons;
-    QGraphicsOpacityEffect *m_stackOpacityEffect = nullptr;
-    QTimer *m_hideTimer;
+    QGraphicsOpacityEffect* m_stackOpacityEffect = nullptr;
+    QTimer* m_hideTimer = nullptr;
     const int AUTOHIDE_DELAY = 5000;
-    QPropertyAnimation *m_progressAnim = nullptr;
+    QPropertyAnimation* m_progressAnim = nullptr;
     double m_progress = 0.0;
 
     void startAutohideTimer();
 
-    [[nodiscard]] double progress() const {
+    [[nodiscard]] double progress() const
+    {
         return m_progress;
     }
 
-    void setProgress(const double p) {
+    void setProgress(const double p)
+    {
         m_progress = p;
         update();
     }
@@ -104,4 +123,6 @@ private:
     void updateContentOnly() const;
 
     void animateHeightChange();
+
+    void cleanupDownloadResources(bool removePartialFile);
 };

@@ -1,36 +1,44 @@
 #pragma once
 #include "logger.h"
+
 #include <QLoggingCategory>
 
-class QtLoggerBridge {
+class QtLoggerBridge
+{
 public:
-    static void install() {
+    static void install()
+    {
         qInstallMessageHandler(messageHandler);
     }
 
 private:
-    static void messageHandler(const QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+    static void messageHandler(const QtMsgType type, const QMessageLogContext& context, const QString& msg)
+    {
         auto lvl = Logger::Level::DEBUG;
 
         switch (type) {
-            case QtDebugMsg: lvl = Logger::Level::DEBUG;
+            case QtDebugMsg:
+                lvl = Logger::Level::DEBUG;
                 break;
-            case QtInfoMsg: lvl = Logger::Level::INFO;
+            case QtInfoMsg:
+                lvl = Logger::Level::INFO;
                 break;
-            case QtWarningMsg: lvl = Logger::Level::WARN;
+            case QtWarningMsg:
+                lvl = Logger::Level::WARN;
                 break;
             case QtCriticalMsg:
-            case QtFatalMsg: lvl = Logger::Level::ERR;
+            case QtFatalMsg:
+                lvl = Logger::Level::ERR;
                 break;
         }
 
-        if (!Logger::_debug && lvl == Logger::Level::DEBUG) return;
+        if (!Logger::_debug && lvl == Logger::Level::DEBUG) {
+            return;
+        }
 
         // Можно фильтровать конкретную категорию, если нужно
         // if (QString(context.category) != "qt.multimedia.ffmpeg") return;
 
-        Logger(context.file ? context.file : "",
-               context.function ? context.function : "",
-               context.line, lvl) << msg;
+        Logger(context.file ? context.file : "", context.function ? context.function : "", context.line, lvl) << msg;
     }
 };
