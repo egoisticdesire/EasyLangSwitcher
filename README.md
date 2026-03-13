@@ -21,7 +21,8 @@ Now with more flexible options:
       Lock on/off.
 - App language selection (English / Russian).
 - Auto-start on Windows login.
-- Configurable automatic update checks with built-in update notification window.
+- Configurable automatic update checks with smart notifications (system toasts when appropriate, silent during Focus/Do
+  Not Disturb).
 
 ## System Tray Controls
 
@@ -30,6 +31,7 @@ The application starts in the system tray and provides easy actions:
 - **Left Click** — toggle on/off (enabled by default)
 - **Double Left Click** — open application settings
 - **Right Click** — open the menu with current configuration details
+- **Update badge** — appears on the tray icon when an update is waiting
 
 ## About
 
